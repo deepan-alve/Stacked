@@ -1,120 +1,185 @@
-# 🎬 Stacked - Modern Media Tracking App
+# Stacked - Advanced Media Tracking App
 
-**Stacked** is a beautiful, modern media tracking application built with the latest web technologies. Track movies, TV shows, books, anime, games, podcasts, and more in one elegant interface.
+![Stacked Logo](public/placeholder-cover.svg)
 
-![Stacked App](https://img.shields.io/badge/Status-In%20Development-yellow)
+**Stacked** is a comprehensive media tracking application that allows users to discover, track, and organize their entertainment across multiple platforms including movies, TV shows, books, anime, games, and podcasts.
+
 ![Next.js](https://img.shields.io/badge/Next.js-14+-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5+-blue)
 ![Tailwind](https://img.shields.io/badge/Tailwind-CSS-38bdf8)
+![Supabase](https://img.shields.io/badge/Supabase-Backend-green)
 
-## ✨ Features
+## 🚀 Features
 
-### 🎨 Modern 2025 Design
-- **Glassmorphism UI** with frosted glass effects
-- **Gradient text** and neon accent colors (#00C2FF, #FF00C7)
-- **Smooth animations** and hover effects
-- **Dark theme** optimized for extended use
-- **Responsive design** for mobile and desktop
+### Core Functionality
+- **Multi-Platform Media Tracking**: Track movies, TV shows, books, anime, games, and podcasts
+- **Advanced Search & Discovery**: Search across multiple APIs (TMDB, IGDB, Jikan, OpenLibrary)
+- **Smart Ratings & Reviews**: Rate and review your media with detailed notes
+- **Personal Collections**: Organize media into custom collections
+- **Progress Tracking**: Monitor your reading/watching/playing progress
 
-### 📱 Core Functionality
-- ✅ **Media Library** - Browse and manage your collection
-- ✅ **Manual Entry** - Add media with ratings, notes, and tags
-- ✅ **Collections** - Organize media into custom groups
-- ✅ **Advanced Filtering** - Search by type, status, rating
-- ✅ **Multiple View Modes** - Grid and list layouts
-- ✅ **User Profile** - Track stats and progress
+### User Experience
+- **Comprehensive Profile System**: Customizable profiles with avatar upload
+- **Advanced Settings**: Theme selection, preferences, privacy controls
+- **Onboarding Tour**: Guided introduction for new users
+- **Empty States**: Helpful guidance when no content is available
+- **Responsive Design**: Works seamlessly on desktop and mobile
 
-### 🚀 Planned Features
-- 🔄 **External API Integration** (TMDB, Jikan, Open Library)
-- 🔄 **Supabase Authentication** and database
-- 🔄 **Real-time sync** across devices
-- 🔄 **Social features** and sharing
-- 🔄 **Export/Import** functionality
-- 🔄 **Mood tracking** and analytics
+### Technical Features
+- **Real-time Sync**: Powered by Supabase for instant updates
+- **Secure Authentication**: JWT-based auth with profile management
+- **File Storage**: Avatar upload with Supabase Storage
+- **Modern UI**: Built with Tailwind CSS and shadcn/ui components
+- **Type Safety**: Full TypeScript implementation
 
-## 🛠 Tech Stack
+## 🛠️ Tech Stack
 
 ### Frontend
-- **Next.js 14+** with App Router
-- **TypeScript** for type safety
-- **Tailwind CSS** for styling
-- **Shadcn/ui** component library
-- **Framer Motion** for animations
-- **Lucide React** icons
+- **Next.js 14** - React framework with App Router
+- **TypeScript** - Type-safe development
+- **Tailwind CSS** - Utility-first CSS framework
+- **shadcn/ui** - High-quality component library
+- **Zustand** - State management
 
-### Backend (Planned)
-- **Supabase** for database and auth
-- **PostgreSQL** with Row Level Security
-- **Real-time subscriptions**
-- **Edge Functions** for API logic
-
-### External APIs (Planned)
-- **TMDB** - Movies and TV shows
-- **Jikan** - Anime data
-- **Open Library** - Book information
-- **IGDB** - Game database
+### Backend & Services
+- **Supabase** - Backend-as-a-Service
+  - Authentication & User Management
+  - PostgreSQL Database
+  - File Storage
+  - Real-time subscriptions
+- **External APIs**:
+  - **TMDB** - Movies and TV shows
+  - **IGDB** - Video games
+  - **Jikan** - Anime and manga
+  - **OpenLibrary** - Books
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 - Node.js 18+ 
-- npm or pnpm
+- npm or yarn
+- Supabase account
 
 ### Installation
-```bash
-# Install dependencies
-npm install
 
-# Set up environment variables
-# Edit .env.local with your API keys (when implementing Supabase)
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd stacked
+   ```
 
-# Start development server
-npm run dev
-```
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-Visit `http://localhost:3000` to see the app!
+3. **Set up environment variables**
+   ```bash
+   cp .env.example .env.local
+   ```
+   
+   Fill in your environment variables:
+   ```env
+   # Supabase Configuration
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   
+   # External API Keys
+   NEXT_PUBLIC_TMDB_API_KEY=your_tmdb_api_key
+   NEXT_PUBLIC_IGDB_CLIENT_ID=your_igdb_client_id
+   IGDB_CLIENT_SECRET=your_igdb_client_secret
+   IGDB_ACCESS_TOKEN=your_igdb_access_token
+   ```
 
-## 📂 Project Structure
+4. **Set up Supabase**
+   - Follow the detailed setup guide in [`SUPABASE_SETUP.md`](SUPABASE_SETUP.md)
+   - Run database migrations
+   - Set up avatar storage bucket (see [`AVATAR_SETUP.md`](AVATAR_SETUP.md))
 
-```
-src/
-├── app/                    # Next.js App Router pages
-│   ├── page.tsx           # Homepage
-│   ├── library/           # Media library
-│   ├── add/               # Add new media
-│   ├── collections/       # Collections management
-│   └── profile/           # User profile
-├── components/            # Reusable components
-│   ├── ui/               # Shadcn/ui components
-│   └── navigation.tsx    # Main navigation
-├── lib/                  # Utility functions
-│   ├── supabase/         # Supabase client setup
-│   └── utils.ts          # Helper utilities
-├── store/                # State management
-│   └── index.ts          # Zustand stores
-└── types/                # TypeScript definitions
-    └── index.ts          # App types
-```
+5. **Run the development server**
+   ```bash
+   npm run dev
+   ```
+
+6. **Open your browser**
+   Navigate to [http://localhost:3000](http://localhost:3000)
+
+## 📱 Key Pages & Features
+
+### 🏠 Dashboard
+- Overview of recently added media
+- Quick stats and activity
+- Onboarding tour for new users
+
+### 🔍 Search & Discovery
+- Multi-platform search across all media types
+- Advanced filters by genre, year, rating
+- Trending and popular content
+- Save searches for later
+
+### 📚 Library
+- View all tracked media
+- Filter by status (completed, in-progress, planned)
+- Sort by rating, date added, title
+- Quick edit with inline controls
+
+### 👤 Profile
+- Personal statistics and achievements
+- Media breakdown by type
+- Activity timeline
+- Public/private profile settings
+
+### ⚙️ Settings
+- **Profile**: Avatar upload, bio, display name
+- **Preferences**: Theme, language, default views
+- **Privacy**: Public profile, activity visibility
+- **Data**: Export data, clear cache, reset onboarding
+
+## 🗄️ Database Schema
+
+The app uses a comprehensive PostgreSQL schema with:
+
+- **Profiles** - User profile information and avatars
+- **Media Items** - All media content with external API integration
+- **User Media** - User's relationship with media (ratings, reviews, status)
+- **Collections** - Custom user-created collections
+- **Tags** - Flexible tagging system
+
+See [`supabase/migrations/001_initial_schema.sql`](supabase/migrations/001_initial_schema.sql) for the complete schema.
 
 ## 🎨 Design System
 
-### Colors
-- **Background**: `#0F0F0F` (Deep black-gray)
-- **Primary**: `#00C2FF` (Electric cyan)
-- **Accent**: `#FF00C7` (Neon magenta)
-- **Card**: `#1A1A1A` (Dark gray)
-- **Border**: `#2A2A2A` (Medium gray)
+Built with a consistent design system featuring:
+- **Glass morphism** effects
+- **Gradient accents** 
+- **Dark/Light theme** support
+- **Responsive breakpoints**
+- **Accessible components**
+- **Consistent spacing** and typography
 
-### Typography
-- **Headers**: Clash Display / Satoshi Bold
-- **Body**: Inter / Space Grotesk
-- **Sizes**: 16-18px body, 24-40px headers
+## 🤝 Contributing
 
-### Effects
-- **Glassmorphism**: `backdrop-blur-xl` with subtle transparency
-- **Glow effects**: Subtle box-shadows on interactive elements
-- **Animations**: Smooth transitions and hover states
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+## 🙏 Acknowledgments
+
+- [Supabase](https://supabase.com) - Backend infrastructure
+- [TMDB](https://www.themoviedb.org) - Movie and TV data
+- [IGDB](https://www.igdb.com) - Video game data
+- [Jikan](https://jikan.moe) - Anime and manga data
+- [OpenLibrary](https://openlibrary.org) - Book data
+- [shadcn/ui](https://ui.shadcn.com) - Component library
 
 ---
+
+**Built with ❤️ using Next.js and Supabase**
 
 Built with ❤️ using modern web technologies for the ultimate media tracking experience.
