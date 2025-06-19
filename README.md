@@ -1,36 +1,120 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🎬 Stacked - Modern Media Tracking App
 
-## Getting Started
+**Stacked** is a beautiful, modern media tracking application built with the latest web technologies. Track movies, TV shows, books, anime, games, podcasts, and more in one elegant interface.
 
-First, run the development server:
+![Stacked App](https://img.shields.io/badge/Status-In%20Development-yellow)
+![Next.js](https://img.shields.io/badge/Next.js-14+-black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5+-blue)
+![Tailwind](https://img.shields.io/badge/Tailwind-CSS-38bdf8)
 
+## ✨ Features
+
+### 🎨 Modern 2025 Design
+- **Glassmorphism UI** with frosted glass effects
+- **Gradient text** and neon accent colors (#00C2FF, #FF00C7)
+- **Smooth animations** and hover effects
+- **Dark theme** optimized for extended use
+- **Responsive design** for mobile and desktop
+
+### 📱 Core Functionality
+- ✅ **Media Library** - Browse and manage your collection
+- ✅ **Manual Entry** - Add media with ratings, notes, and tags
+- ✅ **Collections** - Organize media into custom groups
+- ✅ **Advanced Filtering** - Search by type, status, rating
+- ✅ **Multiple View Modes** - Grid and list layouts
+- ✅ **User Profile** - Track stats and progress
+
+### 🚀 Planned Features
+- 🔄 **External API Integration** (TMDB, Jikan, Open Library)
+- 🔄 **Supabase Authentication** and database
+- 🔄 **Real-time sync** across devices
+- 🔄 **Social features** and sharing
+- 🔄 **Export/Import** functionality
+- 🔄 **Mood tracking** and analytics
+
+## 🛠 Tech Stack
+
+### Frontend
+- **Next.js 14+** with App Router
+- **TypeScript** for type safety
+- **Tailwind CSS** for styling
+- **Shadcn/ui** component library
+- **Framer Motion** for animations
+- **Lucide React** icons
+
+### Backend (Planned)
+- **Supabase** for database and auth
+- **PostgreSQL** with Row Level Security
+- **Real-time subscriptions**
+- **Edge Functions** for API logic
+
+### External APIs (Planned)
+- **TMDB** - Movies and TV shows
+- **Jikan** - Anime data
+- **Open Library** - Book information
+- **IGDB** - Game database
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18+ 
+- npm or pnpm
+
+### Installation
 ```bash
+# Install dependencies
+npm install
+
+# Set up environment variables
+# Edit .env.local with your API keys (when implementing Supabase)
+
+# Start development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit `http://localhost:3000` to see the app!
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📂 Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+├── app/                    # Next.js App Router pages
+│   ├── page.tsx           # Homepage
+│   ├── library/           # Media library
+│   ├── add/               # Add new media
+│   ├── collections/       # Collections management
+│   └── profile/           # User profile
+├── components/            # Reusable components
+│   ├── ui/               # Shadcn/ui components
+│   └── navigation.tsx    # Main navigation
+├── lib/                  # Utility functions
+│   ├── supabase/         # Supabase client setup
+│   └── utils.ts          # Helper utilities
+├── store/                # State management
+│   └── index.ts          # Zustand stores
+└── types/                # TypeScript definitions
+    └── index.ts          # App types
+```
 
-## Learn More
+## 🎨 Design System
 
-To learn more about Next.js, take a look at the following resources:
+### Colors
+- **Background**: `#0F0F0F` (Deep black-gray)
+- **Primary**: `#00C2FF` (Electric cyan)
+- **Accent**: `#FF00C7` (Neon magenta)
+- **Card**: `#1A1A1A` (Dark gray)
+- **Border**: `#2A2A2A` (Medium gray)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Typography
+- **Headers**: Clash Display / Satoshi Bold
+- **Body**: Inter / Space Grotesk
+- **Sizes**: 16-18px body, 24-40px headers
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Effects
+- **Glassmorphism**: `backdrop-blur-xl` with subtle transparency
+- **Glow effects**: Subtle box-shadows on interactive elements
+- **Animations**: Smooth transitions and hover states
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Built with ❤️ using modern web technologies for the ultimate media tracking experience.

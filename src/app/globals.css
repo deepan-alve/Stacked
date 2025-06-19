@@ -1,26 +1,133 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --radius: 0.625rem;
+  --background: #0F0F0F;
+  --foreground: #FAFAFA;
+  --card: #1A1A1A;
+  --card-foreground: #FAFAFA;
+  --popover: #1A1A1A;
+  --popover-foreground: #FAFAFA;
+  --primary: #00C2FF;
+  --primary-foreground: #0F0F0F;
+  --secondary: #2A2A2A;
+  --secondary-foreground: #FAFAFA;
+  --muted: #2A2A2A;
+  --muted-foreground: #A3A3A3;
+  --accent: #FF00C7;
+  --accent-foreground: #FAFAFA;
+  --destructive: #EF4444;
+  --destructive-foreground: #FAFAFA;
+  --border: #2A2A2A;
+  --input: #2A2A2A;
+  --ring: #00C2FF;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    border-color: var(--border);
+    outline-color: color-mix(in srgb, var(--ring) 50%, transparent);
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    background: linear-gradient(135deg, #0F0F0F 0%, #1a1a1a 100%);
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  /* Glassmorphism effects */
+  .glass {
+    backdrop-filter: blur(12px);
+    background-color: color-mix(in srgb, white 5%, transparent);
+    border: 1px solid color-mix(in srgb, white 10%, transparent);
+  }
+  
+  .glass-card {
+    backdrop-filter: blur(12px);
+    background-color: color-mix(in srgb, black 20%, transparent);
+    border: 1px solid color-mix(in srgb, white 10%, transparent);
+    border-radius: 1rem;
+  }
+  
+  /* Glow effects */
+  .glow-primary {
+    box-shadow: 0 0 20px rgba(0, 194, 255, 0.3);
+  }
+  
+  .glow-accent {
+    box-shadow: 0 0 20px rgba(255, 0, 199, 0.3);
+  }
+  
+  /* Gradient text */
+  .gradient-text {
+    background: linear-gradient(45deg, #00C2FF, #FF00C7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: rgba(42, 42, 42, 0.2);
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 194, 255, 0.5);
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 194, 255, 0.7);
+  }
+  
+  /* Shimmer loading effect */
+  .shimmer {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+  
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  
+  /* Media card hover effects */
+  .media-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .media-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 194, 255, 0.2);
+  }
+  
+  /* Floating animation */
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+  
+  .float {
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  /* Pulse glow animation */
+  @keyframes pulse-glow {
+    0%, 100% { 
+      box-shadow: 0 0 20px rgba(0, 194, 255, 0.3);
+    }
+    50% { 
+      box-shadow: 0 0 40px rgba(0, 194, 255, 0.6);
+    }
+  }
+  
+  .pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
 }

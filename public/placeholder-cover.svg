@@ -1,0 +1,9 @@
+<!-- Placeholder SVG for missing cover images -->
+<svg width="200" height="300" viewBox="0 0 200 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="300" fill="#1f2937"/>
+  <rect x="40" y="80" width="120" height="140" rx="8" fill="#374151"/>
+  <circle cx="80" cy="130" r="12" fill="#6b7280"/>
+  <path d="M120 150l-20-15v30l20-15z" fill="#6b7280"/>
+  <rect x="60" y="180" width="80" height="4" rx="2" fill="#4b5563"/>
+  <rect x="60" y="190" width="60" height="4" rx="2" fill="#4b5563"/>
+</svg>
