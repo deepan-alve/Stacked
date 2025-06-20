@@ -34,7 +34,7 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <Navigation />
-            <main className="pb-20 md:pb-8">
+            <main className="relative">
               {children}
             </main>
             <OnboardingWrapper />

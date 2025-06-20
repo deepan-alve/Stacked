@@ -28,13 +28,19 @@
     border-color: var(--border);
     outline-color: color-mix(in srgb, var(--ring) 50%, transparent);
   }
-  
-  body {
+    body {
     background-color: var(--background);
     color: var(--foreground);
     background: linear-gradient(135deg, #0F0F0F 0%, #1a1a1a 100%);
     font-feature-settings: "rlig" 1, "calt" 1;
     cursor: none; /* Hide default cursor */
+    margin: 0;
+    padding: 0;
+  }
+  
+  html {
+    margin: 0;
+    padding: 0;
   }
   
   /* Override cursor for interactive elements */

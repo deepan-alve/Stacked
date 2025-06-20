@@ -43,9 +43,8 @@ export function Navigation() {
   ]
 
   return (
-    <>
-      {/* Desktop Navigation */}
-      <nav className="hidden md:flex fixed top-0 left-0 right-0 z-50 glass-card border-b border-border/50">
+    <>      {/* Desktop Navigation */}
+      <nav className="hidden md:flex fixed top-0 left-0 right-0 z-50 bg-black/50 backdrop-blur-xl border-b border-white/5">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             {/* Logo */}
@@ -101,10 +100,8 @@ export function Navigation() {
             </div>
           </div>
         </div>
-      </nav>
-
-      {/* Mobile Navigation */}
-      <nav className="md:hidden fixed top-0 left-0 right-0 z-50 glass-card border-b border-border/50">
+      </nav>      {/* Mobile Navigation */}
+      <nav className="md:hidden fixed top-0 left-0 right-0 z-50 bg-black/50 backdrop-blur-xl border-b border-white/5">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             {/* Logo */}
@@ -205,11 +202,7 @@ export function Navigation() {
           ) : (
             <div className="mx-2 my-1 h-10 w-10 bg-muted animate-pulse rounded-full" />
           )}
-        </div>
-      </div>
-
-      {/* Spacer for fixed navigation */}
-      <div className="h-16 md:h-20" />
+        </div>      </div>
     </>
   )
 }

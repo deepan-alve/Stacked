@@ -319,15 +319,13 @@ export default function HomePage() {
     {
       icon: Shield,
       title: "Privacy First",
-      description: "Your data is yours. Complete control over what you share",
-      color: "from-indigo-500 to-purple-500"
+      description: "Your data is yours. Complete control over what you share",      color: "from-indigo-500 to-purple-500"
     }
   ]
 
   return (
-    <>
-      <CustomCursor />
-      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black overflow-hidden">
+    <>      <CustomCursor />
+      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black overflow-hidden" style={{ marginTop: '-1px' }}>
         {/* Floating Particles */}
         <FloatingParticles />
         
@@ -345,11 +343,8 @@ export default function HomePage() {
           <motion.div style={{ y: y3 }}>
             <MorphingBlob className="bottom-10 right-10 w-48 h-48 opacity-30" delay={3} />
           </motion.div>
-        </div>
-
-        {/* Hero Section with Enhanced Effects */}
-        <motion.section 
-          className="relative z-10 min-h-screen flex items-center justify-center"
+        </div>        {/* Hero Section with Enhanced Effects */}        <motion.section 
+          className="relative z-10 min-h-screen flex items-center justify-center pt-16"
           style={{ opacity, scale }}
         >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(0,194,255,0.2),transparent_40%),radial-gradient(circle_at_70%_60%,rgba(255,0,199,0.2),transparent_50%)]"></div>
