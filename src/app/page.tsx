@@ -1,9 +1,11 @@
 'use client'
 
 import { motion, useScroll, useTransform } from 'framer-motion'
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { gsap } from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { 
   Play, 
   BookOpen, 
@@ -21,6 +23,11 @@ import {
   Star,
   LucideIcon
 }from 'lucide-react'
+
+// Register GSAP ScrollTrigger plugin
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger)
+}
 
 // Natural Custom Cursor Component
 const CustomCursor = () => {
@@ -278,12 +285,91 @@ const TiltCard = ({ children, className = "" }: { children: React.ReactNode, cla
 }
 
 export default function HomePage() {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const heroRef = useRef<HTMLDivElement>(null)
+  const featuresRef = useRef<HTMLDivElement>(null)
+  const ctaRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const ctx = gsap.context(() => {
+      // Get references to all sections
+      const pinWrap = containerRef.current
+      const heroSection = heroRef.current
+      const featuresSection = featuresRef.current
+      const ctaSection = ctaRef.current
+
+      if (!pinWrap || !heroSection || !featuresSection || !ctaSection) return
+
+      // Set initial states
+      gsap.set(featuresSection, { opacity: 0, y: 100 })
+      gsap.set(ctaSection, { opacity: 0, y: 100 })
+      gsap.set(heroSection, { opacity: 1, scale: 1 })
+
+      // Create the main pinning ScrollTrigger
+      ScrollTrigger.create({
+        trigger: pinWrap,
+        start: 'top top',
+        end: '+=300%', // 3x viewport height for 3 sections
+        pin: true,
+        pinSpacing: false,
+        anticipatePin: 1,
+        onUpdate: (self) => {
+          const progress = self.progress
+          
+          // Hero section (0% to 33%)
+          if (progress <= 0.33) {
+            const heroProgress = progress / 0.33
+            gsap.to(heroSection, {
+              opacity: 1 - heroProgress,
+              scale: 1 - (heroProgress * 0.2),
+              duration: 0.1,
+              ease: "none"
+            })
+            gsap.to(featuresSection, { opacity: 0, duration: 0.1 })
+            gsap.to(ctaSection, { opacity: 0, duration: 0.1 })
+          }
+          
+          // Features section (33% to 66%)
+          else if (progress <= 0.66) {
+            const featuresProgress = (progress - 0.33) / 0.33
+            gsap.to(heroSection, { opacity: 0, duration: 0.1 })
+            gsap.to(featuresSection, {
+              opacity: featuresProgress < 0.5 ? featuresProgress * 2 : 2 - (featuresProgress * 2),
+              y: 100 - (featuresProgress * 100),
+              duration: 0.1,
+              ease: "none"
+            })
+            gsap.to(ctaSection, { opacity: 0, duration: 0.1 })
+          }
+          
+          // CTA section (66% to 100%)
+          else {
+            const ctaProgress = (progress - 0.66) / 0.34
+            gsap.to(heroSection, { opacity: 0, duration: 0.1 })
+            gsap.to(featuresSection, { opacity: 0, duration: 0.1 })
+            gsap.to(ctaSection, {
+              opacity: ctaProgress,
+              y: 100 - (ctaProgress * 100),
+              duration: 0.1,
+              ease: "none"
+            })
+          }
+        }
+      })
+
+    }, containerRef)
+
+    return () => {
+      ctx.revert() // Clean up GSAP animations
+    }
+  }, [])
+
+  // Background parallax with Framer Motion (keeping some effects)
   const { scrollYProgress } = useScroll()
   const y1 = useTransform(scrollYProgress, [0, 1], [0, -100])
   const y2 = useTransform(scrollYProgress, [0, 1], [0, -200])
   const y3 = useTransform(scrollYProgress, [0, 1], [0, -300])
-  const opacity = useTransform(scrollYProgress, [0, 0.3], [1, 0])
-  const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.8])
 
   const features = [
     {
@@ -322,30 +408,33 @@ export default function HomePage() {
       description: "Your data is yours. Complete control over what you share",      color: "from-indigo-500 to-purple-500"
     }
   ]
-
   return (
-    <>      <CustomCursor />
-      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black overflow-hidden" style={{ marginTop: '-1px' }}>
-        {/* Floating Particles */}
+    <>
+      <CustomCursor />
+      
+      {/* GSAP Pinned Container */}
+      <div ref={containerRef} className="relative h-screen overflow-hidden bg-gradient-to-br from-black via-gray-900 to-black">
+        
+        {/* Background Effects */}
         <FloatingParticles />
         
-        {/* Animated Background Blobs with Parallax */}
-        <div className="fixed inset-0 z-0">
+        {/* Animated Background Blobs */}
+        <div className="absolute inset-0 z-0">
           <motion.div style={{ y: y1 }}>
             <MorphingBlob className="top-20 left-10 w-96 h-96 opacity-60" delay={0} />
           </motion.div>
           <motion.div style={{ y: y2 }}>
-            <MorphingBlob className="top-40 right-20 w-64 h-64 opacity-40" delay={1} />
-          </motion.div>
-          <motion.div style={{ y: y1 }}>
             <MorphingBlob className="bottom-20 left-1/3 w-80 h-80 opacity-50" delay={2} />
           </motion.div>
           <motion.div style={{ y: y3 }}>
             <MorphingBlob className="bottom-10 right-10 w-48 h-48 opacity-30" delay={3} />
           </motion.div>
-        </div>        {/* Hero Section with Enhanced Effects */}        <motion.section 
-          className="relative z-10 min-h-screen flex items-center justify-center pt-16"
-          style={{ opacity, scale }}
+        </div>
+
+        {/* Hero Section - Initially visible */}
+        <div 
+          ref={heroRef}
+          className="absolute inset-0 z-30 flex items-center justify-center"
         >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(0,194,255,0.2),transparent_40%),radial-gradient(circle_at_70%_60%,rgba(255,0,199,0.2),transparent_50%)]"></div>
           
@@ -477,9 +566,8 @@ export default function HomePage() {
                   </TiltCard>
                 </motion.div>
               </div>
-            </TiltCard>            {/* Enhanced Stats with Clean Design and Minimal Effects */}
-            <motion.div 
-              className="grid grid-cols-3 gap-8 max-w-4xl mx-auto mt-20"
+            </TiltCard>            {/* Enhanced Stats with Clean Design and Minimal Effects */}            <motion.div 
+              className="grid grid-cols-3 gap-8 max-w-4xl mx-auto mt-8"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 1 }}
@@ -521,46 +609,85 @@ export default function HomePage() {
                       </div>
                     </div>
                   </div>
-                </motion.div>
-              ))}
+                </motion.div>              ))}
+            </motion.div>
+            
+            {/* Scroll indicator */}
+            <motion.div 
+              className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: [0, 10, 0] }}
+              transition={{ 
+                opacity: { delay: 2, duration: 1 },
+                y: { delay: 2, duration: 2, repeat: Infinity, repeatType: "loop" }
+              }}
+            >              <div className="flex flex-col items-center text-white/80">
+                <div className="text-sm font-medium mb-2">Discover More</div>
+                <div className="w-8 h-12 rounded-full border-2 border-white/40 flex justify-center pt-1">
+                  <motion.div 
+                    className="w-2 h-2 bg-primary rounded-full"
+                    animate={{ y: [0, 18, 0] }}
+                    transition={{ duration: 1.5, repeat: Infinity, repeatType: "loop" }}
+                  />
+                </div>              </div>
             </motion.div>
           </div>
-        </motion.section>
-
-        {/* Enhanced Features Section with 3D Cards */}
-        <section className="relative z-10 py-32 overflow-hidden">
+        </div>        {/* Features Section - Hidden initially */}
+        <div 
+          ref={featuresRef}
+          className="absolute inset-0 z-20 py-8 overflow-hidden flex items-center justify-center"
+          style={{ opacity: 0 }}
+        >
+          {/* Smooth transition overlay */}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/80 to-transparent opacity-70 h-32 -top-32 pointer-events-none"></div>
           <div className="absolute inset-0 bg-gradient-radial from-blue-500/10 via-transparent to-transparent opacity-40"></div>
           
-          <div className="max-w-7xl mx-auto px-4">
-            <motion.div 
-              className="text-center mb-20"
-              initial={{ opacity: 0, y: 50 }}
+          <div className="max-w-7xl mx-auto px-4">            <motion.div 
+              className="text-center mb-8"
+              initial={{ opacity: 0, y: 80 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
+              transition={{ duration: 1.2, ease: "easeOut" }}
+              viewport={{ once: true, amount: 0.3 }}
             >
               <div className="inline-block relative">
                 <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent blur-xl opacity-70 rounded-lg"></div>
                 <h2 className="relative text-5xl md:text-7xl font-black gradient-text mb-6 tracking-tight">
                   Why Stacked?
                 </h2>
+                {/* Glowing underline effect */}
+                <motion.div
+                  className="w-32 h-1 bg-gradient-to-r from-primary to-accent rounded-full mx-auto"
+                  initial={{ width: 0, opacity: 0 }}
+                  whileInView={{ width: 128, opacity: 1 }}
+                  transition={{ duration: 1, delay: 0.6 }}
+                  viewport={{ once: true, amount: 0.2 }}
+                />
               </div>
-              <p className="text-xl text-white/80 max-w-3xl mx-auto mt-8 leading-relaxed">
+              <p className="text-xl text-white/80 max-w-3xl mx-auto mt-4 leading-relaxed">
                 Experience the future of media tracking with premium design,
                 AI-powered discovery, and an experience that adapts to you.
               </p>
             </motion.div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-              {features.map((feature, index) => (
-                <motion.div
+              {features.map((feature, index) => (                <motion.div
                   key={index}
-                  initial={{ opacity: 0, y: 50 }}
+                  initial={{ opacity: 0, y: 60 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                  viewport={{ once: true }}
+                  transition={{ 
+                    duration: 0.8, 
+                    delay: 0.3 + index * 0.2, 
+                    ease: "easeOut" 
+                  }}
+                  viewport={{ once: true, amount: 0.1 }}
                 >
-                  <TiltCard>
+                  <motion.div
+                    whileHover={{ 
+                      scale: 1.05,
+                      y: -8,
+                      transition: { type: "spring", damping: 12, stiffness: 200 }
+                    }}
+                  >
                     <div className="group relative">
                       <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-accent/20 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
                       <div className="relative bg-black/40 backdrop-blur-xl p-8 rounded-2xl border border-white/10 h-full overflow-hidden">
@@ -587,20 +714,15 @@ export default function HomePage() {
                         </motion.div>
                       </div>
                     </div>
-                  </TiltCard>
+                  </motion.div>
                 </motion.div>
-              ))}
-            </div>
+              ))}            </div>
           </div>
-        </section>
-
-        {/* Enhanced Final CTA Section */}
-        <motion.section 
-          className="relative z-10 py-32 px-4"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 1 }}
-          viewport={{ once: true }}
+        </div>        {/* CTA Section - Hidden initially */}
+        <div 
+          ref={ctaRef}
+          className="absolute inset-0 z-10 py-32 px-4 flex items-center justify-center"
+          style={{ opacity: 0 }}
         >
           <div className="max-w-4xl mx-auto text-center">
             <TiltCard>
@@ -648,13 +770,14 @@ export default function HomePage() {
                 </motion.div>
                 
                 <p className="text-sm text-white/50 mt-4 relative z-10">
-                  No credit card required • Start tracking in 30 seconds
-                </p>
-              </motion.div>
-            </TiltCard>
+                  No credit card required • Start tracking in 30 seconds                </p>
+              </motion.div>            </TiltCard>
           </div>
-        </motion.section>
+        </div>
       </div>
+      
+      {/* Spacer element to create scroll height for GSAP */}
+      <div className="h-[300vh]"></div>
     </>
   )
 }
