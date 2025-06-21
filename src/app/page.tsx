@@ -75,22 +75,25 @@ const FloatingParticles = () => {
     delay: number;
     xMovement: number;
   }>>([])
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     // Generate particles only on client side to avoid hydration mismatch
-    setParticles(Array.from({ length: 30 }, (_, i) => ({
+    const particleData = Array.from({ length: 30 }, (_, i) => ({
       id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      size: Math.random() * 4 + 1,
-      duration: Math.random() * 20 + 20,
-      delay: Math.random() * 5,
-      xMovement: Math.random() * 100 - 50
-    })))
+      x: (i * 7.3) % 100, // Use deterministic values based on index
+      y: (i * 11.7) % 100,
+      size: (i % 4) + 1,
+      duration: 20 + (i % 8) * 2.5,
+      delay: (i % 5),
+      xMovement: ((i % 11) - 5) * 10
+    }))
+    setParticles(particleData)
   }, [])
 
-  if (particles.length === 0) {
-    // Don't render anything during SSR
+  if (!mounted || particles.length === 0) {
+    // Don't render anything during SSR or before mount
     return null
   }
 
@@ -615,8 +618,7 @@ export default function HomePage() {
               }}
               transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
             />
-            
-            {/* Floating Orbs */}
+              {/* Floating Orbs */}
             {Array.from({ length: 8 }).map((_, i) => (
               <motion.div
                 key={i}
@@ -628,17 +630,17 @@ export default function HomePage() {
                     'rgba(236, 72, 153, 0.1)'
                   }, transparent)`,
                   filter: 'blur(40px)',
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
+                  left: `${(i * 13.7) % 100}%`,
+                  top: `${(i * 17.3) % 100}%`,
                 }}
                 animate={{
-                  x: [0, Math.random() * 100 - 50, 0],
-                  y: [0, Math.random() * 100 - 50, 0],
+                  x: [0, ((i % 7) - 3) * 15, 0],
+                  y: [0, ((i % 5) - 2) * 20, 0],
                   scale: [1, 1.5, 1],
                   opacity: [0.3, 0.7, 0.3]
                 }}
                 transition={{
-                  duration: 12 + Math.random() * 8,
+                  duration: 12 + (i % 3) * 4,
                   repeat: Infinity,
                   ease: "easeInOut",
                   delay: i * 1.5
@@ -947,21 +949,20 @@ export default function HomePage() {
                   </motion.div>
                 ))}
               </motion.div>
-            </div>
-
-            {/* Bottom Stats Row */}
+            </div>            {/* Bottom Stats Row */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.6 }}
               viewport={{ once: true }}
-              className="grid grid-cols-3 gap-8 mt-12 text-center"
+              className="grid grid-cols-3 gap-8 mt-8 text-center"
             >
               {[
-                { number: "50K+", label: " " },                { number: "1M+", label:"" },
+                { number: "50K+", label: "" },
+                { number: "1M+", label: "" },
                 { number: "99.9%", label: "" }
-              ].map((stat) => (
-                <div key={stat.label} className="space-y-2">
+              ].map((stat, index) => (
+                <div key={`features-stat-${index}-${stat.number}`} className="space-y-2">
                   <div className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
                     {stat.number}
                   </div>
@@ -976,12 +977,13 @@ export default function HomePage() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.8 }}
               viewport={{ once: true }}
-              className="text-center mt-8"
+              className="text-center mt-6"
             >
-              <div className="bg-black/40 backdrop-blur-xl rounded-xl border border-white/10 p-6 max-w-2xl mx-auto">                <p className="text-white/80 italic mb-4">
+              <div className="bg-black/40 backdrop-blur-xl rounded-xl border border-white/10 p-4 max-w-xl mx-auto">
+                <p className="text-white/80 italic mb-3 text-sm">
                   &ldquo;Finally, a platform that gets it right. Stacked has completely changed how I track and discover media.&rdquo;
                 </p>
-                <div className="text-white/60 text-sm">— Sarah K., Beta User</div>
+                <div className="text-white/60 text-xs">— Sarah K., Beta User</div>
               </div>
             </motion.div>
           </div>
