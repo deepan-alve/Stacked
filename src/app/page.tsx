@@ -11,16 +11,15 @@ import {
   BookOpen, 
   Film, 
   Tv, 
-  Gamepad2, 
-  Music,
-  ArrowRight,
+  Gamepad2,   Music,  ArrowRight,
   Zap,
-  Shield,
   Users,
-  Search,
-  BarChart3,  Heart,
+  BarChart3,
+  Heart,
   Sparkles,
   Star,
+  Check,
+  X,
   LucideIcon
 }from 'lucide-react'
 
@@ -364,50 +363,11 @@ export default function HomePage() {
       ctx.revert() // Clean up GSAP animations
     }
   }, [])
-
   // Background parallax with Framer Motion (keeping some effects)
   const { scrollYProgress } = useScroll()
   const y1 = useTransform(scrollYProgress, [0, 1], [0, -100])
   const y2 = useTransform(scrollYProgress, [0, 1], [0, -200])
   const y3 = useTransform(scrollYProgress, [0, 1], [0, -300])
-
-  const features = [
-    {
-      icon: Film,
-      title: "Track Everything",
-      description: "Movies, TV shows, books, games, anime, and more in one place",
-      color: "from-blue-500 to-cyan-500"
-    },
-    {
-      icon: Search,
-      title: "Smart Discovery",
-      description: "Find your next obsession with AI-powered recommendations",
-      color: "from-purple-500 to-pink-500"
-    },
-    {
-      icon: BarChart3,
-      title: "Visual Stats",
-      description: "See your entertainment journey with beautiful charts and insights",
-      color: "from-green-500 to-emerald-500"
-    },
-    {
-      icon: Users,
-      title: "Social Features",
-      description: "Share reviews, create lists, and connect with fellow fans",
-      color: "from-orange-500 to-red-500"
-    },
-    {
-      icon: Zap,
-      title: "Real-time Sync",
-      description: "Access your library anywhere with instant synchronization",
-      color: "from-yellow-500 to-orange-500"
-    },
-    {
-      icon: Shield,
-      title: "Privacy First",
-      description: "Your data is yours. Complete control over what you share",      color: "from-indigo-500 to-purple-500"
-    }
-  ]
   return (
     <>
       <CustomCursor />
@@ -604,7 +564,7 @@ export default function HomePage() {
                       
                       <div className="flex items-center justify-center space-x-2">
                         <stat.icon className="w-4 h-4 text-white/60" />
-                        <div className="text-white/80 text-sm font-medium tracking-wide uppercase">
+                        <div className="text-white/80 text-sm font-medium tracking-wide">
                           {stat.label}                        </div>
                       </div>
                     </div>
@@ -632,93 +592,400 @@ export default function HomePage() {
                 </div>              </div>
             </motion.div>
           </div>
-        </div>        {/* Features Section - Hidden initially */}
+        </div>        {/* Features Section - Ultra Modern 3D Design */}
         <div 
           ref={featuresRef}
-          className="absolute inset-0 z-20 py-8 overflow-hidden flex items-center justify-center"
+          className="absolute inset-0 z-20 py-8 px-4 overflow-hidden"
           style={{ opacity: 0 }}
         >
-          {/* Smooth transition overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/80 to-transparent opacity-70 h-32 -top-32 pointer-events-none"></div>
-          <div className="absolute inset-0 bg-gradient-radial from-blue-500/10 via-transparent to-transparent opacity-40"></div>
+          {/* Dynamic Animated Background */}
+          <div className="absolute inset-0">
+            {/* Flowing Gradient Mesh */}
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/30 via-purple-900/20 to-pink-900/30"></div>
+            
+            {/* Animated Mesh Overlays */}
+            <motion.div 
+              className="absolute inset-0 opacity-40"
+              animate={{
+                background: [
+                  "radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.3) 0%, transparent 50%)",
+                  "radial-gradient(circle at 80% 20%, rgba(236, 72, 153, 0.3) 0%, transparent 50%), radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.3) 0%, transparent 50%)",
+                  "radial-gradient(circle at 50% 50%, rgba(168, 85, 247, 0.3) 0%, transparent 50%), radial-gradient(circle at 30% 70%, rgba(236, 72, 153, 0.3) 0%, transparent 50%)"
+                ]
+              }}
+              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+            />
+            
+            {/* Floating Orbs */}
+            {Array.from({ length: 8 }).map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute w-32 h-32 rounded-full"
+                style={{
+                  background: `linear-gradient(45deg, ${
+                    i % 3 === 0 ? 'rgba(59, 130, 246, 0.1)' : 
+                    i % 3 === 1 ? 'rgba(168, 85, 247, 0.1)' : 
+                    'rgba(236, 72, 153, 0.1)'
+                  }, transparent)`,
+                  filter: 'blur(40px)',
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                }}
+                animate={{
+                  x: [0, Math.random() * 100 - 50, 0],
+                  y: [0, Math.random() * 100 - 50, 0],
+                  scale: [1, 1.5, 1],
+                  opacity: [0.3, 0.7, 0.3]
+                }}
+                transition={{
+                  duration: 12 + Math.random() * 8,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: i * 1.5
+                }}
+              />
+            ))}
+          </div>
           
-          <div className="max-w-7xl mx-auto px-4">            <motion.div 
-              className="text-center mb-8"
-              initial={{ opacity: 0, y: 80 }}
+          <div className="max-w-7xl mx-auto relative z-10 h-full flex flex-col justify-center">            {/* Header Section with Clean White Glow */}
+            <motion.div 
+              className="text-center mb-12"
+              initial={{ opacity: 0, y: -50 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1.2, ease: "easeOut" }}
-              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 1, ease: "easeOut" }}
+              viewport={{ once: true }}
             >
-              <div className="inline-block relative">
-                <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent blur-xl opacity-70 rounded-lg"></div>
-                <h2 className="relative text-5xl md:text-7xl font-black gradient-text mb-6 tracking-tight">
-                  Why Stacked?
-                </h2>
-                {/* Glowing underline effect */}
-                <motion.div
-                  className="w-32 h-1 bg-gradient-to-r from-primary to-accent rounded-full mx-auto"
-                  initial={{ width: 0, opacity: 0 }}
-                  whileInView={{ width: 128, opacity: 1 }}
-                  transition={{ duration: 1, delay: 0.6 }}
-                  viewport={{ once: true, amount: 0.2 }}
-                />
-              </div>
-              <p className="text-xl text-white/80 max-w-3xl mx-auto mt-4 leading-relaxed">
-                Experience the future of media tracking with premium design,
-                AI-powered discovery, and an experience that adapts to you.
-              </p>
-            </motion.div>
+              <motion.div
+                className="inline-block relative mb-6"
+                whileHover={{ scale: 1.05 }}
+                transition={{ type: "spring", damping: 15 }}
+              >
+                <div className="absolute -inset-2 bg-white/5 rounded-2xl blur-lg opacity-0 hover:opacity-100 transition-all duration-500"></div>
+                <div className="relative bg-black/40 backdrop-blur-xl px-8 py-3 rounded-2xl border border-white/10">
+                  <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 tracking-wider uppercase">
+                    Next-Gen Experience
+                  </span>
+                </div>
+              </motion.div>
+              
+              <h2 className="text-5xl md:text-7xl font-black mb-6 relative">
+                <span className="absolute inset-0 text-white/10 blur-sm">
+                  Why Choose Stacked?
+                </span>
+                <span className="relative text-white drop-shadow-lg">
+                  Why Choose Stacked?
+                </span>
+              </h2>
+              
+              <motion.p 
+                className="text-xl text-white/70 max-w-3xl mx-auto"
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                transition={{ delay: 0.3, duration: 0.8 }}
+                viewport={{ once: true }}
+              >
+                Experience the future of media tracking with revolutionary features that set us apart
+              </motion.p>
+            </motion.div>{/* Two Column Grid with Balanced Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+              
+              {/* Left Column - Enhanced Comparison Table */}
+              <motion.div
+                initial={{ opacity: 0, x: -100, rotateY: -15 }}
+                whileInView={{ opacity: 1, x: 0, rotateY: 0 }}
+                transition={{ duration: 1, ease: "easeOut" }}
+                viewport={{ once: true }}
+                className="relative"
+                style={{ perspective: "1000px" }}
+              >
+                <div className="relative group">
+                  {/* Minimal Glow Effect */}
+                  <div className="absolute -inset-2 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 rounded-3xl blur-xl transition-all duration-500 opacity-0 group-hover:opacity-60"></div>
+                    {/* Main Container with Balanced Height */}
+                  <div className="relative bg-black/30 backdrop-blur-2xl rounded-3xl border border-white/20 p-8 h-[520px] overflow-hidden group-hover:border-white/30 transition-all duration-500">
+                    {/* Animated Background Pattern */}
+                    <div className="absolute inset-0 opacity-30">
+                      <motion.div
+                        className="absolute inset-0"
+                        animate={{
+                          background: [
+                            "linear-gradient(45deg, rgba(59, 130, 246, 0.1) 0%, transparent 50%)",
+                            "linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, transparent 50%)",
+                            "linear-gradient(225deg, rgba(236, 72, 153, 0.1) 0%, transparent 50%)"
+                          ]
+                        }}
+                        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                      />
+                    </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-              {features.map((feature, index) => (                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 60 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ 
-                    duration: 0.8, 
-                    delay: 0.3 + index * 0.2, 
-                    ease: "easeOut" 
-                  }}
-                  viewport={{ once: true, amount: 0.1 }}
-                >
-                  <motion.div
-                    whileHover={{ 
-                      scale: 1.05,
-                      y: -8,
-                      transition: { type: "spring", damping: 12, stiffness: 200 }
-                    }}
-                  >
-                    <div className="group relative">
-                      <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-accent/20 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
-                      <div className="relative bg-black/40 backdrop-blur-xl p-8 rounded-2xl border border-white/10 h-full overflow-hidden">
-                        <div className="absolute right-0 top-0 -mt-10 -mr-10 w-40 h-40 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full blur-2xl opacity-70"></div>
-                        
-                        <motion.div 
-                          className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-6 shadow-lg`}
-                          whileHover={{ rotate: 5, scale: 1.05 }}
-                          transition={{ type: "spring", damping: 10 }}
+                    <motion.h3 
+                      className="text-2xl font-bold text-white mb-8 relative z-10"
+                      whileHover={{ scale: 1.05 }}
+                    >
+                      <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
+                        Competitive Edge
+                      </span>
+                    </motion.h3>
+
+                    <div className="space-y-6 relative z-10">
+                      {/* Enhanced Header */}
+                      <div className="grid grid-cols-5 gap-4 pb-6 border-b border-white/20">
+                        <div className="text-white/80 font-semibold">Feature</div>
+                        <div className="text-center">
+                          <div className="bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold px-3 py-1 rounded-full text-sm">
+                            Stacked
+                          </div>
+                        </div>
+                        <div className="text-center text-white/60 text-sm font-medium">AniList</div>
+                        <div className="text-center text-white/60 text-sm font-medium">Letterboxd</div>
+                        <div className="text-center text-white/60 text-sm font-medium">Goodreads</div>
+                      </div>
+
+                      {/* Enhanced Rows */}
+                      {[
+                        { feature: "All Media Types", stacked: true, anilist: false, letterboxd: false, goodreads: false },
+                        { feature: "Lightning Performance", stacked: true, anilist: true, letterboxd: false, goodreads: false },
+                        { feature: "AI Analytics", stacked: true, anilist: false, letterboxd: false, goodreads: false },
+                        { feature: "Privacy First", stacked: true, anilist: false, letterboxd: false, goodreads: false },
+                        { feature: "Smart Discovery", stacked: true, anilist: false, letterboxd: true, goodreads: false },
+                      ].map((row, index) => (
+                        <motion.div
+                          key={row.feature}
+                          initial={{ opacity: 0, x: -20 }}
+                          whileInView={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.1, duration: 0.6 }}
+                          viewport={{ once: true }}
+                          whileHover={{ scale: 1.02, x: 4 }}
+                          className="grid grid-cols-5 gap-4 py-4 rounded-xl hover:bg-white/5 transition-all duration-300 px-2"
                         >
-                          <feature.icon className="w-8 h-8 text-white" />
-                        </motion.div>
-                        
-                        <h3 className="text-2xl font-bold text-white mb-4">{feature.title}</h3>
-                        <p className="text-white/70 leading-relaxed">{feature.description}</p>
-                        
-                        <motion.div 
-                          className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                          whileHover={{ scale: 1.1, rotate: 45 }}
-                        >
-                          <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm">
-                            <ArrowRight className="w-5 h-5 text-white" />
+                          <div className="text-white font-medium">{row.feature}</div>
+                          <div className="text-center">
+                            <motion.div
+                              whileHover={{ scale: 1.2, rotate: 360 }}
+                              transition={{ duration: 0.3 }}
+                            >
+                              <Check className="w-6 h-6 text-green-400 mx-auto drop-shadow-lg" />
+                            </motion.div>
+                          </div>
+                          <div className="text-center">
+                            <motion.div whileHover={{ scale: 1.2 }}>
+                              {row.anilist ? 
+                                <Check className="w-5 h-5 text-green-400 mx-auto" /> : 
+                                <X className="w-5 h-5 text-red-400 mx-auto" />
+                              }
+                            </motion.div>
+                          </div>
+                          <div className="text-center">
+                            <motion.div whileHover={{ scale: 1.2 }}>
+                              {row.letterboxd ? 
+                                <Check className="w-5 h-5 text-green-400 mx-auto" /> : 
+                                <X className="w-5 h-5 text-red-400 mx-auto" />
+                              }
+                            </motion.div>
+                          </div>
+                          <div className="text-center">
+                            <motion.div whileHover={{ scale: 1.2 }}>
+                              {row.goodreads ? 
+                                <Check className="w-5 h-5 text-green-400 mx-auto" /> : 
+                                <X className="w-5 h-5 text-red-400 mx-auto" />
+                              }
+                            </motion.div>
                           </div>
                         </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>              {/* Right Column - Larger Feature Cards */}
+              <motion.div
+                initial={{ opacity: 0, x: 100, rotateY: 15 }}
+                whileInView={{ opacity: 1, x: 0, rotateY: 0 }}
+                transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
+                viewport={{ once: true }}
+                className="grid grid-cols-2 gap-4"
+                style={{ perspective: "1000px" }}
+              >
+                {[
+                  {
+                    icon: Users,
+                    title: "Track Everything",
+                    description: "Movies, TV shows, anime, books, games - unified experience across all media types",
+                    gradient: "from-blue-500 via-blue-600 to-cyan-500",
+                    glowColor: "rgba(59, 130, 246, 0.3)",
+                    particle: "🎬"
+                  },
+                  {
+                    icon: Zap,
+                    title: "AI Discovery",
+                    description: "Next-gen recommendations that evolve with your taste and understand your preferences",
+                    gradient: "from-purple-500 via-purple-600 to-pink-500",
+                    glowColor: "rgba(168, 85, 247, 0.3)",
+                    particle: "🤖"
+                  },
+                  {
+                    icon: BarChart3,
+                    title: "Visual Analytics",
+                    description: "Beautiful insights into your entertainment patterns with detailed statistics",
+                    gradient: "from-emerald-500 via-green-600 to-teal-500",
+                    glowColor: "rgba(16, 185, 129, 0.3)",
+                    particle: "📊"
+                  },
+                  {
+                    icon: Heart,
+                    title: "Social Connect",
+                    description: "Discover through friends and build communities around shared interests",
+                    gradient: "from-rose-500 via-pink-600 to-red-500",
+                    glowColor: "rgba(236, 72, 153, 0.3)",
+                    particle: "❤️"
+                  }
+                ].map((feature, index) => (
+                  <motion.div
+                    key={feature.title}
+                    initial={{ opacity: 0, y: 50, rotateX: 20 }}
+                    whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+                    transition={{ 
+                      delay: index * 0.15, 
+                      duration: 0.8,
+                      type: "spring",
+                      damping: 12
+                    }}
+                    viewport={{ once: true }}
+                    whileHover={{ 
+                      y: -8, 
+                      rotateX: -5,
+                      scale: 1.02,
+                      transition: { type: "spring", damping: 10, stiffness: 200 }
+                    }}
+                    className="group relative"
+                  >
+                    {/* Minimal Particle Effect */}
+                    <motion.div
+                      className="absolute -top-2 -right-2 text-xl opacity-70"
+                      animate={{
+                        y: [0, -8, 0],
+                        rotate: [0, 8, -8, 0],
+                        scale: [1, 1.1, 1]
+                      }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: index * 0.5
+                      }}
+                    >
+                      {feature.particle}
+                    </motion.div>
+
+                    {/* Subtle Glow Effect */}
+                    <div 
+                      className="absolute -inset-1 rounded-2xl blur-lg opacity-0 group-hover:opacity-60 transition-all duration-500"
+                      style={{ boxShadow: `0 0 30px ${feature.glowColor}` }}
+                    ></div>
+
+                    {/* Larger Main Card */}
+                    <div className="relative bg-black/40 backdrop-blur-2xl rounded-2xl border border-white/20 p-8 h-[250px] overflow-hidden group-hover:border-white/30 transition-all duration-500">
+                      {/* Subtle Animated Background */}
+                      <motion.div
+                        className="absolute inset-0 opacity-10"
+                        animate={{
+                          background: [
+                            `linear-gradient(45deg, ${feature.glowColor} 0%, transparent 70%)`,
+                            `linear-gradient(135deg, ${feature.glowColor} 0%, transparent 70%)`,
+                            `linear-gradient(225deg, ${feature.glowColor} 0%, transparent 70%)`
+                          ]
+                        }}
+                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                      />
+
+                      {/* Icon with Refined Effect */}
+                      <motion.div 
+                        className="relative mb-6"
+                        whileHover={{ 
+                          scale: 1.1, 
+                          rotate: [0, -5, 5, 0],
+                          transition: { duration: 0.5 }
+                        }}
+                      >
+                        <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center relative overflow-hidden shadow-xl`}>
+                          <div className="absolute inset-0 bg-white/10 rounded-xl blur-sm"></div>
+                          <feature.icon className="w-8 h-8 text-white relative z-10 drop-shadow-lg" />
+                          
+                          {/* Subtle shine effect */}
+                          <motion.div
+                            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12"
+                            animate={{ x: ["-100%", "100%"] }}
+                            transition={{ 
+                              duration: 2,
+                              repeat: Infinity,
+                              repeatDelay: 4,
+                              ease: "easeInOut"
+                            }}
+                          />
+                        </div>
+                      </motion.div>
+
+                      {/* Enhanced Content */}
+                      <div className="relative z-10">
+                        <h3 className="text-white font-bold text-xl mb-4 group-hover:text-white transition-colors">
+                          {feature.title}
+                        </h3>
+                        <p className="text-white/70 text-sm leading-relaxed group-hover:text-white/90 transition-colors">
+                          {feature.description}
+                        </p>
                       </div>
+
+                      {/* Subtle Hover Arrow */}
+                      <motion.div
+                        className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100"
+                        initial={{ x: -10 }}
+                        whileHover={{ x: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <ArrowRight className="w-5 h-5 text-white/60" />
+                      </motion.div>
                     </div>
                   </motion.div>
-                </motion.div>
-              ))}            </div>
+                ))}
+              </motion.div>
+            </div>
+
+            {/* Bottom Stats Row */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+              viewport={{ once: true }}
+              className="grid grid-cols-3 gap-8 mt-12 text-center"
+            >
+              {[
+                { number: "50K+", label: " " },                { number: "1M+", label:"" },
+                { number: "99.9%", label: "" }
+              ].map((stat) => (
+                <div key={stat.label} className="space-y-2">
+                  <div className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+                    {stat.number}
+                  </div>
+                  <div className="text-white/60 text-sm">{stat.label}</div>
+                </div>
+              ))}
+            </motion.div>
+
+            {/* Testimonial */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.8 }}
+              viewport={{ once: true }}
+              className="text-center mt-8"
+            >
+              <div className="bg-black/40 backdrop-blur-xl rounded-xl border border-white/10 p-6 max-w-2xl mx-auto">                <p className="text-white/80 italic mb-4">
+                  &ldquo;Finally, a platform that gets it right. Stacked has completely changed how I track and discover media.&rdquo;
+                </p>
+                <div className="text-white/60 text-sm">— Sarah K., Beta User</div>
+              </div>
+            </motion.div>
           </div>
-        </div>        {/* CTA Section - Hidden initially */}
+        </div>{/* CTA Section - Hidden initially */}
         <div 
           ref={ctaRef}
           className="absolute inset-0 z-10 py-32 px-4 flex items-center justify-center"
