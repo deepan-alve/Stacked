@@ -11,7 +11,9 @@ import {
   BookOpen, 
   Film, 
   Tv, 
-  Gamepad2,   Music,  ArrowRight,
+  Gamepad2,
+  Music,
+  ArrowRight,
   Zap,
   Users,
   BarChart3,
@@ -20,8 +22,11 @@ import {
   Star,
   Check,
   X,
-  LucideIcon
-}from 'lucide-react'
+  LucideIcon,
+  Search,
+  TrendingUp,
+  Shield
+} from 'lucide-react'
 
 // Register GSAP ScrollTrigger plugin
 if (typeof window !== 'undefined') {
@@ -987,60 +992,488 @@ export default function HomePage() {
               </div>
             </motion.div>
           </div>
-        </div>{/* CTA Section - Hidden initially */}
+        </div>        {/* CTA Section - Enhanced with Dynamic Effects */}
         <div 
           ref={ctaRef}
-          className="absolute inset-0 z-10 py-32 px-4 flex items-center justify-center"
+          className="absolute inset-0 z-10 py-16 px-4 flex items-center justify-center overflow-hidden"
           style={{ opacity: 0 }}
-        >
-          <div className="max-w-4xl mx-auto text-center">
-            <TiltCard>
+        >          {/* Ultra Dynamic Background Effects */}
+          <div className="absolute inset-0">
+            {/* Animated Gradient Mesh */}
+            <motion.div 
+              className="absolute inset-0"
+              animate={{
+                background: [
+                  "radial-gradient(circle at 20% 30%, rgba(0, 194, 255, 0.2) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(255, 0, 199, 0.2) 0%, transparent 50%), radial-gradient(circle at 50% 20%, rgba(168, 85, 247, 0.15) 0%, transparent 40%)",
+                  "radial-gradient(circle at 70% 20%, rgba(255, 0, 199, 0.2) 0%, transparent 50%), radial-gradient(circle at 30% 80%, rgba(0, 194, 255, 0.2) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(34, 197, 94, 0.15) 0%, transparent 40%)",
+                  "radial-gradient(circle at 50% 60%, rgba(168, 85, 247, 0.2) 0%, transparent 50%), radial-gradient(circle at 90% 10%, rgba(34, 197, 94, 0.2) 0%, transparent 50%), radial-gradient(circle at 10% 90%, rgba(255, 165, 0, 0.15) 0%, transparent 40%)",
+                  "radial-gradient(circle at 40% 10%, rgba(255, 165, 0, 0.2) 0%, transparent 50%), radial-gradient(circle at 60% 90%, rgba(168, 85, 247, 0.2) 0%, transparent 50%), radial-gradient(circle at 20% 60%, rgba(0, 194, 255, 0.15) 0%, transparent 40%)"
+                ]
+              }}
+              transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+            />
+
+            {/* Floating Energy Orbs with More Variety */}
+            {Array.from({ length: 18 }).map((_, i) => (
               <motion.div
-                className="glass-card p-12 rounded-3xl border-white/20 bg-gradient-to-br from-white/10 to-white/5 relative overflow-hidden"
-                whileHover={{ scale: 1.02 }}
-                transition={{ type: "spring", damping: 10 }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-accent/10 opacity-0 hover:opacity-100 transition-opacity duration-500"></div>
-                
-                <motion.h2 
-                  className="text-4xl md:text-5xl font-bold gradient-text mb-6 relative z-10"
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6 }}
-                  viewport={{ once: true }}
-                >
-                  Ready to Stack Your World?
-                </motion.h2>
-                
-                <motion.p 
-                  className="text-xl text-white/80 mb-8 relative z-10"
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.2 }}
-                  viewport={{ once: true }}
-                >
-                  Join thousands of users who&apos;ve already transformed their media experience.
-                </motion.p>
-                
+                key={`cta-orb-${i}`}
+                className="absolute rounded-full"
+                style={{
+                  width: `${15 + (i % 5) * 12}px`,
+                  height: `${15 + (i % 5) * 12}px`,
+                  background: `linear-gradient(45deg, ${
+                    i % 5 === 0 ? 'rgba(0, 194, 255, 0.4)' : 
+                    i % 5 === 1 ? 'rgba(255, 0, 199, 0.4)' : 
+                    i % 5 === 2 ? 'rgba(168, 85, 247, 0.4)' :
+                    i % 5 === 3 ? 'rgba(34, 197, 94, 0.4)' :
+                    'rgba(255, 165, 0, 0.4)'
+                  }, transparent)`,
+                  filter: `blur(${15 + (i % 3) * 10}px)`,
+                  left: `${(i * 6.2) % 100}%`,
+                  top: `${(i * 9.7) % 100}%`,
+                }}
+                animate={{
+                  x: [0, ((i % 9) - 4) * 40, 0],
+                  y: [0, ((i % 7) - 3) * 50, 0],
+                  scale: [0.8, 1.8, 0.8],
+                  opacity: [0.2, 0.9, 0.2],
+                  rotate: [0, ((i % 6) - 3) * 45, 0]
+                }}
+                transition={{
+                  duration: 8 + (i % 6) * 4,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: i * 0.6
+                }}
+              />
+            ))}
+
+            {/* Multi-layered Scanning Effects */}
+            <motion.div
+              className="absolute inset-0"
+              animate={{
+                background: [
+                  "linear-gradient(90deg, transparent 0%, rgba(0, 194, 255, 0.15) 25%, transparent 50%)",
+                  "linear-gradient(90deg, transparent 50%, rgba(255, 0, 199, 0.15) 75%, transparent 100%)"
+                ]
+              }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            />
+            
+            <motion.div
+              className="absolute inset-0"
+              animate={{
+                background: [
+                  "linear-gradient(180deg, transparent 0%, rgba(168, 85, 247, 0.1) 30%, transparent 60%)",
+                  "linear-gradient(180deg, transparent 40%, rgba(34, 197, 94, 0.1) 70%, transparent 100%)"
+                ]
+              }}
+              transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+            />
+
+            {/* Rotating Energy Rings */}
+            {Array.from({ length: 3 }).map((_, i) => (
+              <motion.div
+                key={`ring-${i}`}
+                className="absolute"
+                style={{
+                  width: `${200 + i * 100}px`,
+                  height: `${200 + i * 100}px`,
+                  border: `1px solid rgba(${
+                    i === 0 ? '0, 194, 255' : 
+                    i === 1 ? '255, 0, 199' : 
+                    '168, 85, 247'
+                  }, 0.1)`,
+                  borderRadius: '50%',
+                  left: '50%',
+                  top: '50%',
+                  transform: 'translate(-50%, -50%)',
+                }}
+                animate={{
+                  rotate: [0, 360],
+                  scale: [1, 1.1, 1],
+                  opacity: [0.1, 0.3, 0.1]
+                }}
+                transition={{
+                  duration: 20 + i * 10,
+                  repeat: Infinity,
+                  ease: "linear",
+                  delay: i * 2
+                }}
+              />
+            ))}
+          </div>
+
+          <div className="container mx-auto max-w-6xl relative z-10">
+            <motion.div
+              initial={{ opacity: 0, y: 50, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              viewport={{ once: true }}
+              className="relative"
+            >              {/* Simple static glow */}
+              <div 
+                className="absolute -inset-4 rounded-3xl opacity-20"
+                style={{ 
+                  background: 'rgba(0, 194, 255, 0.1)',
+                  filter: 'blur(20px)' 
+                }}
+              />
+
+              {/* Pulsing Ring Effects */}
+              {Array.from({ length: 4 }).map((_, i) => (
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.4 }}
-                  viewport={{ once: true }}
-                  className="relative z-10"
-                >
-                  <Link href="/auth/signup">
-                    <MagneticButton size="lg" className="px-12 py-6 text-xl font-bold">
-                      <Heart className="w-6 h-6 mr-3" />
-                      Get Started Free
-                      <Sparkles className="w-6 h-6 ml-3" />
-                    </MagneticButton>
-                  </Link>
-                </motion.div>
-                
-                <p className="text-sm text-white/50 mt-4 relative z-10">
-                  No credit card required • Start tracking in 30 seconds                </p>
-              </motion.div>            </TiltCard>
+                  key={`pulse-ring-${i}`}
+                  className="absolute -inset-4 rounded-3xl border opacity-20"
+                  style={{
+                    borderColor: i % 2 === 0 ? 'rgba(0, 194, 255, 0.4)' : 'rgba(255, 0, 199, 0.4)',
+                    borderWidth: '1px'
+                  }}
+                  animate={{
+                    scale: [1, 1.1, 1],
+                    opacity: [0.2, 0.6, 0.2],
+                    rotate: [0, i % 2 === 0 ? 5 : -5, 0]
+                  }}
+                  transition={{
+                    duration: 3 + i * 0.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: i * 0.3
+                  }}
+                />
+              ))}
+
+              {/* Main CTA Card with Ultra Enhanced Effects */}
+              <motion.div 
+                className="relative glass-card border-border/50 p-8 md:p-12 overflow-hidden group hover:border-primary/60 transition-all duration-700 bg-black/30 backdrop-blur-3xl"
+                whileHover={{ 
+                  scale: 1.02,
+                  boxShadow: "0 20px 60px rgba(0, 194, 255, 0.2), 0 0 100px rgba(255, 0, 199, 0.1)"
+                }}
+                transition={{ duration: 0.3 }}
+              >                {/* Simple static background */}
+                <div
+                  className="absolute inset-0 opacity-5"
+                  style={{
+                    background: "linear-gradient(45deg, rgba(0, 194, 255, 0.1) 0%, transparent 50%)"
+                  }}
+                />{/* Enhanced Floating Data Particles with More Variety and Effects */}
+                {Array.from({ length: 16 }).map((_, i) => (
+                  <motion.div
+                    key={`data-particle-${i}`}
+                    className="absolute rounded-full opacity-40"
+                    style={{
+                      width: `${2 + (i % 3)}px`,
+                      height: `${2 + (i % 3)}px`,
+                      background: i % 5 === 0 ? '#00c2ff' : 
+                                  i % 5 === 1 ? '#ff00c7' : 
+                                  i % 5 === 2 ? '#a855f7' : 
+                                  i % 5 === 3 ? '#22c55e' : '#ffa500',
+                      left: `${15 + (i * 5) % 70}%`,
+                      top: `${15 + (i * 7) % 70}%`,
+                      boxShadow: `0 0 10px ${
+                        i % 5 === 0 ? '#00c2ff' : 
+                        i % 5 === 1 ? '#ff00c7' : 
+                        i % 5 === 2 ? '#a855f7' : 
+                        i % 5 === 3 ? '#22c55e' : '#ffa500'
+                      }`
+                    }}
+                    animate={{
+                      y: [0, -30, 0],
+                      x: [0, ((i % 5) - 2) * 15, 0],
+                      opacity: [0.2, 0.8, 0.2],
+                      scale: [0.5, 2, 0.5],
+                      rotate: [0, 360, 0]
+                    }}
+                    transition={{
+                      duration: 3 + (i % 4),
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: i * 0.3
+                    }}
+                  />
+                ))}
+
+                {/* Floating Action Particles for Extra Visual Interest */}
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <motion.div
+                    key={`action-particle-${i}`}
+                    className="absolute rounded-full opacity-30"
+                    style={{
+                      width: `${3 + (i % 2)}px`,
+                      height: `${3 + (i % 2)}px`,
+                      background: `linear-gradient(45deg, ${
+                        i % 3 === 0 ? 'rgba(0, 194, 255, 0.8)' : 
+                        i % 3 === 1 ? 'rgba(255, 0, 199, 0.8)' : 
+                        'rgba(168, 85, 247, 0.8)'
+                      }, transparent)`,
+                      left: `${20 + (i * 7) % 60}%`,
+                      top: `${20 + (i * 9) % 60}%`,
+                      filter: 'blur(1px)'
+                    }}
+                    animate={{
+                      y: [0, -40, 0],
+                      x: [0, ((i % 4) - 2) * 20, 0],
+                      opacity: [0.3, 0.9, 0.3],
+                      scale: [0.8, 1.8, 0.8],
+                      rotate: [0, (i % 2 === 0 ? 180 : -180), 0]
+                    }}
+                    transition={{
+                      duration: 4 + (i % 3),
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: i * 0.4
+                    }}
+                  />
+                ))}
+
+                {/* Content with Enhanced Animations */}
+                <div className="relative z-10 text-center space-y-8">
+                  {/* Enhanced Badge with Pulse Effect */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6 }}
+                    viewport={{ once: true }}
+                    whileHover={{ scale: 1.05 }}
+                  >                    <div 
+                      className="inline-flex items-center gap-2 bg-primary/10 backdrop-blur-sm px-4 py-2 rounded-full border border-primary/20 relative overflow-hidden"
+                      style={{ boxShadow: "0 0 20px rgba(0, 194, 255, 0.2)" }}
+                    >
+                      <Sparkles className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-medium gradient-text">Ready to Begin?</span>
+                    </div>
+                  </motion.div>
+
+                  {/* Enhanced Main Heading with Floating Letters */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.2 }}
+                    viewport={{ once: true }}
+                    className="space-y-4"
+                  >                    <h2 
+                      className="text-4xl md:text-6xl font-bold tracking-tight relative"
+                      style={{ textShadow: "0 0 20px rgba(0, 194, 255, 0.3)" }}
+                    >
+                      <span className="inline-block">
+                        Start Your Media Journey with{" "}
+                      </span>
+                      <span className="gradient-text inline-block">
+                        Stacked
+                      </span>
+                    </h2>
+                    <motion.p 
+                      className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed"
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
+                      transition={{ duration: 1, delay: 0.4 }}
+                      viewport={{ once: true }}
+                    >
+                      Join thousands of users who have transformed how they track, discover, and organize their entertainment. 
+                      <motion.span 
+                        className="text-primary font-semibold"
+                        animate={{ opacity: [0.7, 1, 0.7] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                      >
+                        {" "}Movies, TV shows, books, anime, games, and podcasts
+                      </motion.span>
+                      {" "}— all in one beautiful place.
+                    </motion.p>
+                  </motion.div>
+
+                  {/* Enhanced Features Grid with Hover Effects */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.4 }}
+                    viewport={{ once: true }}
+                    className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto"
+                  >
+                    {[
+                      { icon: Zap, text: "Quick Setup", subtitle: "Ready in 30 seconds", color: "from-yellow-400 to-orange-500" },
+                      { icon: Shield, text: "100% Free", subtitle: "No credit card required", color: "from-green-400 to-emerald-500" },
+                      { icon: Star, text: "Smart Tracking", subtitle: "AI-powered insights", color: "from-purple-400 to-pink-500" },
+                      { icon: Users, text: "Join 50K+", subtitle: "Active users", color: "from-blue-400 to-cyan-500" }
+                    ].map((feature, index) => (
+                      <motion.div
+                        key={feature.text}
+                        initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                        whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ duration: 0.5, delay: 0.5 + index * 0.1 }}
+                        viewport={{ once: true }}
+                        whileHover={{ 
+                          scale: 1.05, 
+                          y: -5,
+                          rotateY: 5,
+                          transition: { type: "spring", damping: 10, stiffness: 200 }
+                        }}
+                        className="glass-card border-border/30 p-6 hover:border-primary/30 transition-all duration-300 group relative overflow-hidden"
+                        style={{ perspective: "1000px" }}
+                      >
+                        {/* Animated background glow */}
+                        <motion.div
+                          className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500"
+                          animate={{
+                            background: [
+                              `linear-gradient(45deg, transparent, rgba(0, 194, 255, 0.3), transparent)`,
+                              `linear-gradient(135deg, transparent, rgba(255, 0, 199, 0.3), transparent)`,
+                              `linear-gradient(225deg, transparent, rgba(168, 85, 247, 0.3), transparent)`
+                            ]
+                          }}
+                          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                        />
+                        
+                        <motion.div
+                          animate={{ 
+                            rotate: [0, 5, -5, 0],
+                            scale: [1, 1.1, 1]
+                          }}
+                          transition={{ 
+                            duration: 4, 
+                            repeat: Infinity, 
+                            ease: "easeInOut",
+                            delay: index * 0.5
+                          }}
+                        >
+                          <feature.icon className="w-8 h-8 text-primary mx-auto mb-3 group-hover:scale-110 transition-transform duration-300" />
+                        </motion.div>
+                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">{feature.text}</h3>
+                        <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">{feature.subtitle}</p>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+
+                  {/* Enhanced CTA Buttons with Magnetic Effect */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.8 }}
+                    viewport={{ once: true }}
+                    className="flex flex-col sm:flex-row gap-4 justify-center max-w-lg mx-auto"
+                  >                    <Link href="/auth/signup" className="flex-1">
+                      <motion.div
+                        whileHover={{ 
+                          scale: 1.05,
+                          rotate: [0, 1, -1, 0],
+                          transition: { type: "spring", damping: 10, stiffness: 200 }
+                        }}
+                        whileTap={{ scale: 0.95 }}
+                        className="relative group"
+                      >                        {/* Simple static glow */}
+                        <div
+                          className="absolute -inset-2 rounded-lg opacity-40"
+                          style={{
+                            background: "linear-gradient(45deg, rgba(0, 194, 255, 0.6), rgba(59, 130, 246, 0.6))",
+                            filter: 'blur(8px)'
+                          }}
+                        />
+                        
+                        <Button size="lg" className="w-full glow-primary group relative overflow-hidden bg-gradient-to-r from-primary to-blue-500 hover:from-blue-500 hover:to-primary transition-all duration-300">
+                          <Play className="w-5 h-5 mr-2 group-hover:scale-125 transition-transform duration-300 drop-shadow-sm" />
+                          <span className="font-semibold tracking-wide">Get Started Free</span>
+                          <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-2 transition-transform duration-300" />
+                        </Button>
+                      </motion.div>
+                    </Link>
+                    <Link href="/search" className="flex-1">
+                      <motion.div
+                        whileHover={{ 
+                          scale: 1.03,
+                          y: -2,
+                          transition: { type: "spring", damping: 15 }
+                        }}
+                        whileTap={{ scale: 0.97 }}
+                        className="relative group"
+                      >                        {/* Simple static glow for outline button */}
+                        <div
+                          className="absolute -inset-1 rounded-lg opacity-0 group-hover:opacity-40 transition-all duration-500"
+                          style={{
+                            background: "rgba(0, 194, 255, 0.2)",
+                            filter: 'blur(6px)'
+                          }}
+                        />
+                        
+                        <Button variant="outline" size="lg" className="w-full group relative overflow-hidden border-primary/30 hover:border-primary/60 hover:bg-primary/5 transition-all duration-300">
+                          <Search className="w-5 h-5 mr-2 group-hover:text-primary transition-colors duration-300" />
+                          <span className="font-medium">Explore Demo</span>
+                          
+                          {/* Simple wave effect */}
+                          <div
+                            className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-primary to-blue-400 group-hover:h-1 transition-all duration-300 opacity-0 group-hover:opacity-100"
+                            style={{ width: "0%" }}
+                          />
+                        </Button>
+                      </motion.div>
+                    </Link>
+                  </motion.div>                  {/* Enhanced Trust Indicators with Dynamic Effects */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    transition={{ duration: 0.6, delay: 1 }}
+                    viewport={{ once: true }}
+                    className="flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-muted-foreground"
+                  >                    <div 
+                      className="flex items-center gap-2 group cursor-pointer hover:scale-105 transition-transform"
+                    >
+                      <div className="flex items-center">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star key={star} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        ))}
+                      </div>
+                      <span className="group-hover:text-foreground transition-colors">
+                        4.9/5 rating
+                      </span>
+                    </div>
+                    
+                    <div 
+                      className="flex items-center gap-2 group cursor-pointer hover:scale-105 transition-transform"
+                    >
+                      <TrendingUp className="w-4 h-4 text-green-500" />
+                      <span className="group-hover:text-foreground transition-colors text-green-400">
+                        50,000+ active users
+                      </span>
+                    </div>
+                    
+                    <div 
+                      className="flex items-center gap-2 group cursor-pointer hover:scale-105 transition-transform"
+                    >
+                      <Shield className="w-4 h-4 text-blue-500" />
+                      <span className="group-hover:text-foreground transition-colors text-blue-400">
+                        100% privacy focused
+                      </span>
+                    </div>
+                  </motion.div>                  {/* Simple Media Type Icons */}
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 1, delay: 1.2 }}
+                    viewport={{ once: true }}
+                    className="flex justify-center items-center gap-6 mt-8 opacity-40"
+                  >
+                    {[Film, Tv, BookOpen, Star, Gamepad2, Music].map((Icon, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{
+                          duration: 0.5,
+                          delay: 1.4 + index * 0.1,
+                          type: "spring",
+                          damping: 15
+                        }}
+                        whileHover={{ 
+                          scale: 1.2,
+                          transition: { type: "spring", damping: 10, stiffness: 300 }
+                        }}
+                        className="p-2 rounded-lg bg-card/50"
+                      >
+                        <Icon className="w-5 h-5" />
+                      </motion.div>
+                    ))}
+                  </motion.div>                </div>
+              </motion.div>
+            </motion.div>
           </div>
         </div>
       </div>
