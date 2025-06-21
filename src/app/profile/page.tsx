@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useStore } from '@/store/media'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { ProfileEmptyState } from '@/components/empty-states/EmptyState'
+import { useNavigation } from '@/hooks/useNavigation'
 import Link from 'next/link'
 import { 
   Calendar,
@@ -34,6 +35,7 @@ interface MediaTypeBreakdown {
 export default function ProfilePage() {
   const { user } = useAuth()
   const { userMedia } = useStore()
+  const { navHeight, isNavVisible } = useNavigation()
   const [stats, setStats] = useState({
     totalMedia: 0,
     thisMonth: 0,
@@ -122,7 +124,12 @@ export default function ProfilePage() {
   const joinDate = user.profile?.created_at || new Date().toISOString()
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div 
+      className="container mx-auto px-4 py-8 transition-all duration-300" 
+      style={{ 
+        paddingTop: isNavVisible ? `${navHeight + 32}px` : '32px' 
+      }}
+    >
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">

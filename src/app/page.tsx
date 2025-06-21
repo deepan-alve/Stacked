@@ -6,6 +6,9 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { useAuth } from '@/components/providers/AuthProvider'
+import { useTheme } from '@/components/providers/ThemeProvider'
+import { Dashboard } from '@/components/dashboard/Dashboard'
 import { 
   Play, 
   BookOpen, 
@@ -292,10 +295,21 @@ const TiltCard = ({ children, className = "" }: { children: React.ReactNode, cla
 }
 
 export default function HomePage() {
+  const { user } = useAuth()
+  const { setTheme } = useTheme()
   const containerRef = useRef<HTMLDivElement>(null)
   const heroRef = useRef<HTMLDivElement>(null)
   const featuresRef = useRef<HTMLDivElement>(null)
   const ctaRef = useRef<HTMLDivElement>(null)
+  
+  // Force dark mode for landing page
+  useEffect(() => {
+    setTheme('dark')
+    // Also directly apply dark class to ensure immediate effect
+    document.documentElement.classList.add('dark')
+    document.documentElement.classList.remove('light')
+  }, [setTheme])
+  
   useEffect(() => {
     if (typeof window === 'undefined') return
 
@@ -370,18 +384,52 @@ export default function HomePage() {
     return () => {
       ctx.revert() // Clean up GSAP animations
     }
-  }, [])
-  // Background parallax with Framer Motion (keeping some effects)
+  }, [])  // Background parallax with Framer Motion (keeping some effects)
   const { scrollYProgress } = useScroll()
   const y1 = useTransform(scrollYProgress, [0, 1], [0, -100])
   const y2 = useTransform(scrollYProgress, [0, 1], [0, -200])
   const y3 = useTransform(scrollYProgress, [0, 1], [0, -300])
+
+  // Add custom cursor styles for landing page only (when user is not authenticated)
+  useEffect(() => {
+    if (!user) {
+      const style = document.createElement('style')
+      style.textContent = `
+        .landing-page {
+          cursor: none !important;
+        }
+        .landing-page * {
+          cursor: none !important;
+        }
+        .landing-page input[type="text"],
+        .landing-page input[type="email"],
+        .landing-page input[type="password"],
+        .landing-page textarea {
+          cursor: text !important;
+        }
+      `
+      document.head.appendChild(style)
+      
+      return () => {
+        if (document.head.contains(style)) {
+          document.head.removeChild(style)
+        }
+      }
+    }
+  }, [user])
+  
+  // If user is authenticated, show dashboard instead of landing page
+  if (user) {
+    return <Dashboard />
+  }
+
   return (
     <>
-      <CustomCursor />
-      
-      {/* GSAP Pinned Container */}
-      <div ref={containerRef} className="relative h-screen overflow-hidden bg-gradient-to-br from-black via-gray-900 to-black">
+      <div className="landing-page">
+        <CustomCursor />
+        
+        {/* GSAP Pinned Container */}
+        <div ref={containerRef} className="relative h-screen overflow-hidden bg-gradient-to-br from-black via-gray-900 to-black">
         
         {/* Background Effects */}
         <FloatingParticles />
@@ -1474,12 +1522,11 @@ export default function HomePage() {
                   </motion.div>                </div>
               </motion.div>
             </motion.div>
-          </div>
-        </div>
+          </div>        </div>        </div>
+        
+        {/* Spacer element to create scroll height for GSAP */}
+        <div className="h-[300vh]"></div>
       </div>
-      
-      {/* Spacer element to create scroll height for GSAP */}
-      <div className="h-[300vh]"></div>
     </>
   )
 }

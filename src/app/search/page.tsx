@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useStore } from '@/store/media'
+import { useNavigation } from '@/hooks/useNavigation'
 import { searchMovies } from '@/lib/api/tmdb'
 import { searchBooks } from '@/lib/api/openlibrary'
 import { searchAnime } from '@/lib/api/jikan'
@@ -77,6 +78,7 @@ export default function GlobalSearchPage() {
   const [savedSearches, setSavedSearches] = useState<string[]>([])
   const [showFilters, setShowFilters] = useState(false)
   const [selectedResult, setSelectedResult] = useState<SearchResult | null>(null)
+  const { navHeight, isNavVisible } = useNavigation()
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
     const { userMedia } = useStore()
   const router = useRouter()
@@ -257,9 +259,13 @@ export default function GlobalSearchPage() {
     const typeData = mediaTypes.find(t => t.value === type)
     return typeData ? typeData.icon : Search
   }
-
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div 
+      className="container mx-auto px-4 py-8 transition-all duration-300" 
+      style={{ 
+        paddingTop: isNavVisible ? `${navHeight + 32}px` : '32px' 
+      }}
+    >
       {/* Header */}
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold mb-2">

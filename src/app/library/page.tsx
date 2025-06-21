@@ -28,6 +28,7 @@ import {
   ArrowUpDown
 } from 'lucide-react'
 import { useStore } from '@/store/media'
+import { useNavigation } from '@/hooks/useNavigation'
 import { getUserMedia } from '@/lib/api/media'
 import { MediaType, MediaStatus } from '@/types/database'
 
@@ -66,6 +67,7 @@ export default function LibraryPage() {
   const [isLoading, setIsLoading] = useState(true)
 
   const { user, userMedia, setUserMedia } = useStore()
+  const { navHeight, isNavVisible } = useNavigation()
 
   // Load user media on component mount
   useEffect(() => {
@@ -151,11 +153,15 @@ export default function LibraryPage() {
           </CardContent>
         </Card>
       </div>
-    )
-  }
+    )  }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div 
+      className="container mx-auto px-4 py-8 transition-all duration-300" 
+      style={{ 
+        paddingTop: isNavVisible ? `${navHeight + 32}px` : '32px' 
+      }}
+    >
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">

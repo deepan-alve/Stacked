@@ -13,14 +13,17 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('system')
-  const [actualTheme, setActualTheme] = useState<'light' | 'dark'>('light')
-
+  const [theme, setThemeState] = useState<Theme>('dark')
+  const [actualTheme, setActualTheme] = useState<'light' | 'dark'>('dark')
   // Load theme from localStorage on mount
   useEffect(() => {
     const savedTheme = localStorage.getItem('stacked-theme') as Theme
     if (savedTheme) {
       setThemeState(savedTheme)
+    } else {
+      // Default to dark theme for new users
+      setThemeState('dark')
+      localStorage.setItem('stacked-theme', 'dark')
     }
   }, [])
 

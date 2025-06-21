@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { CollectionsEmptyState, FilteredResultsEmptyState } from '@/components/empty-states/EmptyState'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { useStore } from '@/store/media'
+import { useNavigation } from '@/hooks/useNavigation'
 import { 
   Plus,
   FolderOpen,
@@ -38,6 +39,7 @@ interface Collection {
 export default function CollectionsPage() {
   const { user } = useAuth()
   const { userMedia } = useStore()
+  const { navHeight, isNavVisible } = useNavigation()
   const [collections, setCollections] = useState<Collection[]>([])
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -152,11 +154,15 @@ export default function CollectionsPage() {
           </CardContent>
         </Card>
       </div>
-    )
-  }
+    )  }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div 
+      className="container mx-auto px-4 py-8 transition-all duration-300" 
+      style={{ 
+        paddingTop: isNavVisible ? `${navHeight + 32}px` : '32px' 
+      }}
+    >
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div>

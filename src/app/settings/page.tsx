@@ -15,6 +15,7 @@ import { useStore } from '@/store/media'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { useTheme } from '@/components/providers/ThemeProvider'
 import { useOnboarding } from '@/components/onboarding/OnboardingTour'
+import { useNavigation } from '@/hooks/useNavigation'
 import { uploadAvatarAndUpdateProfile, updateProfile } from '@/lib/supabase/profile-update'
 import { debugUserProfile } from '@/lib/supabase/profile-debug'
 import { 
@@ -99,6 +100,7 @@ export default function SettingsPage() {
   const { setUser } = useStore()
   const { theme, setTheme } = useTheme()
   const { resetOnboarding } = useOnboarding()
+  const { navHeight, isNavVisible } = useNavigation()
   const [isSaving, setIsSaving] = useState(false)
   const [activeTab, setActiveTab] = useState<'profile' | 'preferences' | 'privacy' | 'data'>('profile')
   const [profile, setProfile] = useState<UserProfile>({
@@ -305,9 +307,13 @@ export default function SettingsPage() {
       </div>
     )
   }
-
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div 
+      className="container mx-auto px-4 py-8 transition-all duration-300" 
+      style={{ 
+        paddingTop: isNavVisible ? `${navHeight + 32}px` : '32px' 
+      }}
+    >
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Settings</h1>

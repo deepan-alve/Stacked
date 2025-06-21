@@ -13,6 +13,7 @@ import { useMediaSearch, SearchResult } from '@/hooks/useMediaSearch'
 import { SearchResults } from '@/components/SearchResults'
 import { StarRating } from '@/components/StarRating'
 import { useStore } from '@/store/media'
+import { useNavigation } from '@/hooks/useNavigation'
 import { addUserMedia } from '@/lib/api/media'
 import { 
   Plus,
@@ -47,6 +48,7 @@ const statusOptions = [
 
 export default function AddMediaPage() {
   const searchParams = useSearchParams()
+  const { navHeight, isNavVisible } = useNavigation()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedType, setSelectedType] = useState<'movie' | 'tv' | 'book' | 'anime' | 'game'>('movie')
   const [showResults, setShowResults] = useState(false)
@@ -189,13 +191,18 @@ export default function AddMediaPage() {
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
+    if (e.key === 'Enter') {      e.preventDefault()
       addTag()
     }
   }
+  
   return (
-    <div className="container mx-auto px-4 py-8 max-w-2xl pt-24 pb-32 md:pt-28 md:pb-8">
+    <div 
+      className="container mx-auto px-4 py-8 max-w-2xl pb-32 md:pb-8 transition-all duration-300" 
+      style={{ 
+        paddingTop: isNavVisible ? `${navHeight + 32}px` : '32px' 
+      }}
+    >
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">
