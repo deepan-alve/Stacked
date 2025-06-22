@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { motion } from 'framer-motion'
-import { Search, Settings, User, LogOut } from 'lucide-react'
+import { Search, Settings, User, LogOut, BarChart3 } from 'lucide-react'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { signOut } from '@/lib/api/auth'
 import {
@@ -162,11 +162,16 @@ export function AppTopNavigation() {
                       {user?.email || 'user@example.com'}
                     </p>
                   </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
+                  <DropdownMenuSeparator />                  <DropdownMenuItem asChild>
                     <Link href="/profile" className="w-full">
                       <User className="mr-2 h-4 w-4" />
                       Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/analytics" className="w-full">
+                      <BarChart3 className="mr-2 h-4 w-4" />
+                      Analytics
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>

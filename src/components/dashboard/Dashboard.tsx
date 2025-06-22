@@ -6,23 +6,58 @@ import { Button } from '@/components/ui/button'
 import { Film, Tv, BookOpen, Gamepad2, Star, TrendingUp, Plus, Calendar } from 'lucide-react'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { useNavigation } from '@/hooks/useNavigation'
+import { useStore } from '@/store/media'
+import { useMemo } from 'react'
 
 export function Dashboard() {
   const { user } = useAuth()
   const { navHeight, isNavVisible } = useNavigation()
+  const { userMedia } = useStore()
+  // Calculate real stats from user data
+  const quickStats = useMemo(() => {
+    const movieCount = userMedia.filter(media => media.media_item?.type === 'movie').length
+    const tvCount = userMedia.filter(media => media.media_item?.type === 'tv').length
+    const bookCount = userMedia.filter(media => media.media_item?.type === 'book').length
+    const gameCount = userMedia.filter(media => media.media_item?.type === 'game').length
 
-  const quickStats = [
-    { icon: Film, label: 'Movies', count: 24, color: 'text-blue-500' },
-    { icon: Tv, label: 'TV Shows', count: 12, color: 'text-purple-500' },
-    { icon: BookOpen, label: 'Books', count: 8, color: 'text-green-500' },
-    { icon: Gamepad2, label: 'Games', count: 6, color: 'text-red-500' },
-  ]
+    return [
+      { icon: Film, label: 'Movies', count: movieCount, color: 'text-blue-500' },
+      { icon: Tv, label: 'TV Shows', count: tvCount, color: 'text-purple-500' },
+      { icon: BookOpen, label: 'Books', count: bookCount, color: 'text-green-500' },
+      { icon: Gamepad2, label: 'Games', count: gameCount, color: 'text-red-500' },
+    ]  }, [userMedia])
 
-  const recentActivity = [
-    { title: 'The Bear', type: 'TV Show', action: 'Watched', time: '2 hours ago' },
-    { title: 'Dune: Part Two', type: 'Movie', action: 'Added to library', time: '1 day ago' },
-    { title: 'Project Hail Mary', type: 'Book', action: 'Finished reading', time: '2 days ago' },
-  ]
+  // Helper function to format time ago
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffInMs = now.getTime() - date.getTime()
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60))
+    const diffInDays = Math.floor(diffInHours / 24)
+
+    if (diffInHours < 1) return 'Just now'
+    if (diffInHours < 24) return `${diffInHours} hours ago`
+    if (diffInDays === 1) return '1 day ago'
+    return `${diffInDays} days ago`
+  }
+
+  // Get recent activity from user data
+  const recentActivity = useMemo(() => {
+    // Sort by creation date and take the 5 most recent
+    const sortedMedia = [...userMedia]
+      .filter(media => media.media_item) // Only include items with media_item data
+      .sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime())
+      .slice(0, 5)
+
+    return sortedMedia.map(media => ({
+      title: media.media_item?.title || 'Unknown Title',
+      type: media.media_item?.type ? 
+        media.media_item.type.charAt(0).toUpperCase() + media.media_item.type.slice(1) : 
+        'Media',
+      action: media.status === 'completed' ? 'Completed' : 'Added to library',
+      time: formatTimeAgo(media.created_at || new Date().toISOString())
+    }))
+  }, [userMedia])
   return (
     <div 
       className="min-h-screen bg-background pb-24 transition-all duration-300" 
@@ -92,28 +127,37 @@ export function Dashboard() {
                 <CardDescription>
                   Your latest media interactions
                 </CardDescription>
-              </CardHeader>
-              <CardContent>
+              </CardHeader>              <CardContent>
                 <div className="space-y-4">
-                  {recentActivity.map((activity, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: 0.3 + index * 0.1 }}
-                      className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
-                    >
-                      <div>
-                        <p className="font-medium">{activity.title}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {activity.action} • {activity.type}
-                        </p>
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        {activity.time}
-                      </span>
-                    </motion.div>
-                  ))}
+                  {recentActivity.length > 0 ? (
+                    recentActivity.map((activity, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: 0.3 + index * 0.1 }}
+                        className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                      >
+                        <div>
+                          <p className="font-medium">{activity.title}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {activity.action} • {activity.type}
+                          </p>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {activity.time}
+                        </span>
+                      </motion.div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8">
+                      <div className="text-4xl mb-2">📚</div>
+                      <p className="text-muted-foreground mb-4">No media in your library yet</p>
+                      <Button size="sm" asChild>
+                        <a href="/add">Add Your First Media</a>
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

@@ -16,7 +16,8 @@ import {
   X,
   LogOut,
   LogIn,
-  Settings
+  Settings,
+  BarChart3
 } from 'lucide-react'
 
 export function Navigation() {
@@ -32,12 +33,12 @@ export function Navigation() {
   const handleSignOut = async () => {
     await signOut()
   }
-
   const navItems = [
     { icon: Home, label: 'Home', href: '/' },
     { icon: Search, label: 'Search', href: '/search' },
     { icon: Library, label: 'Library', href: '/library' },
     { icon: FolderOpen, label: 'Collections', href: '/collections' },
+    { icon: BarChart3, label: 'Analytics', href: '/analytics' },
     { icon: User, label: 'Profile', href: '/profile' },
     { icon: Settings, label: 'Settings', href: '/settings' },
   ]

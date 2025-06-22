@@ -18,6 +18,7 @@ import { useOnboarding } from '@/components/onboarding/OnboardingTour'
 import { useNavigation } from '@/hooks/useNavigation'
 import { uploadAvatarAndUpdateProfile, updateProfile } from '@/lib/supabase/profile-update'
 import { debugUserProfile } from '@/lib/supabase/profile-debug'
+import { AniListConnection } from '@/components/anilist/AniListConnection'
 import { 
   User, 
   Camera, 
@@ -732,11 +733,12 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         </div>
-      )}
-
-      {/* Data Tab */}
+      )}      {/* Data Tab */}
       {activeTab === 'data' && (
         <div className="grid gap-6 max-w-2xl">
+          {/* AniList Integration */}
+          <AniListConnection />
+          
           <Card className="glass-card">
             <CardHeader>
               <CardTitle>Data Management</CardTitle>

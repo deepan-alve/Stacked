@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Home, Library, Plus, FolderOpen, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { FloatingAddModal } from '@/components/FloatingAddModal'
 
 export function FloatingBottomNav() {
   const pathname = usePathname()
@@ -27,9 +28,9 @@ export function FloatingBottomNav() {
     { 
       icon: Plus, 
       label: 'Add', 
-      href: '#',
+      href: '/add',
       isAdd: true,
-      isActive: false
+      isActive: pathname === '/add'
     },
     { 
       icon: FolderOpen, 
@@ -46,9 +47,7 @@ export function FloatingBottomNav() {
   ]
 
   const handleAddClick = () => {
-    // TODO: Open floating add modal
     setIsAddModalOpen(true)
-    console.log('Add button clicked - will open floating modal')
   }
 
   return (
@@ -116,9 +115,8 @@ export function FloatingBottomNav() {
                         <item.icon className={`h-5 w-5 relative z-10 ${
                           item.isActive ? 'text-primary' : ''
                         }`} />
-                        
-                        {/* Tooltip */}
-                        <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap border border-border/50">
+                          {/* Tooltip */}
+                        <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-popover/95 backdrop-blur-xl text-popover-foreground text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap border border-border/50 shadow-lg">
                           {item.label}
                         </div>
                       </div>
@@ -150,34 +148,14 @@ export function FloatingBottomNav() {
                 delay: i * 0.3,
               }}
             />
-          ))}
-        </div>
+          ))}        </div>
       </motion.div>
 
-      {/* Temporary Add Modal Placeholder */}
-      {isAddModalOpen && (
-        <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          onClick={() => setIsAddModalOpen(false)}
-        >
-          <motion.div
-            className="bg-card border border-border rounded-lg p-6 max-w-md mx-4"
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="text-lg font-semibold mb-4">Add New Media</h3>
-            <p className="text-muted-foreground mb-4">
-              Floating add modal will be implemented here. This is just a placeholder.
-            </p>
-            <Button onClick={() => setIsAddModalOpen(false)} className="w-full">
-              Close
-            </Button>
-          </motion.div>
-        </motion.div>
-      )}
+      {/* Floating Add Modal */}
+      <FloatingAddModal 
+        isOpen={isAddModalOpen} 
+        onClose={() => setIsAddModalOpen(false)} 
+      />
     </>
   )
 }
