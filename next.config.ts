@@ -7,7 +7,8 @@ const nextConfig: NextConfig = {
       'images-na.ssl-images-amazon.com', 
       'images.igdb.com',
       'covers.openlibrary.org',
-      'cdn.myanimelist.net'
+      'cdn.myanimelist.net',
+      's4.anilist.co' // Added AniList CDN
     ],
     remotePatterns: [
       {
@@ -33,6 +34,12 @@ const nextConfig: NextConfig = {
         hostname: 'covers.openlibrary.org',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 's4.anilist.co',
+        port: '',
+        pathname: '/file/anilistcdn/**',
       }
     ]
   }

@@ -19,6 +19,7 @@ import { useNavigation } from '@/hooks/useNavigation'
 import { uploadAvatarAndUpdateProfile, updateProfile } from '@/lib/supabase/profile-update'
 import { debugUserProfile } from '@/lib/supabase/profile-debug'
 import { AniListConnection } from '@/components/anilist/AniListConnection'
+import { FloatingComingSoonCard } from '@/components/ui/FloatingComingSoonCard'
 import { 
   User, 
   Camera, 
@@ -133,6 +134,8 @@ export default function SettingsPage() {
     defaultView: 'grid',
     autoSync: true,
   })
+
+  const [comingSoonOpen, setComingSoonOpen] = useState<string | undefined>(undefined)
 
   // Load settings from localStorage
   useEffect(() => {
@@ -489,6 +492,11 @@ export default function SettingsPage() {
       {/* Preferences Tab */}
       {activeTab === 'preferences' && (
         <div className="grid gap-6 max-w-2xl">
+          <FloatingComingSoonCard
+            open={!!comingSoonOpen}
+            onClose={() => setComingSoonOpen(undefined)}
+            featureName={comingSoonOpen}
+          />
           <Card className="glass-card">
             <CardHeader>
               <CardTitle>App Preferences</CardTitle>
@@ -497,7 +505,7 @@ export default function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Theme Selection */}
+              {/* Theme Selection (assume implemented) */}
               <div className="space-y-3">
                 <Label>Theme</Label>
                 <div className="grid grid-cols-3 gap-3">
@@ -520,8 +528,8 @@ export default function SettingsPage() {
 
               <Separator />
 
-              {/* Accent Color */}
-              <div className="space-y-3">
+              {/* Accent Color (Coming Soon) */}
+              <div className="space-y-3 opacity-60 pointer-events-none relative">
                 <Label>Accent Color</Label>
                 <p className="text-sm text-muted-foreground">
                   Choose your preferred accent color
@@ -539,24 +547,28 @@ export default function SettingsPage() {
                   ].map((color) => (
                     <button
                       key={color.value}
-                      onClick={() => setSettings(prev => ({ ...prev, accentColor: color.value }))}
-                      className={`w-10 h-10 rounded-lg ${color.color} border-2 transition-colors ${
-                        settings.accentColor === color.value
-                          ? 'border-foreground scale-110'
-                          : 'border-transparent hover:border-muted-foreground'
-                      }`}
+                      className={`w-10 h-10 rounded-lg ${color.color} border-2 transition-colors`}
                       title={color.name}
+                      tabIndex={-1}
+                      aria-disabled
                     />
                   ))}
                 </div>
+                <button
+                  type="button"
+                  className="absolute inset-0 w-full h-full cursor-pointer z-10 bg-transparent"
+                  onClick={() => setComingSoonOpen('Accent Color')}
+                  tabIndex={0}
+                  aria-label="Accent Color Coming Soon"
+                />
               </div>
 
               <Separator />
 
-              {/* Language */}
-              <div className="space-y-2">
+              {/* Language (Coming Soon) */}
+              <div className="space-y-2 opacity-60 pointer-events-none relative">
                 <Label>Language</Label>
-                <Select value={settings.language} onValueChange={(value) => setSettings(prev => ({ ...prev, language: value }))}>
+                <Select value={settings.language}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -568,19 +580,26 @@ export default function SettingsPage() {
                     ))}
                   </SelectContent>
                 </Select>
+                <button
+                  type="button"
+                  className="absolute inset-0 w-full h-full cursor-pointer z-10 bg-transparent"
+                  onClick={() => setComingSoonOpen('Language Selection')}
+                  tabIndex={0}
+                  aria-label="Language Coming Soon"
+                />
               </div>
 
               <Separator />
 
-              {/* Default View */}
-              <div className="flex items-center justify-between">
+              {/* Default View (Coming Soon) */}
+              <div className="flex items-center justify-between opacity-60 pointer-events-none relative">
                 <div>
                   <Label>Default Library View</Label>
                   <p className="text-sm text-muted-foreground">
                     Choose how your library is displayed by default
                   </p>
                 </div>
-                <Select value={settings.defaultView} onValueChange={(value: 'grid' | 'list') => setSettings(prev => ({ ...prev, defaultView: value }))}>
+                <Select value={settings.defaultView}>
                   <SelectTrigger className="w-32">
                     <SelectValue />
                   </SelectTrigger>
@@ -589,9 +608,16 @@ export default function SettingsPage() {
                     <SelectItem value="list">List</SelectItem>
                   </SelectContent>
                 </Select>
+                <button
+                  type="button"
+                  className="absolute inset-0 w-full h-full cursor-pointer z-10 bg-transparent"
+                  onClick={() => setComingSoonOpen('Default Library View')}
+                  tabIndex={0}
+                  aria-label="Default View Coming Soon"
+                />
               </div>
 
-              {/* Auto Sync */}
+              {/* Auto Sync (assume implemented) */}
               <div className="flex items-center justify-between">
                 <div>
                   <Label>Auto Sync</Label>

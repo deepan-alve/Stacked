@@ -1,6 +1,6 @@
 'use client'
 
-import { AnimeAnalytics } from '@/components/anilist/AnimeAnalytics'
+import { UniversalMediaAnalytics } from '@/components/analytics/UniversalMediaAnalytics'
 import { useNavigation } from '@/hooks/useNavigation'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { Card, CardContent } from '@/components/ui/card'
@@ -45,7 +45,7 @@ export default function AnalyticsPage() {
         paddingTop: isNavVisible ? `${navHeight + 32}px` : '32px' 
       }}
     >
-      <AnimeAnalytics />
+      <UniversalMediaAnalytics />
     </div>
   )
 }

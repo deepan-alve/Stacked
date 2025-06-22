@@ -118,7 +118,22 @@ export function AppTopNavigation() {
             </div>
           </motion.div>          {/* Right Actions */}
           <div className="flex items-center space-x-3 flex-shrink-0">
-            
+            {/* Analytics Button */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.25 }}
+            >
+              <Link href="/analytics">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="w-9 h-9 p-0 hover:bg-card"
+                >
+                  <BarChart3 className="h-4 w-4" />
+                </Button>
+              </Link>
+            </motion.div>
             {/* Settings Button */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
@@ -166,12 +181,6 @@ export function AppTopNavigation() {
                     <Link href="/profile" className="w-full">
                       <User className="mr-2 h-4 w-4" />
                       Profile
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/analytics" className="w-full">
-                      <BarChart3 className="mr-2 h-4 w-4" />
-                      Analytics
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>

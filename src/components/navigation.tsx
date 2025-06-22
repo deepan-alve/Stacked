@@ -38,7 +38,6 @@ export function Navigation() {
     { icon: Search, label: 'Search', href: '/search' },
     { icon: Library, label: 'Library', href: '/library' },
     { icon: FolderOpen, label: 'Collections', href: '/collections' },
-    { icon: BarChart3, label: 'Analytics', href: '/analytics' },
     { icon: User, label: 'Profile', href: '/profile' },
     { icon: Settings, label: 'Settings', href: '/settings' },
   ]
