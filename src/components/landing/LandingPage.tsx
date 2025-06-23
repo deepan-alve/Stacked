@@ -1,11 +1,7 @@
 'use client'
 
-import { motion, useScroll, useTransform } from 'framer-motion'
-import { useEffect, useState, useMemo, useRef } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { gsap } from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 // Import the existing landing page content from page.tsx
 // We'll need to move all the components and logic here

@@ -10,6 +10,7 @@ interface StarRatingProps {
   readonly?: boolean
   size?: 'sm' | 'md' | 'lg'
   showValue?: boolean
+  max?: number // 5 or 10
 }
 
 export function StarRating({ 
@@ -17,7 +18,8 @@ export function StarRating({
   onChange, 
   readonly = false, 
   size = 'md',
-  showValue = true 
+  showValue = true,
+  max = 5
 }: StarRatingProps) {
   const [hoverValue, setHoverValue] = useState<number | null>(null)
 
@@ -110,11 +112,11 @@ export function StarRating({
   return (
     <div className="flex items-center gap-1">
       <div className="flex items-center">
-        {[0, 1, 2, 3, 4].map(renderStar)}
+        {Array.from({ length: max }, (_, i) => i).map(renderStar)}
       </div>
       {showValue && (
         <span className="ml-2 text-sm text-muted-foreground">
-          {value > 0 ? `${value}/5` : 'No rating'}
+          {value > 0 ? `${value}/${max}` : 'No rating'}
         </span>
       )}
     </div>

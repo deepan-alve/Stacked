@@ -11,7 +11,6 @@ import { NavigationContext } from '@/hooks/useNavigation'
 export function NavigationWrapper() {
   const { user } = useAuth()
   const pathname = usePathname()
-  const [navHeight, setNavHeight] = useState(64)
   const [isNavVisible, setIsNavVisible] = useState(true)
 
   // Show landing navigation only for non-authenticated users on the landing page
@@ -38,8 +37,8 @@ export function NavigationWrapper() {
   }, [])
 
   const navigationContextValue = {
-    navHeight,
-    isNavVisible
+    isNavVisible,
+    navHeight: 64
   }
 
   if (showLandingNav) {

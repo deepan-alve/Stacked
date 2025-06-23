@@ -17,7 +17,6 @@ import {
   LogOut,
   LogIn,
   Settings,
-  BarChart3
 } from 'lucide-react'
 
 export function Navigation() {

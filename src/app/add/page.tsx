@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,7 +13,7 @@ import { useMediaSearch, SearchResult } from '@/hooks/useMediaSearch'
 import { SearchResults } from '@/components/SearchResults'
 import { StarRating } from '@/components/StarRating'
 import { useStore } from '@/store/media'
-import { useNavigation } from '@/hooks/useNavigation'
+import { RatingSystem } from '@/components/ui/RatingSystemSelect'
 import { addUserMedia } from '@/lib/api/media'
 import { 
   Plus,
@@ -47,8 +47,15 @@ const statusOptions = [
 ]
 
 export default function AddMediaPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AddMediaPageContent />
+    </Suspense>
+  )
+}
+
+function AddMediaPageContent() {
   const searchParams = useSearchParams()
-  const { navHeight, isNavVisible } = useNavigation()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedType, setSelectedType] = useState<'movie' | 'tv' | 'book' | 'anime' | 'game'>('movie')
   const [showResults, setShowResults] = useState(false)
@@ -68,6 +75,18 @@ export default function AddMediaPage() {
   })
   const [newTag, setNewTag] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  
+  // Get rating system from settings (localStorage)
+  const [ratingSystem, setRatingSystem] = useState<RatingSystem>('10-star')
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('stacked-settings')
+    if (savedSettings) {
+      try {
+        const parsed = JSON.parse(savedSettings)
+        if (parsed.ratingSystem) setRatingSystem(parsed.ratingSystem)
+      } catch {}
+    }
+  }, [])
   
   // Handle prefill from search
   useEffect(() => {
@@ -196,12 +215,77 @@ export default function AddMediaPage() {
     }
   }
   
+  // Helper for rendering rating input
+  function renderRatingInput() {
+    switch (ratingSystem) {
+      case '5-star':
+        return (
+          <StarRating
+            value={formData.rating}
+            onChange={(rating) => setFormData(prev => ({...prev, rating}))}
+            size="md"
+            max={5}
+          />
+        )
+      case '10-star':
+        return (
+          <StarRating
+            value={formData.rating}
+            onChange={(rating) => setFormData(prev => ({...prev, rating}))}
+            size="md"
+            max={10}
+          />
+        )
+      case '100-point':
+        return (
+          <input
+            type="number"
+            min={0}
+            max={100}
+            step={1}
+            value={formData.rating}
+            onChange={e => setFormData(prev => ({...prev, rating: Number(e.target.value)}))}
+            className="input"
+          />
+        )
+      case 'decimal':
+        return (
+          <input
+            type="number"
+            min={0}
+            max={10}
+            step={0.1}
+            value={formData.rating}
+            onChange={e => setFormData(prev => ({...prev, rating: Number(e.target.value)}))}
+            className="input"
+          />
+        )
+      case 'like-dislike':
+        return (
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant={formData.rating === 1 ? 'default' : 'outline'}
+              onClick={() => setFormData(prev => ({...prev, rating: 1}))}
+            >Like</Button>
+            <Button
+              type="button"
+              variant={formData.rating === -1 ? 'default' : 'outline'}
+              onClick={() => setFormData(prev => ({...prev, rating: -1}))}
+            >Dislike</Button>
+          </div>
+        )
+      default:
+        return null
+    }
+  }
+  
   return (
     <div 
       className="container mx-auto px-4 py-8 max-w-2xl pb-32 md:pb-8 transition-all duration-300" 
-      style={{ 
-        paddingTop: isNavVisible ? `${navHeight + 32}px` : '32px' 
-      }}
+      // style={{ 
+      //   paddingTop: isNavVisible ? `${navHeight + 32}px` : '32px' 
+      // }}
     >
       {/* Header */}
       <div className="mb-8">
@@ -345,11 +429,7 @@ export default function AddMediaPage() {
               <div className="space-y-2">
                 <Label htmlFor="rating">Rating</Label>
                 <div className="pt-2">
-                  <StarRating
-                    value={formData.rating}
-                    onChange={(rating) => setFormData(prev => ({...prev, rating}))}
-                    size="md"
-                  />
+                  {renderRatingInput()}
                 </div>
               </div>
               <div className="space-y-2">

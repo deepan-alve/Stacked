@@ -44,12 +44,7 @@ export function EnhancedAnimeSearch() {
   const [isSearching, setIsSearching] = useState(false)
   const [isPowerUser, setIsPowerUser] = useState(false)
   const [userLibrary, setUserLibrary] = useState<Set<number>>(new Set())
-  useEffect(() => {
-    if (user) {
-      checkPowerUserStatus()
-      loadUserLibrary()
-    }
-  }, [user, checkPowerUserStatus, loadUserLibrary])
+
   const checkPowerUserStatus = useCallback(async () => {
     try {
       const supabase = createClient()
@@ -74,14 +69,21 @@ export function EnhancedAnimeSearch() {
         .not('media_items.anilist_id', 'is', null)
 
       const anilistIds = new Set(
-        data?.map((item: { media_items?: { anilist_id?: number } }) => item.media_items?.anilist_id)
-          .filter((id): id is number => id !== undefined) || []
+        (data || []).flatMap((item: { media_items?: { anilist_id?: number }[] }) =>
+          (item.media_items || []).map((media) => media.anilist_id)
+        ).filter((id): id is number => id !== undefined)
       )
       setUserLibrary(anilistIds)
     } catch (error) {
       console.error('Error loading user library:', error)
     }
   }, [user?.id])
+  useEffect(() => {
+    if (user) {
+      checkPowerUserStatus()
+      loadUserLibrary()
+    }
+  }, [user, checkPowerUserStatus, loadUserLibrary])
 
   const searchAnime = async (query: string) => {
     if (!query.trim()) {

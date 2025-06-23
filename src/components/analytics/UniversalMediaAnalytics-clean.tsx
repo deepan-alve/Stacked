@@ -24,11 +24,6 @@ import {
   Music,
   Target,
   TrendingUp,
-  Zap,
-  Eye,
-  Heart,
-  Flame,
-  ChevronRight,
   Medal,
   Sparkles
 } from 'lucide-react'
@@ -56,7 +51,7 @@ interface UniversalStats {
   achievements: Array<{
     title: string
     description: string
-    icon: any
+    icon: React.ElementType
     earned: boolean
     rarity: 'common' | 'rare' | 'legendary'
     progress?: number
@@ -65,13 +60,13 @@ interface UniversalStats {
     title: string
     description: string
     type: string
-    icon: any
+    icon: React.ElementType
   }>
   recentActivity: Array<{
     title: string
     description: string
     type: string
-    icon: any
+    icon: React.ElementType
   }>
 }
 
@@ -637,7 +632,7 @@ export function UniversalMediaAnalytics() {
           </TabsContent>
           
           <TabsContent value="books" className="space-y-6">
-            <BookAnalytics />
+            <BookAnalytics stats={stats.byType.book} />
           </TabsContent>
 
           <TabsContent value="achievements" className="space-y-6">
@@ -648,7 +643,7 @@ export function UniversalMediaAnalytics() {
                   Achievements
                 </CardTitle>
                 <CardDescription>
-                  Milestones and badges you've earned
+                  Milestones and badges you&apos;ve earned
                 </CardDescription>
               </CardHeader>
               <CardContent>

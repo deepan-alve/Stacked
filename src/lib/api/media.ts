@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/client'
-import { MediaItem, UserMedia, CreateMediaResponse, UpdateMediaResponse, DeleteMediaResponse, MediaType, MediaStatus } from '@/types/database'
+import { MediaItem, UserMedia, CreateMediaResponse, UpdateMediaResponse, DeleteMediaResponse } from '@/types/database'
 
 const supabase = createClient()
 

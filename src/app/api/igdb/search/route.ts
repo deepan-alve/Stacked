@@ -65,7 +65,7 @@ async function searchIGDBGames(query: string, limit: number = 10): Promise<IGDBG
            genres.name, platforms.name, cover.url, cover.image_id;
     search "${query}";
     limit ${limit};
-    where version_parent = null;
+    where version_parent = null & category = 0;
   `.trim()
 
   try {

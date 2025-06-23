@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -27,6 +26,8 @@ import {
   Plus,
   Check
 } from 'lucide-react'
+import { RatingSystem } from '@/components/ui/RatingSystemSelect'
+import Image from 'next/image'
 
 const mediaTypes = [
   { value: 'movie', label: 'Movie', icon: Film },
@@ -67,6 +68,18 @@ export function FloatingAddModal({ isOpen, onClose }: FloatingAddModalProps) {  
     cover_url: ''
   })
   const { results, isLoading, search, clearResults } = useMediaSearch()
+
+  // Get rating system from settings (localStorage)
+  const [ratingSystem, setRatingSystem] = useState<RatingSystem>('10-star')
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('stacked-settings')
+    if (savedSettings) {
+      try {
+        const parsed = JSON.parse(savedSettings)
+        if (parsed.ratingSystem) setRatingSystem(parsed.ratingSystem)
+      } catch {}
+    }
+  }, [])
 
   // Reset form when modal closes
   useEffect(() => {
@@ -162,6 +175,70 @@ export function FloatingAddModal({ isOpen, onClose }: FloatingAddModalProps) {  
       alert(`Error saving media: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  function renderRatingInput() {
+    switch (ratingSystem) {
+      case '5-star':
+        return (
+          <StarRating
+            value={formData.rating}
+            onChange={(rating: number) => setFormData({ ...formData, rating })}
+            size="md"
+            max={5}
+          />
+        )
+      case '10-star':
+        return (
+          <StarRating
+            value={formData.rating}
+            onChange={(rating: number) => setFormData({ ...formData, rating })}
+            size="md"
+            max={10}
+          />
+        )
+      case '100-point':
+        return (
+          <input
+            type="number"
+            min={0}
+            max={100}
+            step={1}
+            value={formData.rating}
+            onChange={e => setFormData({ ...formData, rating: Number(e.target.value) })}
+            className="input"
+          />
+        )
+      case 'decimal':
+        return (
+          <input
+            type="number"
+            min={0}
+            max={10}
+            step={0.1}
+            value={formData.rating}
+            onChange={e => setFormData({ ...formData, rating: Number(e.target.value) })}
+            className="input"
+          />
+        )
+      case 'like-dislike':
+        return (
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant={formData.rating === 1 ? 'default' : 'outline'}
+              onClick={() => setFormData({ ...formData, rating: 1 })}
+            >Like</Button>
+            <Button
+              type="button"
+              variant={formData.rating === -1 ? 'default' : 'outline'}
+              onClick={() => setFormData({ ...formData, rating: -1 })}
+            >Dislike</Button>
+          </div>
+        )
+      default:
+        return null
     }
   }
 
@@ -316,10 +393,13 @@ export function FloatingAddModal({ isOpen, onClose }: FloatingAddModalProps) {  
                               className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted cursor-pointer transition-colors"
                             >
                               {result.coverUrl ? (
-                                <img
+                                <Image
                                   src={result.coverUrl}
                                   alt={result.title}
+                                  width={48}
+                                  height={64}
                                   className="w-12 h-16 object-cover rounded"
+                                  unoptimized
                                 />
                               ) : (
                                 <div className="w-12 h-16 bg-muted rounded flex items-center justify-center">
@@ -349,7 +429,7 @@ export function FloatingAddModal({ isOpen, onClose }: FloatingAddModalProps) {  
                         onClick={handleManualEntry}
                         className="w-full"
                       >
-                        Can't find what you're looking for? Add manually
+                        Can&apos;t find what you&apos;re looking for? Add manually
                       </Button>
                     </div>
                   </div>
@@ -383,10 +463,13 @@ export function FloatingAddModal({ isOpen, onClose }: FloatingAddModalProps) {  
                   {selectedResult && (
                     <div className="flex gap-4 p-4 bg-muted/50 rounded-lg">
                       {selectedResult.coverUrl && (
-                        <img
+                        <Image
                           src={selectedResult.coverUrl}
                           alt={selectedResult.title}
+                          width={64}
+                          height={96}
                           className="w-16 h-24 object-cover rounded"
+                          unoptimized
                         />
                       )}
                       <div>
@@ -425,10 +508,7 @@ export function FloatingAddModal({ isOpen, onClose }: FloatingAddModalProps) {  
                       </Select>
                     </div>                    <div className="space-y-2">
                       <Label>Rating</Label>
-                      <StarRating
-                        value={formData.rating}
-                        onChange={(rating: number) => setFormData({ ...formData, rating })}
-                      />
+                      {renderRatingInput()}
                     </div>
 
                     <div className="space-y-2">

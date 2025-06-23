@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react'
 import { TMDBService, TMDBMovie, TMDBTVShow } from '@/lib/api/tmdb'
-import { JikanService, JikanAnime } from '@/lib/api/jikan'
+import { anilistClient, AniListAnime } from '@/lib/api/anilist'
 import { OpenLibraryService, OpenLibraryBook } from '@/lib/api/openlibrary'
 import { IGDBService, IGDBGame } from '@/lib/api/igdb'
 
@@ -13,7 +13,7 @@ export type SearchResult = {
   year?: string
   rating?: number
   type: 'movie' | 'tv' | 'anime' | 'book' | 'game'
-  originalData: TMDBMovie | TMDBTVShow | JikanAnime | OpenLibraryBook | IGDBGame
+  originalData: TMDBMovie | TMDBTVShow | AniListAnime | OpenLibraryBook | IGDBGame
 }
 
 export interface UseMediaSearchResult {
@@ -83,18 +83,18 @@ export function useMediaSearch(): UseMediaSearchResult {
             }))
           ).catch(() => [])
         )
-      }      // Jikan search (anime)
+      }      // AniList search (anime)
       if (types.includes('anime')) {
         searchPromises.push(
-          JikanService.searchAnime(query, 1).then(response =>
-            response.data.slice(0, 5).map((anime): SearchResult => ({
-              id: `jikan-anime-${anime.mal_id}`,
-              title: anime.title,
-              subtitle: anime.aired?.from ? new Date(anime.aired.from).getFullYear().toString() : undefined,
-              coverUrl: anime.images?.jpg?.image_url,
-              description: anime.synopsis,
-              year: anime.aired?.from ? new Date(anime.aired.from).getFullYear().toString() : undefined,
-              rating: anime.score ? Math.round(anime.score) : undefined,
+          anilistClient.searchAnime(query, 1, 5).then((response) =>
+            response.data.Page.media.map((anime: AniListAnime): SearchResult => ({
+              id: `anilist-anime-${anime.id}`,
+              title: anime.title.english || anime.title.romaji || anime.title.native,
+              subtitle: anime.seasonYear ? anime.seasonYear.toString() : undefined,
+              coverUrl: anime.coverImage?.large || anime.coverImage?.medium,
+              description: anime.description,
+              year: anime.seasonYear ? anime.seasonYear.toString() : undefined,
+              rating: anime.averageScore ? Math.round(anime.averageScore / 10) : undefined,
               type: 'anime',
               originalData: anime
             }))
@@ -126,7 +126,7 @@ export function useMediaSearch(): UseMediaSearchResult {
               id: `igdb-game-${game.id}`,
               title: game.name,
               subtitle: game.release_dates?.[0] ? new Date(game.release_dates[0].date * 1000).getFullYear().toString() : undefined,
-              coverUrl: game.cover ? IGDBService.getImageURL(game.cover.url, 'cover_big') : undefined,
+              coverUrl: game.cover?.image_id ? IGDBService.getImageURL(game.cover.image_id, 'cover_big') : undefined,
               description: game.summary,
               year: game.release_dates?.[0] ? new Date(game.release_dates[0].date * 1000).getFullYear().toString() : undefined,
               rating: game.rating ? Math.round(game.rating / 10) : undefined,

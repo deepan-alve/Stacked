@@ -244,47 +244,6 @@ const FloatingMediaCard = ({
   )
 }
 
-// Magnetic Button Component  
-const MagneticButton = ({ children, className = "", onClick, ...props }: React.ComponentProps<typeof Button> & { className?: string }) => {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
-  const [isHovering, setIsHovering] = useState(false)
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    setMousePosition({
-      x: e.clientX - rect.left - rect.width / 2,
-      y: e.clientY - rect.top - rect.height / 2
-    })
-  }
-
-  return (
-    <motion.div
-      className={`relative inline-block`}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseLeave={() => setIsHovering(false)}      animate={{
-        x: isHovering ? mousePosition.x * 0.05 : 0,
-        y: isHovering ? mousePosition.y * 0.05 : 0
-      }}
-      transition={{ type: "spring", damping: 15, stiffness: 150 }}
-    >
-      <Button 
-        {...props}
-        onClick={onClick}
-        className={`relative overflow-hidden bg-gradient-to-r from-primary to-accent hover:scale-105 transition-transform duration-300 ${className}`}
-      >
-        {children}
-        <motion.div
-          className="absolute inset-0 bg-white/20"
-          initial={{ scale: 0, opacity: 0 }}
-          whileHover={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        />
-      </Button>
-    </motion.div>
-  )
-}
-
 // Simple Card Container Component  
 const TiltCard = ({ children, className = "" }: { children: React.ReactNode, className?: string }) => {
   return (

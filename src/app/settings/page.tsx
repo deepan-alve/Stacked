@@ -20,6 +20,7 @@ import { uploadAvatarAndUpdateProfile, updateProfile } from '@/lib/supabase/prof
 import { debugUserProfile } from '@/lib/supabase/profile-debug'
 import { AniListConnection } from '@/components/anilist/AniListConnection'
 import { FloatingComingSoonCard } from '@/components/ui/FloatingComingSoonCard'
+import RatingSystemSelect, { RatingSystem } from '@/components/ui/RatingSystemSelect'
 import { 
   User, 
   Camera, 
@@ -117,7 +118,7 @@ export default function SettingsPage() {
     isPublic: (user as ExtendedUser)?.user_metadata?.is_public ?? true,
   })
 
-  const [settings, setSettings] = useState<AppSettings>({
+  const [settings, setSettings] = useState<AppSettings & { ratingSystem?: RatingSystem }>({
     language: 'en',
     accentColor: 'blue',
     notifications: {
@@ -133,6 +134,7 @@ export default function SettingsPage() {
     },
     defaultView: 'grid',
     autoSync: true,
+    ratingSystem: '10-star', // default
   })
 
   const [comingSoonOpen, setComingSoonOpen] = useState<string | undefined>(undefined)
@@ -154,8 +156,67 @@ export default function SettingsPage() {
     localStorage.setItem('stacked-settings', JSON.stringify(settings))
   }
   const handleSettingsUpdate = () => {
+    // If rating system changed, rescale all ratings
+    const prevSettings = localStorage.getItem('stacked-settings')
+    let prevRatingSystem: RatingSystem | undefined
+    if (prevSettings) {
+      try {
+        prevRatingSystem = JSON.parse(prevSettings).ratingSystem
+      } catch {}
+    }
+    if (prevRatingSystem && prevRatingSystem !== settings.ratingSystem) {
+      // Rescale all ratings in userMedia
+      const userMediaRaw = localStorage.getItem('stacked-store')
+      if (userMediaRaw) {
+        try {
+          const store = JSON.parse(userMediaRaw)
+          if (Array.isArray(store.userMedia)) {
+            const rescaled = store.userMedia.map((media: { rating?: number }) => {
+              if (typeof media.rating !== 'number') return media
+              return {
+                ...media,
+                rating: rescaleRating(media.rating, prevRatingSystem!, settings.ratingSystem!)
+              }
+            })
+            store.userMedia = rescaled
+            localStorage.setItem('stacked-store', JSON.stringify(store))
+          }
+        } catch {}
+      }
+    }
     saveSettings()
     alert('Settings saved successfully!')
+  }
+
+  // Helper to rescale rating values
+  function rescaleRating(value: number, from: RatingSystem, to: RatingSystem): number {
+    // Like/dislike is special: 1 = like, -1 = dislike, 0 = unrated
+    if (from === to) return value
+    if (from === 'like-dislike') {
+      if (value === 1) return to === '100-point' ? 100 : to === '10-star' ? 10 : to === '5-star' ? 5 : to === 'decimal' ? 10 : 1
+      if (value === -1) return 0
+      return 0
+    }
+    if (to === 'like-dislike') {
+      if (value >= (from === '100-point' ? 50 : from === '10-star' ? 5 : from === '5-star' ? 2.5 : from === 'decimal' ? 5 : 1)) return 1
+      return -1
+    }
+    // Convert to 0-1 scale, then to target
+    let normalized = 0
+    switch (from) {
+      case '100-point': normalized = value / 100; break
+      case '10-star': normalized = value / 10; break
+      case '5-star': normalized = value / 5; break
+      case 'decimal': normalized = value / 10; break
+      default: normalized = value
+    }
+    switch (to) {
+      case '100-point': return Math.round(normalized * 100)
+      case '10-star': return Math.round(normalized * 10 * 10) / 10 // 1 decimal
+      case '5-star': return Math.round(normalized * 5 * 2) / 2 // 0.5 steps
+      case 'decimal': return Math.round(normalized * 100) / 10 // 1 decimal
+      default: return value
+    }
   }
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -630,6 +691,12 @@ export default function SettingsPage() {
                   onCheckedChange={(checked) => setSettings(prev => ({ ...prev, autoSync: checked }))}
                 />
               </div>
+
+              {/* Rating System Selection */}
+              <RatingSystemSelect
+                value={settings.ratingSystem || '10-star'}
+                onChange={(value) => setSettings((prev) => ({ ...prev, ratingSystem: value }))}
+              />
 
               <Button onClick={handleSettingsUpdate} className="w-full">
                 <Save className="h-4 w-4 mr-2" />

@@ -37,12 +37,12 @@ export function AniListConnectionDebug() {
           timeoutPromise
         ])
         
-        const { data: authUser, error: authError } = result as { data: any; error: any }
+        const { data: authUser, error: authError } = result as { data: unknown; error: unknown }
         
         console.log('Debug: Auth user:', authUser, 'Error:', authError)
         
         if (authError) {
-          setError(`Auth error: ${authError.message}`)
+          setError(`Auth error: ${typeof authError === 'object' && authError && 'message' in authError ? (authError as { message?: string }).message : String(authError)}`)
           return
         }
 
@@ -72,9 +72,9 @@ export function AniListConnectionDebug() {
           profileErrorCode: profileError?.code
         })
         
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Debug: Catch error:', err)
-        setError(`Unexpected error: ${err.message || err}`)
+        setError(`Unexpected error: ${typeof err === 'object' && err && 'message' in err ? (err as { message?: string }).message : String(err)}`)
       } finally {
         setLoading(false)
       }

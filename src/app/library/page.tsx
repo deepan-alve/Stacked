@@ -31,6 +31,7 @@ import { useStore } from '@/store/media'
 import { useNavigation } from '@/hooks/useNavigation'
 import { getUserMedia } from '@/lib/api/media'
 import { MediaType, MediaStatus } from '@/types/database'
+import { RatingSystem } from '@/components/ui/RatingSystemSelect'
 
 const mediaTypes = [
   { value: 'all', label: 'All Media', icon: Grid3X3 },
@@ -68,6 +69,18 @@ export default function LibraryPage() {
 
   const { user, userMedia, setUserMedia } = useStore()
   const { navHeight, isNavVisible } = useNavigation()
+
+  // Get rating system from settings (localStorage)
+  const [ratingSystem, setRatingSystem] = useState<RatingSystem>('10-star')
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('stacked-settings')
+    if (savedSettings) {
+      try {
+        const parsed = JSON.parse(savedSettings)
+        if (parsed.ratingSystem) setRatingSystem(parsed.ratingSystem)
+      } catch {}
+    }
+  }, [])
 
   // Load user media on component mount
   useEffect(() => {
@@ -132,6 +145,25 @@ export default function LibraryPage() {
       case 'anime': return <Star className="h-4 w-4" />
       case 'podcast': return <Music className="h-4 w-4" />
       default: return <Grid3X3 className="h-4 w-4" />
+    }
+  }
+
+  // Helper for rendering rating display
+  function renderRatingValue(rating: number | undefined) {
+    if (rating == null) return null
+    switch (ratingSystem) {
+      case '5-star':
+        return `${rating}/5`
+      case '10-star':
+        return `${rating}/10`
+      case '100-point':
+        return `${rating}/100`
+      case 'decimal':
+        return rating.toFixed(1)
+      case 'like-dislike':
+        return rating === 1 ? 'Like' : rating === -1 ? 'Dislike' : ''
+      default:
+        return rating
     }
   }
 
@@ -279,7 +311,7 @@ export default function LibraryPage() {
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
                         <div className="flex items-center gap-1 text-yellow-400">
                           <Star className="h-3 w-3 fill-current" />
-                          <span className="text-sm font-medium">{item.rating}</span>
+                          <span className="text-sm font-medium">{renderRatingValue(item.rating)}</span>
                         </div>
                       </div>
                     )}
@@ -332,7 +364,7 @@ export default function LibraryPage() {
                       {item.rating && (
                         <div className="flex items-center gap-1">
                           <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                          <span>{item.rating}</span>
+                          <span>{renderRatingValue(item.rating)}</span>
                         </div>
                       )}
                       <div className="flex items-center gap-1">

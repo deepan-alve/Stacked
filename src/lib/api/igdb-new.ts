@@ -61,7 +61,7 @@ export class IGDBService {
   }
 
   // For now, return mock data for popular games until we implement more API routes
-  static async getPopularGames(limit: number = 20): Promise<IGDBGame[]> {
+  static async getPopularGames(): Promise<IGDBGame[]> {
     // This could be implemented as another API route in the future
     return []
   }

@@ -21,7 +21,7 @@ export default function NotFound() {
           </div>
           <h1 className="text-4xl font-bold text-primary text-center drop-shadow-md">404: Page Not Found</h1>
           <p className="text-muted-foreground text-center max-w-md text-lg">
-            <span className="block mb-2">"There is no page... yet."</span>
+            <span className="block mb-2">&quot;There is no page... yet.&quot;</span>
             <span className="italic">(Like The Matrix, we&apos;re still building this reality. Come back soon for more movie magic!)</span>
           </p>
           <Link href="/" className="mt-4 px-6 py-2 rounded-lg bg-primary/80 text-white font-semibold shadow hover:bg-primary transition">
