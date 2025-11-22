@@ -51,4 +51,25 @@ export const entryService = {
   getStatistics: () => apiClient.get("/entries/stats"),
 };
 
+export const searchService = {
+  // Search movies
+  searchMovies: (query) =>
+    apiClient.get(`/search/movies?query=${encodeURIComponent(query)}`),
+
+  // Search TV series
+  searchSeries: (query) =>
+    apiClient.get(`/search/series?query=${encodeURIComponent(query)}`),
+
+  // Search anime
+  searchAnime: (query) =>
+    apiClient.get(`/search/anime?query=${encodeURIComponent(query)}`),
+
+  // Search books
+  searchBooks: (query) =>
+    apiClient.get(`/search/books?query=${encodeURIComponent(query)}`),
+
+  // Get details
+  getDetails: (type, id) => apiClient.get(`/search/${type}/${id}`),
+};
+
 export default apiClient;

@@ -24,13 +24,37 @@ class EntryModel {
   }
 
   async create(data) {
-    const { title, type, rating, season, notes } = data;
+    const {
+      title,
+      type,
+      rating,
+      season,
+      notes,
+      poster_url,
+      api_id,
+      api_provider,
+      description,
+      release_date,
+    } = data;
     const now = new Date().toISOString();
 
     try {
       const result = await database.run(
-        "INSERT INTO movies (title, type, rating, season, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        [title, type, rating || null, season || null, notes || "", now, now]
+        "INSERT INTO movies (title, type, rating, season, notes, poster_url, api_id, api_provider, description, release_date, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [
+          title,
+          type,
+          rating || null,
+          season || null,
+          notes || "",
+          poster_url || null,
+          api_id || null,
+          api_provider || null,
+          description || null,
+          release_date || null,
+          now,
+          now,
+        ]
       );
 
       return {
@@ -40,6 +64,11 @@ class EntryModel {
         rating: rating || null,
         season: season || null,
         notes: notes || "",
+        poster_url: poster_url || null,
+        api_id: api_id || null,
+        api_provider: api_provider || null,
+        description: description || null,
+        release_date: release_date || null,
         created_at: now,
         updated_at: now,
       };
@@ -49,13 +78,37 @@ class EntryModel {
   }
 
   async update(id, data) {
-    const { title, type, rating, season, notes } = data;
+    const {
+      title,
+      type,
+      rating,
+      season,
+      notes,
+      poster_url,
+      api_id,
+      api_provider,
+      description,
+      release_date,
+    } = data;
     const now = new Date().toISOString();
 
     try {
       const result = await database.run(
-        "UPDATE movies SET title = ?, type = ?, rating = ?, season = ?, notes = ?, updated_at = ? WHERE id = ?",
-        [title, type, rating || null, season || null, notes || "", now, id]
+        "UPDATE movies SET title = ?, type = ?, rating = ?, season = ?, notes = ?, poster_url = ?, api_id = ?, api_provider = ?, description = ?, release_date = ?, updated_at = ? WHERE id = ?",
+        [
+          title,
+          type,
+          rating || null,
+          season || null,
+          notes || "",
+          poster_url || null,
+          api_id || null,
+          api_provider || null,
+          description || null,
+          release_date || null,
+          now,
+          id,
+        ]
       );
 
       if (result.changes === 0) {
@@ -69,6 +122,11 @@ class EntryModel {
         rating: rating || null,
         season: season || null,
         notes: notes || "",
+        poster_url: poster_url || null,
+        api_id: api_id || null,
+        api_provider: api_provider || null,
+        description: description || null,
+        release_date: release_date || null,
         updated_at: now,
       };
     } catch (error) {

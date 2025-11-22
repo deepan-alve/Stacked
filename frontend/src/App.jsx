@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
-import { Film, Tv, Sparkles, Book, Plus, Search, X, ChevronDown, Star, Inbox } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Film, Tv, Sparkles, Book, Plus, Search, X, ChevronDown, Star, Inbox, ExternalLink } from 'lucide-react';
 import { useEntries } from './hooks/useEntries';
+import SearchModal from './components/SearchModal';
 
 function App() {
   const { entries, loading, createEntry, updateEntry, deleteEntry } = useEntries();
@@ -9,6 +10,7 @@ function App() {
   const [currentView, setCurrentView] = useState('collection');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentEntry, setCurrentEntry] = useState(null);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -16,7 +18,12 @@ function App() {
     type: 'Movie',
     rating: '',
     season: '',
-    notes: ''
+    notes: '',
+    poster_url: '',
+    api_id: '',
+    api_provider: '',
+    description: '',
+    release_date: ''
   });
 
   // Filter entries
@@ -43,7 +50,12 @@ function App() {
         type: entry.type,
         rating: entry.rating || '',
         season: entry.season || '',
-        notes: entry.notes || ''
+        notes: entry.notes || '',
+        poster_url: entry.poster_url || '',
+        api_id: entry.api_id || '',
+        api_provider: entry.api_provider || '',
+        description: entry.description || '',
+        release_date: entry.release_date || ''
       });
     } else {
       setCurrentEntry(null);
@@ -52,10 +64,22 @@ function App() {
         type: 'Movie',
         rating: '',
         season: '',
-        notes: ''
+        notes: '',
+        poster_url: '',
+        api_id: '',
+        api_provider: '',
+        description: '',
+        release_date: ''
       });
     }
     setIsModalOpen(true);
+  };
+
+  const handleSearchSelect = (apiData) => {
+    setFormData(prev => ({
+      ...prev,
+      ...apiData
+    }));
   };
 
   const closeModal = () => {
@@ -230,7 +254,7 @@ function App() {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                 {filteredEntries.map(entry => (
                   <EntryCard 
                     key={entry.id} 
@@ -268,7 +292,17 @@ function App() {
 
             <form onSubmit={handleSubmit} className="flex-grow flex flex-col gap-5">
               <div className="space-y-1.5">
-                <label className="text-[11px] uppercase tracking-wider font-medium text-zinc-500">Title</label>
+                <label className="text-[11px] uppercase tracking-wider font-medium text-zinc-500 flex items-center justify-between">
+                  <span>Title</span>
+                  <button
+                    type="button"
+                    onClick={() => setIsSearchModalOpen(true)}
+                    className="text-blue-400 hover:text-blue-300 flex items-center gap-1 text-xs normal-case"
+                  >
+                    <ExternalLink size={12} />
+                    Search API
+                  </button>
+                </label>
                 <input 
                   type="text" 
                   required
@@ -356,6 +390,14 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* Search Modal */}
+      <SearchModal 
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+        onSelect={handleSearchSelect}
+        type={formData.type}
+      />
     </div>
   );
 }
@@ -370,39 +412,131 @@ function StatCard({ label, value }) {
 }
 
 function EntryCard({ entry, onClick, getTypeIcon, getTypeColor }) {
+  const [isFlipped, setIsFlipped] = React.useState(false);
+
+  const handleClick = (e) => {
+    e.stopPropagation();
+    if (isFlipped) {
+      // If flipped, open modal on second click
+      onClick();
+    } else {
+      // First click: flip the card
+      setIsFlipped(true);
+    }
+  };
+
+  const handleCardLeave = () => {
+    // Flip back when mouse leaves
+    setIsFlipped(false);
+  };
+
   return (
     <div 
-      onClick={onClick}
-      className="group relative flex flex-col bg-zinc-900/30 border border-zinc-800/60 rounded-lg overflow-hidden hover:border-zinc-600/50 hover:bg-zinc-900/50 transition-all cursor-pointer fade-in"
+      className="flip-card-container h-72 cursor-pointer"
+      onClick={handleClick}
+      onMouseLeave={handleCardLeave}
     >
-      <div className={`absolute top-0 left-0 w-full h-full bg-gradient-to-b ${getTypeColor(entry.type)} to-transparent opacity-50 group-hover:opacity-80 transition-opacity`} />
-      <div className="p-4 relative z-10 flex flex-col h-full">
-        <div className="flex items-start justify-between mb-3">
-          <div className="p-1.5 rounded bg-zinc-800/50 border border-zinc-700/50 text-zinc-400">
-            {getTypeIcon(entry.type)}
-          </div>
-          {entry.rating ? (
-            <div className="flex items-center gap-1 text-zinc-400 text-xs">
-              <Star className="w-3 h-3 fill-current" />
-              <span>{entry.rating}</span>
+      <div className={`flip-card ${isFlipped ? 'flipped' : ''}`}>
+        {/* Front Side - Poster */}
+        <div className="flip-card-front">
+          {entry.poster_url ? (
+            <div className="relative w-full h-full overflow-hidden rounded-lg border border-zinc-800/60">
+              <img 
+                src={entry.poster_url} 
+                alt={entry.title}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="150"%3E%3Crect fill="%2318181b" width="100" height="150"/%3E%3C/svg%3E';
+                }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-3">
+                <h3 className="text-white font-medium text-xs leading-tight line-clamp-2 mb-1">
+                  {entry.title}
+                </h3>
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] text-zinc-300 font-medium uppercase tracking-wider">
+                    {entry.type}
+                  </span>
+                  {entry.rating && (
+                    <div className="flex items-center gap-1 text-yellow-400 text-[10px]">
+                      <Star className="w-2.5 h-2.5 fill-current" />
+                      <span>{entry.rating}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           ) : (
-            <span className="text-zinc-600 text-xs">-</span>
+            <div className="w-full h-full bg-zinc-900/30 border border-zinc-800/60 rounded-lg flex flex-col items-center justify-center p-4 text-center">
+              <div className="p-2 rounded bg-zinc-800/50 border border-zinc-700/50 text-zinc-400 mb-3">
+                {getTypeIcon(entry.type)}
+              </div>
+              <h3 className="text-zinc-100 font-medium text-xs leading-tight line-clamp-3 mb-2">
+                {entry.title}
+              </h3>
+              <span className="text-[9px] text-zinc-500 font-medium uppercase tracking-wider">
+                {entry.type}
+              </span>
+            </div>
           )}
         </div>
-        <div className="mt-auto">
-          <h3 className="text-zinc-100 font-medium text-sm tracking-tight mb-1 line-clamp-1">
-            {entry.title}
-          </h3>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider">
-              {entry.type}
-            </span>
-            {(entry.type === 'Series' || entry.type === 'Anime') && entry.season && (
-              <span className="text-[10px] font-medium bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded border border-zinc-700">
-                S{entry.season}
-              </span>
-            )}
+
+        {/* Back Side - Details */}
+        <div className="flip-card-back">
+          <div className={`w-full h-full bg-zinc-900/90 border border-zinc-600/50 rounded-lg p-4 flex flex-col relative overflow-hidden`}>
+            <div className={`absolute top-0 left-0 w-full h-full bg-gradient-to-b ${getTypeColor(entry.type)} to-transparent opacity-30`} />
+            
+            <div className="relative z-10 flex-1 flex flex-col">
+              <div className="flex items-start justify-between mb-3">
+                <div className="p-1.5 rounded bg-zinc-800/50 border border-zinc-700/50 text-zinc-400">
+                  {getTypeIcon(entry.type)}
+                </div>
+                {entry.rating ? (
+                  <div className="flex items-center gap-1 text-yellow-400 text-xs">
+                    <Star className="w-3 h-3 fill-current" />
+                    <span>{entry.rating}</span>
+                  </div>
+                ) : (
+                  <span className="text-zinc-600 text-xs">-</span>
+                )}
+              </div>
+
+              <h3 className="text-zinc-100 font-semibold text-sm leading-tight mb-2 line-clamp-2">
+                {entry.title}
+              </h3>
+
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider">
+                  {entry.type}
+                </span>
+                {(entry.type === 'Series' || entry.type === 'Anime') && entry.season && (
+                  <span className="text-[10px] font-medium bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded border border-zinc-700">
+                    Season {entry.season}
+                  </span>
+                )}
+              </div>
+
+              {entry.description && (
+                <p className="text-zinc-400 text-[11px] leading-relaxed line-clamp-4 mb-3">
+                  {entry.description}
+                </p>
+              )}
+
+              {entry.notes && (
+                <div className="mt-auto pt-2 border-t border-zinc-700/50">
+                  <p className="text-zinc-500 text-[10px] leading-relaxed line-clamp-2">
+                    {entry.notes}
+                  </p>
+                </div>
+              )}
+
+              <div className="mt-auto pt-3">
+                <div className="text-[9px] text-zinc-600 uppercase tracking-wider">
+                  Click again to edit
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

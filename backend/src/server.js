@@ -3,6 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import database from "./config/database.js";
 import entryRoutes from "./routes/entries.js";
+import searchRoutes from "./routes/search.js";
+import imdbRoutes from "./routes/imdb.js";
 
 dotenv.config();
 
@@ -22,6 +24,8 @@ app.use((req, res, next) => {
 
 // API Routes
 app.use("/api/entries", entryRoutes);
+app.use("/api/search", searchRoutes);
+app.use("/api/imdb", imdbRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
