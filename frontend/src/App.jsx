@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Film, Tv, Sparkles, Book, Plus, Search, X, ChevronDown, Star, Inbox, ExternalLink } from 'lucide-react';
 import { useEntries } from './hooks/useEntries';
 import SearchModal from './components/SearchModal';
+import SpotlightSearch from './components/SpotlightSearch';
 
 function App() {
   const { entries, loading, createEntry, updateEntry, deleteEntry } = useEntries();
@@ -11,6 +12,7 @@ function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentEntry, setCurrentEntry] = useState(null);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [isSpotlightOpen, setIsSpotlightOpen] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -80,6 +82,25 @@ function App() {
       ...prev,
       ...apiData
     }));
+  };
+
+  const handleSpotlightSelect = (result) => {
+    // Pre-fill form with IMDB data and open edit modal
+    setCurrentEntry(null); // New entry
+    setFormData({
+      title: result.title || '',
+      type: result.type || 'Movie',
+      rating: result.rating || '',
+      season: '',
+      notes: '',
+      poster_url: result.poster || '',
+      api_id: result.imdbId || '',
+      api_provider: 'imdb',
+      description: result.plot || '',
+      release_date: result.releaseDate || result.year || ''
+    });
+    setIsSpotlightOpen(false);
+    setIsModalOpen(true);
   };
 
   const closeModal = () => {
@@ -194,7 +215,7 @@ function App() {
             </div>
 
             <button 
-              onClick={() => openModal()}
+              onClick={() => setIsSpotlightOpen(true)}
               className="flex items-center gap-2 bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-medium py-1.5 px-3 rounded transition-colors shadow-[0_0_15px_rgba(255,255,255,0.1)]"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -274,32 +295,35 @@ function App() {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           <div 
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+            className="absolute inset-0 bg-black/60 backdrop-blur-md transition-opacity" 
             onClick={closeModal}
           />
           
-          <div className={`absolute right-0 top-0 h-full w-full sm:w-[400px] bg-[#09090b] border-l border-zinc-800 shadow-2xl p-6 flex flex-col transition-transform transform ${isModalOpen ? 'translate-x-0' : 'translate-x-full'} duration-300 ease-out`}>
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-lg font-medium text-zinc-100 tracking-tight">
+          <div 
+            className="relative w-full max-w-md bg-zinc-900/95 backdrop-blur-xl border border-zinc-800 shadow-2xl rounded-xl p-6 flex flex-col max-h-[85vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-base font-medium text-white tracking-tight">
                 {currentEntry ? 'Edit Entry' : 'Add Entry'}
               </h2>
-              <button onClick={closeModal} className="text-zinc-500 hover:text-zinc-200 transition-colors">
+              <button onClick={closeModal} className="text-zinc-500 hover:text-zinc-300 transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex-grow flex flex-col gap-5">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[11px] uppercase tracking-wider font-medium text-zinc-500 flex items-center justify-between">
+                <label className="text-xs text-zinc-500 flex items-center justify-between">
                   <span>Title</span>
                   <button
                     type="button"
                     onClick={() => setIsSearchModalOpen(true)}
-                    className="text-blue-400 hover:text-blue-300 flex items-center gap-1 text-xs normal-case"
+                    className="text-blue-400 hover:text-blue-300 flex items-center gap-1 text-xs"
                   >
-                    <ExternalLink size={12} />
+                    <ExternalLink size={11} />
                     Search API
                   </button>
                 </label>
@@ -308,18 +332,18 @@ function App() {
                   required
                   value={formData.title}
                   onChange={(e) => setFormData({...formData, title: e.target.value})}
-                  className="w-full bg-zinc-900 border border-zinc-800 text-zinc-200 text-sm rounded px-3 py-2 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-colors placeholder-zinc-700" 
+                  className="w-full bg-zinc-800/50 border border-zinc-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-colors placeholder-zinc-600" 
                   placeholder="e.g. Inception" 
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[11px] uppercase tracking-wider font-medium text-zinc-500">Type</label>
+                <label className="text-xs text-zinc-500">Type</label>
                 <div className="relative">
                   <select 
                     value={formData.type}
                     onChange={(e) => setFormData({...formData, type: e.target.value})}
-                    className="w-full appearance-none bg-zinc-900 border border-zinc-800 text-zinc-200 text-sm rounded px-3 py-2 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-colors cursor-pointer"
+                    className="w-full appearance-none bg-zinc-800/50 border border-zinc-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-colors cursor-pointer"
                   >
                     <option value="Movie">Movie</option>
                     <option value="Series">Series</option>
@@ -330,9 +354,9 @@ function App() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="text-[11px] uppercase tracking-wider font-medium text-zinc-500">Rating (0-10)</label>
+                  <label className="text-xs text-zinc-500">Rating (0-10)</label>
                   <input 
                     type="number" 
                     min="0" 
@@ -340,39 +364,39 @@ function App() {
                     step="0.1"
                     value={formData.rating}
                     onChange={(e) => setFormData({...formData, rating: e.target.value})}
-                    className="w-full bg-zinc-900 border border-zinc-800 text-zinc-200 text-sm rounded px-3 py-2 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-colors placeholder-zinc-700" 
+                    className="w-full bg-zinc-800/50 border border-zinc-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-colors placeholder-zinc-600" 
                     placeholder="-" 
                   />
                 </div>
                 <div className={`space-y-1.5 ${formData.type !== 'Series' && formData.type !== 'Anime' ? 'opacity-50' : ''}`}>
-                  <label className="text-[11px] uppercase tracking-wider font-medium text-zinc-500">Season</label>
+                  <label className="text-xs text-zinc-500">Season</label>
                   <input 
                     type="number" 
                     min="1"
                     disabled={formData.type !== 'Series' && formData.type !== 'Anime'}
                     value={formData.season}
                     onChange={(e) => setFormData({...formData, season: e.target.value})}
-                    className="w-full bg-zinc-900 border border-zinc-800 text-zinc-200 text-sm rounded px-3 py-2 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-colors placeholder-zinc-700 disabled:cursor-not-allowed" 
+                    className="w-full bg-zinc-800/50 border border-zinc-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-colors placeholder-zinc-600 disabled:cursor-not-allowed disabled:opacity-50" 
                     placeholder="#" 
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[11px] uppercase tracking-wider font-medium text-zinc-500">Notes</label>
+                <label className="text-xs text-zinc-500">Notes</label>
                 <textarea 
-                  rows="4"
+                  rows="3"
                   value={formData.notes}
                   onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                  className="w-full bg-zinc-900 border border-zinc-800 text-zinc-200 text-sm rounded px-3 py-2 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-colors placeholder-zinc-700 resize-none" 
+                  className="w-full bg-zinc-800/50 border border-zinc-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-colors placeholder-zinc-600 resize-none" 
                   placeholder="Thoughts, memorable quotes, or summary..." 
                 />
               </div>
 
-              <div className="mt-auto flex flex-col gap-3 pt-6 border-t border-zinc-800">
+              <div className="flex flex-col gap-2 pt-4 border-t border-zinc-800">
                 <button 
                   type="submit"
-                  className="w-full bg-zinc-100 hover:bg-white text-zinc-950 font-medium text-sm py-2.5 rounded transition-colors"
+                  className="w-full bg-white hover:bg-gray-100 text-zinc-950 font-medium text-sm py-2.5 rounded-lg transition-colors"
                 >
                   Save Entry
                 </button>
@@ -380,7 +404,7 @@ function App() {
                   <button 
                     type="button"
                     onClick={handleDelete}
-                    className="w-full bg-transparent hover:bg-red-500/10 text-red-400 hover:text-red-300 border border-zinc-800 hover:border-red-500/30 font-medium text-sm py-2.5 rounded transition-colors"
+                    className="w-full bg-transparent hover:bg-red-500/10 text-red-400 hover:text-red-300 border border-zinc-700 hover:border-red-500/50 font-medium text-sm py-2.5 rounded-lg transition-colors"
                   >
                     Delete Entry
                   </button>
@@ -397,6 +421,13 @@ function App() {
         onClose={() => setIsSearchModalOpen(false)}
         onSelect={handleSearchSelect}
         type={formData.type}
+      />
+
+      {/* Spotlight Search */}
+      <SpotlightSearch
+        isOpen={isSpotlightOpen}
+        onClose={() => setIsSpotlightOpen(false)}
+        onSelect={handleSpotlightSelect}
       />
     </div>
   );

@@ -2,6 +2,8 @@ import tmdbService from "../services/tmdb.js";
 import anilistService from "../services/anilist.js";
 import openlibraryService from "../services/openlibrary.js";
 import imdbService from "../services/imdb.js";
+import googleSearchService from "../services/googleSearch.js";
+import db from "../config/database.js";
 
 const searchController = {
   // Search for movies
@@ -162,6 +164,36 @@ const searchController = {
     } catch (error) {
       console.error("Get Popular Error:", error);
       res.status(500).json({ error: "Failed to get popular" });
+    }
+  },
+
+  // Spotlight search - IMDB scraper
+  spotlightSearch: async (req, res) => {
+    try {
+      const { query } = req.query;
+
+      if (!query) {
+        return res.status(400).json({ error: "Search query is required" });
+      }
+
+      console.log("Spotlight search for:", query);
+
+      // Check if query includes "anime" prefix
+      const isAnimeQuery = query.toLowerCase().startsWith("anime ");
+
+      // Search using Google scraper
+      const searchResults = isAnimeQuery
+        ? await googleSearchService.searchWithAnime(
+            query.replace(/^anime\s+/i, "")
+          )
+        : await googleSearchService.searchIMDB(query);
+
+      console.log("Sending", searchResults.length, "results");
+
+      res.json({ results: searchResults });
+    } catch (error) {
+      console.error("Spotlight Search Error:", error);
+      res.status(500).json({ error: "Failed to search" });
     }
   },
 };

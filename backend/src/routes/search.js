@@ -4,6 +4,7 @@ import searchController from "../controllers/searchController.js";
 const router = express.Router();
 
 // Search routes
+router.get("/spotlight", searchController.spotlightSearch);
 router.get("/movies", searchController.searchMovies);
 router.get("/series", searchController.searchSeries);
 router.get("/anime", searchController.searchAnime);
