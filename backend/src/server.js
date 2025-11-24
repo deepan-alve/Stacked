@@ -5,6 +5,7 @@ import database from "./config/database.js";
 import entryRoutes from "./routes/entries.js";
 import searchRoutes from "./routes/search.js";
 import imdbRoutes from "./routes/imdb.js";
+import detailsRoutes from "./routes/details.js";
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ app.use((req, res, next) => {
 app.use("/api/entries", entryRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/imdb", imdbRoutes);
+app.use("/api/details", detailsRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {

@@ -31,7 +31,7 @@ class Database {
 
   initializeDatabase() {
     return new Promise((resolve, reject) => {
-      const createTableQuery = `
+      const createMoviesTable = `
         CREATE TABLE IF NOT EXISTS movies (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           title TEXT NOT NULL,
@@ -46,13 +46,47 @@ class Database {
         )
       `;
 
-      this.db.run(createTableQuery, (err) => {
+      const createDetailsTable = `
+        CREATE TABLE IF NOT EXISTS movie_details (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          entry_id INTEGER UNIQUE NOT NULL,
+          wikipedia_url TEXT,
+          wikipedia_summary TEXT,
+          wikipedia_plot TEXT,
+          wikipedia_cast TEXT,
+          wikipedia_crew TEXT,
+          wikipedia_infobox TEXT,
+          imdb_url TEXT,
+          imdb_rating REAL,
+          imdb_votes INTEGER,
+          imdb_metascore INTEGER,
+          imdb_plot TEXT,
+          imdb_cast TEXT,
+          imdb_crew TEXT,
+          imdb_reviews TEXT,
+          imdb_awards TEXT,
+          imdb_trivia TEXT,
+          last_synced DATETIME,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (entry_id) REFERENCES movies(id) ON DELETE CASCADE
+        )
+      `;
+
+      this.db.run(createMoviesTable, (err) => {
         if (err) {
-          console.error("Error creating table:", err.message);
+          console.error("Error creating movies table:", err.message);
           reject(err);
         } else {
-          console.log("Database table ready");
-          resolve();
+          this.db.run(createDetailsTable, (err) => {
+            if (err) {
+              console.error("Error creating movie_details table:", err.message);
+              reject(err);
+            } else {
+              console.log("Database tables ready");
+              resolve();
+            }
+          });
         }
       });
     });

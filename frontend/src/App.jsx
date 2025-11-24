@@ -173,9 +173,9 @@ function App() {
               onClick={() => setCurrentView('collection')}
             >
               <div className="w-6 h-6 bg-zinc-100 rounded text-zinc-950 flex items-center justify-center font-bold text-xs tracking-tighter group-hover:bg-zinc-200 transition-colors">
-                C
+                S
               </div>
-              <span className="text-zinc-100 font-medium tracking-tight text-sm">COLLECT</span>
+              <span className="text-zinc-100 font-medium tracking-tight text-sm">Stacked</span>
             </div>
 
             <div className="hidden md:flex items-center gap-1">
@@ -608,15 +608,90 @@ function StatsView({ entries }) {
     Book: <Book className="w-4 h-4 text-emerald-400" />
   };
 
+  // Calculate top rated entries
+  const topRated = [...entries]
+    .filter(e => e.rating != null)
+    .sort((a, b) => b.rating - a.rating)
+    .slice(0, 5);
+
+  // Calculate rating distribution
+  const ratingBuckets = [
+    { range: '9-10', min: 9, max: 10, color: 'bg-emerald-500' },
+    { range: '7-8.9', min: 7, max: 8.9, color: 'bg-green-500' },
+    { range: '5-6.9', min: 5, max: 6.9, color: 'bg-yellow-500' },
+    { range: '3-4.9', min: 3, max: 4.9, color: 'bg-orange-500' },
+    { range: '0-2.9', min: 0, max: 2.9, color: 'bg-red-500' }
+  ];
+
+  const ratingDistribution = ratingBuckets.map(bucket => ({
+    ...bucket,
+    count: entries.filter(e => e.rating >= bucket.min && e.rating <= bucket.max).length
+  }));
+
+  const maxRatingCount = Math.max(...ratingDistribution.map(r => r.count), 1);
+
+  // Calculate overall stats
+  const ratedEntries = entries.filter(e => e.rating != null);
+  const overallAvg = ratedEntries.length > 0
+    ? (ratedEntries.reduce((sum, e) => sum + e.rating, 0) / ratedEntries.length).toFixed(1)
+    : '0.0';
+  
+  const highestRated = ratedEntries.length > 0
+    ? Math.max(...ratedEntries.map(e => e.rating)).toFixed(1)
+    : '0.0';
+  
+  const lowestRated = ratedEntries.length > 0
+    ? Math.min(...ratedEntries.map(e => e.rating)).toFixed(1)
+    : '0.0';
+
+  // Recent additions (last 10)
+  const recentAdditions = [...entries]
+    .sort((a, b) => b.id - a.id)
+    .slice(0, 10);
+
   return (
     <div className="fade-in space-y-6">
       <div className="flex items-center justify-between mb-2">
-        <h2 className="text-lg font-medium text-zinc-100 tracking-tight">Overview</h2>
+        <h2 className="text-lg font-medium text-zinc-100 tracking-tight">Analytics</h2>
+        <span className="text-xs text-zinc-500">{entries.length} total entries</span>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Overall Stats Row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="p-4 rounded-lg border border-zinc-800 bg-gradient-to-br from-zinc-900/50 to-zinc-900/30">
+          <span className="text-xs font-medium text-zinc-400 block mb-2">Overall Average</span>
+          <div className="flex items-baseline gap-2">
+            <h3 className="text-2xl font-semibold text-zinc-100 tracking-tight">{overallAvg}</h3>
+            <span className="text-xs text-zinc-600">/ 10</span>
+          </div>
+        </div>
+        <div className="p-4 rounded-lg border border-zinc-800 bg-gradient-to-br from-emerald-900/20 to-zinc-900/30">
+          <span className="text-xs font-medium text-emerald-400/70 block mb-2">Highest Rated</span>
+          <div className="flex items-baseline gap-2">
+            <h3 className="text-2xl font-semibold text-emerald-400 tracking-tight">{highestRated}</h3>
+            <Star className="w-4 h-4 text-emerald-400 fill-current" />
+          </div>
+        </div>
+        <div className="p-4 rounded-lg border border-zinc-800 bg-gradient-to-br from-red-900/20 to-zinc-900/30">
+          <span className="text-xs font-medium text-red-400/70 block mb-2">Lowest Rated</span>
+          <div className="flex items-baseline gap-2">
+            <h3 className="text-2xl font-semibold text-red-400 tracking-tight">{lowestRated}</h3>
+            <span className="text-xs text-red-500">/ 10</span>
+          </div>
+        </div>
+        <div className="p-4 rounded-lg border border-zinc-800 bg-gradient-to-br from-blue-900/20 to-zinc-900/30">
+          <span className="text-xs font-medium text-blue-400/70 block mb-2">With Ratings</span>
+          <div className="flex items-baseline gap-2">
+            <h3 className="text-2xl font-semibold text-blue-400 tracking-tight">{ratedEntries.length}</h3>
+            <span className="text-xs text-zinc-600">/ {entries.length}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Type Averages */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {types.map(type => (
-          <div key={type} className="p-5 rounded-lg border border-zinc-800 bg-zinc-900/30">
+          <div key={type} className="p-5 rounded-lg border border-zinc-800 bg-zinc-900/30 hover:bg-zinc-900/40 transition-colors">
             <div className="flex items-center justify-between mb-4">
               <span className="text-xs font-medium text-zinc-400">Avg. {type} Score</span>
               {typeIcons[type]}
@@ -629,23 +704,107 @@ function StatsView({ entries }) {
         ))}
       </div>
 
-      <div className="p-6 rounded-lg border border-zinc-800 bg-zinc-900/30">
-        <h3 className="text-sm font-medium text-zinc-200 mb-6">Collection Distribution</h3>
-        <div className="space-y-5">
-          {distribution.map(({ type, count, percentage }) => (
-            <div key={type} className="space-y-2">
-              <div className="flex justify-between text-xs">
-                <span className="text-zinc-400 font-medium">{type}</span>
-                <span className="text-zinc-500">{count} items ({percentage.toFixed(0)}%)</span>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Collection Distribution */}
+        <div className="p-6 rounded-lg border border-zinc-800 bg-zinc-900/30">
+          <h3 className="text-sm font-medium text-zinc-200 mb-6">Collection Distribution</h3>
+          <div className="space-y-5">
+            {distribution.map(({ type, count, percentage }) => (
+              <div key={type} className="space-y-2">
+                <div className="flex justify-between text-xs">
+                  <span className="text-zinc-400 font-medium">{type}</span>
+                  <span className="text-zinc-500">{count} items ({percentage.toFixed(0)}%)</span>
+                </div>
+                <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full ${typeColors[type]} bar-fill opacity-80`} 
+                    style={{ width: `${percentage}%` }}
+                  />
+                </div>
               </div>
-              <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
-                <div 
-                  className={`h-full ${typeColors[type]} bar-fill opacity-80`} 
-                  style={{ width: `${percentage}%` }}
-                />
+            ))}
+          </div>
+        </div>
+
+        {/* Rating Distribution */}
+        <div className="p-6 rounded-lg border border-zinc-800 bg-zinc-900/30">
+          <h3 className="text-sm font-medium text-zinc-200 mb-6">Rating Distribution</h3>
+          <div className="space-y-4">
+            {ratingDistribution.map(({ range, count, color }) => (
+              <div key={range} className="flex items-center gap-3">
+                <span className="text-xs font-medium text-zinc-400 w-12">{range}</span>
+                <div className="flex-1 h-8 bg-zinc-800 rounded overflow-hidden relative">
+                  <div 
+                    className={`h-full ${color} bar-fill opacity-70`} 
+                    style={{ width: `${(count / maxRatingCount) * 100}%` }}
+                  />
+                  <span className="absolute inset-0 flex items-center justify-end pr-3 text-xs font-medium text-zinc-300">
+                    {count}
+                  </span>
+                </div>
               </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Top Rated & Recent */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Top Rated */}
+        <div className="p-6 rounded-lg border border-zinc-800 bg-zinc-900/30">
+          <h3 className="text-sm font-medium text-zinc-200 mb-4">Top Rated</h3>
+          {topRated.length > 0 ? (
+            <div className="space-y-3">
+              {topRated.map((entry, idx) => (
+                <div key={entry.id} className="flex items-center gap-3 p-3 rounded-lg bg-zinc-800/30 hover:bg-zinc-800/50 transition-colors">
+                  <div className="flex items-center justify-center w-6 h-6 rounded bg-zinc-700/50 text-zinc-400 text-xs font-medium">
+                    {idx + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-zinc-200 font-medium truncate">{entry.title}</div>
+                    <div className="text-xs text-zinc-500">{entry.type}</div>
+                  </div>
+                  <div className="flex items-center gap-1 text-yellow-400 text-sm font-medium">
+                    <Star className="w-3.5 h-3.5 fill-current" />
+                    {entry.rating}
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          ) : (
+            <div className="text-center py-8 text-zinc-500 text-sm">No rated entries yet</div>
+          )}
+        </div>
+
+        {/* Recent Additions */}
+        <div className="p-6 rounded-lg border border-zinc-800 bg-zinc-900/30">
+          <h3 className="text-sm font-medium text-zinc-200 mb-4">Recent Additions</h3>
+          {recentAdditions.length > 0 ? (
+            <div className="space-y-3">
+              {recentAdditions.map((entry) => (
+                <div key={entry.id} className="flex items-center gap-3 p-3 rounded-lg bg-zinc-800/30 hover:bg-zinc-800/50 transition-colors">
+                  <div className="p-1.5 rounded bg-zinc-700/50">
+                    {entry.type === 'Movie' && <Film className="w-3.5 h-3.5 text-indigo-400" />}
+                    {entry.type === 'Series' && <Tv className="w-3.5 h-3.5 text-violet-400" />}
+                    {entry.type === 'Anime' && <Sparkles className="w-3.5 h-3.5 text-pink-400" />}
+                    {entry.type === 'Book' && <Book className="w-3.5 h-3.5 text-emerald-400" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-zinc-200 font-medium truncate">{entry.title}</div>
+                    <div className="text-xs text-zinc-500">{entry.type}</div>
+                  </div>
+                  {entry.rating && (
+                    <div className="flex items-center gap-1 text-yellow-400 text-sm font-medium">
+                      <Star className="w-3.5 h-3.5 fill-current" />
+                      {entry.rating}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-zinc-500 text-sm">No entries yet</div>
+          )}
         </div>
       </div>
     </div>

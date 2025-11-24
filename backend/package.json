@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon src/server.js",
+    "scrape:content": "node scripts/scrapeMovieContent.js",
+    "export:ai": "node scripts/exportForAI.js"
   },
   "keywords": ["movie", "tracker", "api"],
   "author": "",

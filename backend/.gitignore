@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Database
+*.db
+*.db-journal
+
+# Environment
+.env
+
+# Training data exports (can be regenerated)
+movie_training_data.json
+movie_training_text.json
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
