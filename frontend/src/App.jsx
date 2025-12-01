@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Film, Tv, Sparkles, Book, Plus, Search, X, ChevronDown, Star, Inbox, ExternalLink, Heart } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Film, Tv, Sparkles, Book, Plus, Search, X, ChevronDown, Star, Inbox, ExternalLink } from 'lucide-react';
 import { useEntries } from './hooks/useEntries';
 import SearchModal from './components/SearchModal';
 import SpotlightSearch from './components/SpotlightSearch';
@@ -14,6 +14,7 @@ function App() {
   const [currentEntry, setCurrentEntry] = useState(null);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isSpotlightOpen, setIsSpotlightOpen] = useState(false);
+  const dlangViewRef = useRef(null);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -85,9 +86,42 @@ function App() {
     }));
   };
 
-  const handleSpotlightSelect = (result) => {
-    // Pre-fill form with IMDB data and open edit modal
-    setCurrentEntry(null); // New entry
+  const handleSpotlightSelect = async (result) => {
+    // Check if we're on Dlang page - save directly to dlang database
+    if (currentView === 'dlang') {
+      try {
+        const payload = {
+          title: result.title || '',
+          year: result.year ? parseInt(result.year) : null,
+          language: 'English', // Default, user can edit later
+          genre: result.genre || '',
+          director: result.director || '',
+          rating: result.rating ? parseFloat(result.rating) : null,
+          poster_url: result.poster || '',
+          notes: result.plot || ''
+        };
+        
+        const res = await fetch('/api/dlang', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        
+        if (!res.ok) throw new Error('Failed to save');
+        
+        // Refresh dlang view
+        if (dlangViewRef.current && dlangViewRef.current.refresh) {
+          dlangViewRef.current.refresh();
+        }
+        setIsSpotlightOpen(false);
+      } catch (error) {
+        alert('Failed to add movie: ' + error.message);
+      }
+      return;
+    }
+    
+    // Pre-fill form with IMDB data and open edit modal for main collection
+    setCurrentEntry(null);
     setFormData({
       title: result.title || '',
       type: result.type || 'Movie',
@@ -192,13 +226,12 @@ function App() {
               </button>
               <button 
                 onClick={() => setCurrentView('dlang')}
-                className={`text-xs font-medium px-3 py-1.5 rounded-md transition-all flex items-center gap-1 ${
+                className={`text-xs font-medium px-3 py-1.5 rounded-md transition-all ${
                   currentView === 'dlang' 
-                    ? 'text-red-400 bg-red-500/10' 
-                    : 'text-zinc-500 hover:text-red-400 hover:bg-red-500/5'
+                    ? 'text-zinc-100 bg-zinc-800/50' 
+                    : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30'
                 }`}
               >
-                <Heart className="w-3 h-3" />
                 Dlang
               </button>
               <button 
@@ -231,7 +264,7 @@ function App() {
               className="flex items-center gap-2 bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-medium py-1.5 px-3 rounded transition-colors shadow-[0_0_15px_rgba(255,255,255,0.1)]"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Add Entry</span>
+              <span className="hidden sm:inline">{currentView === 'dlang' ? 'Add Movie' : 'Add Entry'}</span>
             </button>
           </div>
         </div>
@@ -301,7 +334,7 @@ function App() {
             )}
           </div>
         ) : currentView === 'dlang' ? (
-          <DlangView />
+          <DlangView ref={dlangViewRef} searchQuery={searchQuery} />
         ) : (
           <StatsView entries={entries} />
         )}
