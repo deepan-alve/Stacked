@@ -1,4 +1,5 @@
 import EntryModel from "../models/entryModel.js";
+import googleSearchService from "../services/googleSearch.js";
 
 class EntryController {
   async getAll(req, res) {
@@ -33,6 +34,46 @@ class EntryController {
       const entry = await EntryModel.create(req.body);
       res.status(201).json(entry);
     } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  async addByImdb(req, res) {
+    try {
+      const { imdbId, type } = req.body;
+
+      if (!imdbId) {
+        return res.status(400).json({ error: "IMDB ID is required" });
+      }
+
+      // Default type is 'movie'
+      const entryType = type || "movie";
+
+      // Fetch details by scraping IMDB directly
+      console.log("Scraping IMDB details for:", imdbId);
+      const details = await googleSearchService.scrapeIMDBDetails(imdbId);
+
+      if (!details || !details.title || details.title === "Unknown") {
+        return res.status(404).json({ error: "Movie not found on IMDB" });
+      }
+
+      // Create entry with fetched details
+      const entryData = {
+        title: details.title,
+        type: entryType,
+        rating: null, // User will rate it themselves
+        poster_url: details.poster,
+        api_id: imdbId,
+        api_provider: "imdb",
+        description: details.plot,
+        release_date: details.year ? `${details.year}-01-01` : null,
+        notes: "",
+      };
+
+      const entry = await EntryModel.create(entryData);
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error adding by IMDB:", error);
       res.status(500).json({ error: error.message });
     }
   }

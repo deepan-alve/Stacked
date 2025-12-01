@@ -1,5 +1,6 @@
 import express from "express";
 import db from "../config/database.js";
+import googleSearchService from "../services/googleSearch.js";
 
 const router = express.Router();
 
@@ -108,6 +109,59 @@ router.delete("/:id", async (req, res) => {
   } catch (error) {
     console.error("Error deleting dlang movie:", error);
     res.status(500).json({ error: "Failed to delete dlang movie" });
+  }
+});
+
+// Add movie by IMDB ID
+router.post("/add-by-imdb", async (req, res) => {
+  try {
+    const { imdbId } = req.body;
+
+    if (!imdbId) {
+      return res.status(400).json({ error: "IMDB ID is required" });
+    }
+
+    // Fetch details by scraping IMDB directly
+    console.log("Scraping IMDB details for:", imdbId);
+    const details = await googleSearchService.scrapeIMDBDetails(imdbId);
+
+    if (!details || !details.title || details.title === "Unknown") {
+      return res.status(404).json({ error: "Movie not found on IMDB" });
+    }
+
+    // Extract director name (from scraped data if available)
+    const director = details.director || '';
+    
+    // Extract first genre
+    const genre = details.genres?.[0] || details.type || '';
+    
+    // Extract language
+    const language = details.languages?.[0] || 'English';
+
+    const result = await db.run(
+      `INSERT INTO dlang_movies (title, year, language, genre, director, rating, poster_url, notes)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        details.title,
+        details.year,
+        language,
+        genre,
+        director,
+        details.rating,
+        details.poster,
+        `IMDB: ${imdbId} | ${details.plot || ''}`
+      ]
+    );
+
+    const newMovie = await db.get(
+      "SELECT * FROM dlang_movies WHERE id = ?",
+      [result.lastID]
+    );
+
+    res.status(201).json(newMovie);
+  } catch (error) {
+    console.error("Error adding movie by IMDB:", error);
+    res.status(500).json({ error: "Failed to add movie: " + error.message });
   }
 });
 
