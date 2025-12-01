@@ -73,6 +73,22 @@ class Database {
         )
       `;
 
+      const createDlangTable = `
+        CREATE TABLE IF NOT EXISTS dlang_movies (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          title TEXT NOT NULL,
+          year INTEGER,
+          language TEXT,
+          genre TEXT,
+          director TEXT,
+          rating REAL,
+          poster_url TEXT,
+          notes TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+      `;
+
       this.db.run(createMoviesTable, (err) => {
         if (err) {
           console.error("Error creating movies table:", err.message);
@@ -83,8 +99,15 @@ class Database {
               console.error("Error creating movie_details table:", err.message);
               reject(err);
             } else {
-              console.log("Database tables ready");
-              resolve();
+              this.db.run(createDlangTable, (err) => {
+                if (err) {
+                  console.error("Error creating dlang_movies table:", err.message);
+                  reject(err);
+                } else {
+                  console.log("Database tables ready");
+                  resolve();
+                }
+              });
             }
           });
         }

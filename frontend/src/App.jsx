@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Film, Tv, Sparkles, Book, Plus, Search, X, ChevronDown, Star, Inbox, ExternalLink } from 'lucide-react';
+import { Film, Tv, Sparkles, Book, Plus, Search, X, ChevronDown, Star, Inbox, ExternalLink, Heart } from 'lucide-react';
 import { useEntries } from './hooks/useEntries';
 import SearchModal from './components/SearchModal';
 import SpotlightSearch from './components/SpotlightSearch';
+import DlangView from './components/DlangView';
 
 function App() {
   const { entries, loading, createEntry, updateEntry, deleteEntry } = useEntries();
@@ -190,6 +191,17 @@ function App() {
                 Collection
               </button>
               <button 
+                onClick={() => setCurrentView('dlang')}
+                className={`text-xs font-medium px-3 py-1.5 rounded-md transition-all flex items-center gap-1 ${
+                  currentView === 'dlang' 
+                    ? 'text-red-400 bg-red-500/10' 
+                    : 'text-zinc-500 hover:text-red-400 hover:bg-red-500/5'
+                }`}
+              >
+                <Heart className="w-3 h-3" />
+                Dlang
+              </button>
+              <button 
                 onClick={() => setCurrentView('stats')}
                 className={`text-xs font-medium px-3 py-1.5 rounded-md transition-all ${
                   currentView === 'stats' 
@@ -288,6 +300,8 @@ function App() {
               </div>
             )}
           </div>
+        ) : currentView === 'dlang' ? (
+          <DlangView />
         ) : (
           <StatsView entries={entries} />
         )}
