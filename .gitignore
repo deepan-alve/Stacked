@@ -10,8 +10,8 @@ build/
 out/
 
 # Database
-*.db
 *.db-journal
+!backend/movies.db
 
 # Environment
 .env
