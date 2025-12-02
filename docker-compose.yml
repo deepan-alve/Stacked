@@ -1,48 +1,4 @@
-version: '3.8'
-
-# ============================================
-# Stacked - Docker Compose for stacked.deepanalve.dev
-# ============================================
-# 
-# DEPLOY:
-#   1. git clone https://github.com/deepan-alve/Stacked-db.git
-#   2. cd Stacked-db
-#   3. docker-compose up -d --build
-#
-# That's it! SSL is automatic via Let's Encrypt.
-
 services:
-  # ----------------------------------------
-  # Traefik - Reverse Proxy + Auto SSL
-  # ----------------------------------------
-  traefik:
-    image: traefik:v2.10
-    container_name: traefik
-    restart: unless-stopped
-    command:
-      - "--api.dashboard=false"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
-      - "--certificatesresolvers.letsencrypt.acme.email=deepanalve05@gmail.com"
-      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
-      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
-      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - traefik-certs:/letsencrypt
-    networks:
-      - stacked-network
-
-  # ----------------------------------------
-  # Backend - Express API + SQLite
-  # ----------------------------------------
   backend:
     build:
       context: ./backend
@@ -60,43 +16,42 @@ services:
       - SUPABASE_DB_PASSWORD=${STACKED_DB_PASSWORD}
       - BACKUP_INTERVAL_HOURS=6
     volumes:
-      - stacked-data:/data
-    networks:
-      - stacked-network
+      - ./data:/data
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3000/api/health",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
 
-  # ----------------------------------------
-  # Frontend - React + Nginx
-  # ----------------------------------------
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: stacked-frontend
     restart: unless-stopped
-    depends_on:
-      backend:
-        condition: service_healthy
+    container_name: stacked-frontend
+    healthcheck:
+      test: ["CMD", "curl", "-q", "http://localhost:80"]
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`stacked.deepanalve.dev`)"
-      - "traefik.http.routers.frontend.entrypoints=websecure"
-      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
-      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+      - "traefik.http.routers.stacked-frontend.rule=Host(`stacked.deepanalve.dev`)"
+      - "traefik.docker.network=traefik_net"
+      - "traefik.http.services.stacked-frontend.loadbalancer.server.port=80"
+      - "traefik.http.routers.stacked-frontend.entrypoints=websecure"
+      - "traefik.http.routers.stacked-frontend.tls=true"
+      - "traefik.http.routers.stacked-frontend.tls.certresolver=le"
     networks:
-      - stacked-network
-
-volumes:
-  stacked-data:
-    driver: local
-  traefik-certs:
-    driver: local
+      - default
+      - traefik_net
 
 networks:
-  stacked-network:
-    driver: bridge
+  traefik_net:
+    external: true
