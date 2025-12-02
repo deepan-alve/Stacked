@@ -1,5 +1,6 @@
 // Backup Service - Syncs SQLite to Supabase PostgreSQL
 import pg from "pg";
+import dns from "dns";
 import { execSync } from "child_process";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -9,6 +10,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const { Pool } = pg;
+
+// Force IPv4 DNS resolution (fixes ENETUNREACH on servers without IPv6)
+dns.setDefaultResultOrder("ipv4first");
 
 // Build connection config from environment
 const getPoolConfig = () => {
