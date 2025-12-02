@@ -1,25 +1,24 @@
 version: '3.8'
 
 # ============================================
-# Stacked - Unified Docker Compose
+# Stacked - Docker Compose for stacked.deepanalve.dev
 # ============================================
 # 
-# USAGE:
-#   Development (HTTP):  docker-compose up -d
-#   Production (HTTPS):  docker-compose --profile ssl up -d
+# DEPLOY:
+#   1. git clone https://github.com/deepan-alve/Stacked-db.git
+#   2. cd Stacked-db
+#   3. docker-compose up -d --build
 #
-# First time setup is automatic via deploy.sh
+# That's it! SSL is automatic via Let's Encrypt.
 
 services:
   # ----------------------------------------
-  # Traefik - SSL/HTTPS (production only)
+  # Traefik - Reverse Proxy + Auto SSL
   # ----------------------------------------
   traefik:
     image: traefik:v2.10
     container_name: traefik
     restart: unless-stopped
-    profiles:
-      - ssl
     command:
       - "--api.dashboard=false"
       - "--providers.docker=true"
@@ -28,7 +27,7 @@ services:
       - "--entrypoints.websecure.address=:443"
       - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
       - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
-      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.email=deepanalve05@gmail.com"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
@@ -51,15 +50,15 @@ services:
     container_name: stacked-backend
     restart: unless-stopped
     environment:
-      - NODE_ENV=${NODE_ENV:-production}
+      - NODE_ENV=production
       - PORT=3000
       - DB_PATH=/data/movies.db
-      - SUPABASE_DB_HOST=${SUPABASE_DB_HOST}
-      - SUPABASE_DB_PORT=${SUPABASE_DB_PORT:-5432}
-      - SUPABASE_DB_NAME=${SUPABASE_DB_NAME:-postgres}
-      - SUPABASE_DB_USER=${SUPABASE_DB_USER:-postgres}
-      - SUPABASE_DB_PASSWORD=${SUPABASE_DB_PASSWORD}
-      - BACKUP_INTERVAL_HOURS=${BACKUP_INTERVAL_HOURS:-6}
+      - SUPABASE_DB_HOST=${STACKED_DB_HOST}
+      - SUPABASE_DB_PORT=5432
+      - SUPABASE_DB_NAME=postgres
+      - SUPABASE_DB_USER=postgres
+      - SUPABASE_DB_PASSWORD=${STACKED_DB_PASSWORD}
+      - BACKUP_INTERVAL_HOURS=6
     volumes:
       - stacked-data:/data
     networks:
@@ -80,14 +79,12 @@ services:
       dockerfile: Dockerfile
     container_name: stacked-frontend
     restart: unless-stopped
-    ports:
-      - "80:80"
     depends_on:
       backend:
         condition: service_healthy
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.frontend.rule=Host(`stacked.deepanalve.dev`)"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
       - "traefik.http.services.frontend.loadbalancer.server.port=80"
