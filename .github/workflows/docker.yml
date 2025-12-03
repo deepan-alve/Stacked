@@ -40,6 +40,9 @@ jobs:
           tags: |
             ${{ env.BACKEND_IMAGE }}:latest
             ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+          build-args: |
+            SUPABASE_DB_HOST=${{ secrets.SUPABASE_DB_HOST }}
+            SUPABASE_DB_PASSWORD=${{ secrets.SUPABASE_DB_PASSWORD }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -52,5 +55,8 @@ jobs:
           tags: |
             ${{ env.FRONTEND_IMAGE }}:latest
             ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+          build-args: |
+            VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}
+            VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

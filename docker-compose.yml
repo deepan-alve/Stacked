@@ -6,15 +6,7 @@ services:
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     environment:
-      - NODE_ENV=production
-      - PORT=3000
       - DB_PATH=/data/movies.db
-      - SUPABASE_DB_HOST=${SUPABASE_DB_HOST}
-      - SUPABASE_DB_PORT=5432
-      - SUPABASE_DB_NAME=postgres
-      - SUPABASE_DB_USER=postgres
-      - SUPABASE_DB_PASSWORD=${SUPABASE_DB_PASSWORD}
-      - BACKUP_INTERVAL_HOURS=6
     volumes:
       - ./data:/data
     healthcheck:
