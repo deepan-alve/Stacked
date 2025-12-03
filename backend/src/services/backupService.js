@@ -120,7 +120,7 @@ class BackupService {
     try {
       // Get all movies from SQLite
       const movies = await database.all("SELECT * FROM movies");
-      
+
       if (movies.length === 0) {
         console.log("No movies to sync");
         return 0;
@@ -181,7 +181,7 @@ class BackupService {
     try {
       // Get all dlang movies from SQLite
       const movies = await database.all("SELECT * FROM dlang_movies");
-      
+
       if (movies.length === 0) {
         console.log("No dlang movies to sync");
         return 0;
@@ -238,17 +238,25 @@ class BackupService {
     try {
       const moviesCount = await this.syncMovies();
       const dlangCount = await this.syncDlangMovies();
-      
+
       // Also commit to Git
       const gitResult = this.gitBackup();
 
       this.lastSyncTime = new Date();
 
       // Log sync to Supabase
-      await this.logSync("full", moviesCount + dlangCount, "success", null, startTime);
+      await this.logSync(
+        "full",
+        moviesCount + dlangCount,
+        "success",
+        null,
+        startTime
+      );
 
-      console.log(`✅ Full sync completed: ${moviesCount} movies, ${dlangCount} dlang movies`);
-      
+      console.log(
+        `✅ Full sync completed: ${moviesCount} movies, ${dlangCount} dlang movies`
+      );
+
       return {
         success: true,
         moviesCount,
@@ -275,7 +283,9 @@ class BackupService {
       process.chdir(ROOT_DIR);
 
       // Check if there are changes to the database
-      const status = execSync("git status --porcelain backend/movies.db", { encoding: "utf-8" });
+      const status = execSync("git status --porcelain backend/movies.db", {
+        encoding: "utf-8",
+      });
 
       if (!status.trim()) {
         console.log(`📝 No database changes to commit to Git`);
@@ -361,7 +371,9 @@ class BackupService {
       }
 
       // Restore dlang movies
-      const dlangResult = await client.query("SELECT * FROM dlang_movies_backup");
+      const dlangResult = await client.query(
+        "SELECT * FROM dlang_movies_backup"
+      );
       for (const movie of dlangResult.rows) {
         await database.run(
           `INSERT OR REPLACE INTO dlang_movies (id, title, year, language, genre, director, rating, poster_url, notes, created_at)
@@ -383,8 +395,10 @@ class BackupService {
 
       client.release();
 
-      console.log(`✅ Restored ${moviesResult.rows.length} movies, ${dlangResult.rows.length} dlang movies`);
-      
+      console.log(
+        `✅ Restored ${moviesResult.rows.length} movies, ${dlangResult.rows.length} dlang movies`
+      );
+
       return {
         success: true,
         moviesCount: moviesResult.rows.length,

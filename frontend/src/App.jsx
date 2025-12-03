@@ -4,8 +4,10 @@ import { useEntries } from './hooks/useEntries';
 import SearchModal from './components/SearchModal';
 import SpotlightSearch from './components/SpotlightSearch';
 import DlangView from './components/DlangView';
+import { supabase } from './lib/supabase';
+import LandingPage from './pages/LandingPage';
 
-function App() {
+function Dashboard() {
   const { entries, loading, createEntry, updateEntry, deleteEntry } = useEntries();
   const [filterType, setFilterType] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -856,6 +858,36 @@ function StatsView({ entries }) {
       </div>
     </div>
   );
+}
+
+function App() {
+  const [session, setSession] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setAuthLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (authLoading) {
+    return <div className="min-h-screen bg-[#050505] flex items-center justify-center text-white">Loading...</div>;
+  }
+
+  if (!session) {
+    return <LandingPage onLogin={() => {}} />;
+  }
+
+  return <Dashboard />;
 }
 
 export default App;

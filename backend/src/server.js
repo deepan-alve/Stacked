@@ -44,14 +44,26 @@ app.get("/api/health", (req, res) => {
 app.get("/api/stats", async (req, res) => {
   try {
     // Get main collection stats
-    const mainTotal = await database.get("SELECT COUNT(*) as count FROM movies");
-    const movieCount = await database.get("SELECT COUNT(*) as count FROM movies WHERE type = 'movie'");
-    const seriesCount = await database.get("SELECT COUNT(*) as count FROM movies WHERE type = 'series'");
-    const animeCount = await database.get("SELECT COUNT(*) as count FROM movies WHERE type = 'anime'");
-    const bookCount = await database.get("SELECT COUNT(*) as count FROM movies WHERE type = 'book'");
-    
+    const mainTotal = await database.get(
+      "SELECT COUNT(*) as count FROM movies"
+    );
+    const movieCount = await database.get(
+      "SELECT COUNT(*) as count FROM movies WHERE type = 'movie'"
+    );
+    const seriesCount = await database.get(
+      "SELECT COUNT(*) as count FROM movies WHERE type = 'series'"
+    );
+    const animeCount = await database.get(
+      "SELECT COUNT(*) as count FROM movies WHERE type = 'anime'"
+    );
+    const bookCount = await database.get(
+      "SELECT COUNT(*) as count FROM movies WHERE type = 'book'"
+    );
+
     // Get dlang count
-    const dlangCount = await database.get("SELECT COUNT(*) as count FROM dlang_movies");
+    const dlangCount = await database.get(
+      "SELECT COUNT(*) as count FROM dlang_movies"
+    );
 
     res.json({
       total: mainTotal.count + dlangCount.count,
@@ -98,7 +110,9 @@ database
           await backupService.initSupabaseTables();
           // Start periodic sync
           backupService.startPeriodicSync(BACKUP_INTERVAL_HOURS);
-          console.log(`Backup enabled: syncing every ${BACKUP_INTERVAL_HOURS} hours`);
+          console.log(
+            `Backup enabled: syncing every ${BACKUP_INTERVAL_HOURS} hours`
+          );
         }
       } catch (error) {
         console.error("Backup initialization failed:", error.message);

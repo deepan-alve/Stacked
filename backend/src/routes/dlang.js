@@ -20,10 +20,9 @@ router.get("/", async (req, res) => {
 // Get single dlang movie
 router.get("/:id", async (req, res) => {
   try {
-    const movie = await db.get(
-      "SELECT * FROM dlang_movies WHERE id = ?",
-      [req.params.id]
-    );
+    const movie = await db.get("SELECT * FROM dlang_movies WHERE id = ?", [
+      req.params.id,
+    ]);
     if (!movie) {
       return res.status(404).json({ error: "Movie not found" });
     }
@@ -37,8 +36,17 @@ router.get("/:id", async (req, res) => {
 // Create dlang movie
 router.post("/", async (req, res) => {
   try {
-    const { title, year, language, genre, director, rating, poster_url, notes } = req.body;
-    
+    const {
+      title,
+      year,
+      language,
+      genre,
+      director,
+      rating,
+      poster_url,
+      notes,
+    } = req.body;
+
     if (!title) {
       return res.status(400).json({ error: "Title is required" });
     }
@@ -49,11 +57,10 @@ router.post("/", async (req, res) => {
       [title, year, language, genre, director, rating, poster_url, notes]
     );
 
-    const newMovie = await db.get(
-      "SELECT * FROM dlang_movies WHERE id = ?",
-      [result.lastID]
-    );
-    
+    const newMovie = await db.get("SELECT * FROM dlang_movies WHERE id = ?", [
+      result.lastID,
+    ]);
+
     res.status(201).json(newMovie);
   } catch (error) {
     console.error("Error creating dlang movie:", error);
@@ -64,8 +71,17 @@ router.post("/", async (req, res) => {
 // Update dlang movie
 router.put("/:id", async (req, res) => {
   try {
-    const { title, year, language, genre, director, rating, poster_url, notes } = req.body;
-    
+    const {
+      title,
+      year,
+      language,
+      genre,
+      director,
+      rating,
+      poster_url,
+      notes,
+    } = req.body;
+
     if (!title) {
       return res.status(400).json({ error: "Title is required" });
     }
@@ -74,7 +90,17 @@ router.put("/:id", async (req, res) => {
       `UPDATE dlang_movies 
        SET title = ?, year = ?, language = ?, genre = ?, director = ?, rating = ?, poster_url = ?, notes = ?, updated_at = CURRENT_TIMESTAMP
        WHERE id = ?`,
-      [title, year, language, genre, director, rating, poster_url, notes, req.params.id]
+      [
+        title,
+        year,
+        language,
+        genre,
+        director,
+        rating,
+        poster_url,
+        notes,
+        req.params.id,
+      ]
     );
 
     const updatedMovie = await db.get(
@@ -96,10 +122,9 @@ router.put("/:id", async (req, res) => {
 // Delete dlang movie
 router.delete("/:id", async (req, res) => {
   try {
-    const result = await db.run(
-      "DELETE FROM dlang_movies WHERE id = ?",
-      [req.params.id]
-    );
+    const result = await db.run("DELETE FROM dlang_movies WHERE id = ?", [
+      req.params.id,
+    ]);
 
     if (result.changes === 0) {
       return res.status(404).json({ error: "Movie not found" });
@@ -130,13 +155,13 @@ router.post("/add-by-imdb", async (req, res) => {
     }
 
     // Extract director name (from scraped data if available)
-    const director = details.director || '';
-    
+    const director = details.director || "";
+
     // Extract first genre
-    const genre = details.genres?.[0] || details.type || '';
-    
+    const genre = details.genres?.[0] || details.type || "";
+
     // Extract language
-    const language = details.languages?.[0] || 'English';
+    const language = details.languages?.[0] || "English";
 
     const result = await db.run(
       `INSERT INTO dlang_movies (title, year, language, genre, director, rating, poster_url, notes)
@@ -149,14 +174,13 @@ router.post("/add-by-imdb", async (req, res) => {
         director,
         details.rating,
         details.poster,
-        `IMDB: ${imdbId} | ${details.plot || ''}`
+        `IMDB: ${imdbId} | ${details.plot || ""}`,
       ]
     );
 
-    const newMovie = await db.get(
-      "SELECT * FROM dlang_movies WHERE id = ?",
-      [result.lastID]
-    );
+    const newMovie = await db.get("SELECT * FROM dlang_movies WHERE id = ?", [
+      result.lastID,
+    ]);
 
     res.status(201).json(newMovie);
   } catch (error) {

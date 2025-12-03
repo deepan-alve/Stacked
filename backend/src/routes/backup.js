@@ -10,7 +10,9 @@ router.get("/test", async (req, res) => {
     const connected = await backupService.testConnection();
     res.json({
       success: connected,
-      message: connected ? "Supabase connection successful" : "Connection failed",
+      message: connected
+        ? "Supabase connection successful"
+        : "Connection failed",
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
