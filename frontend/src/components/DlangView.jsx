@@ -262,10 +262,13 @@ const DlangView = forwardRef(({ searchQuery = '' }, ref) => {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 overflow-hidden">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={closeModal} />
           
-          <div className="relative w-full max-w-md bg-zinc-900/95 backdrop-blur-xl border border-zinc-800 shadow-2xl rounded-xl p-6 max-h-[85vh] overflow-y-auto">
+          <div 
+            className="relative w-full max-w-md bg-zinc-900/95 backdrop-blur-xl border border-zinc-800 shadow-2xl rounded-xl p-6 max-h-[85vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-base font-medium text-white tracking-tight">
                 {editingMovie ? 'Edit Movie' : 'Add Movie'}
