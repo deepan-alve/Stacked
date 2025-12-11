@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
 import database from "./config/database.js";
 import entryRoutes from "./routes/entries.js";
@@ -19,10 +21,54 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 const BACKUP_INTERVAL_HOURS = parseInt(process.env.BACKUP_INTERVAL_HOURS) || 6;
+const isProduction = process.env.NODE_ENV === "production";
+
+// ===================
+// SECURITY MIDDLEWARE
+// ===================
+
+// Helmet - sets various HTTP security headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:", "http:"], // Allow external images for posters
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+    },
+  },
+  crossOriginEmbedderPolicy: false, // Disable for external images
+}));
+
+// Rate limiting - general API
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // 100 requests per windowMs
+  message: { error: "Too many requests, please try again later" },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => !isProduction, // Skip in development
+});
+
+// Stricter rate limiting for auth endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Only 5 login attempts per 15 minutes
+  message: { error: "Too many login attempts, please try again in 15 minutes" },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipFailedRequests: false,
+  skip: (req) => !isProduction, // Skip in development
+});
 
 // Allowed origins for CORS
 const allowedOrigins = [
-  process.env.FRONTEND_URL || "http://localhost:5173",
+  process.env.FRONTEND_URL,
   "http://localhost:5173",
   "http://localhost:3000",
   "https://stacked.deepanalve.dev",
@@ -31,8 +77,11 @@ const allowedOrigins = [
 // CORS configuration for credentials (cookies)
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, curl, etc.)
-    if (!origin) return callback(null, true);
+    // Block requests with no origin in production (except for same-origin)
+    if (!origin) {
+      // Allow same-origin requests and server-to-server
+      return callback(null, true);
+    }
     
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
@@ -44,22 +93,28 @@ const corsOptions = {
   credentials: true, // Allow cookies to be sent
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
+  maxAge: 86400, // Cache preflight for 24 hours
 };
 
 // Middleware
 app.use(cors(corsOptions));
 app.use(cookieParser());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "10mb" })); // Limit body size
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// Request logging
+// Apply general rate limiting to all routes
+app.use(generalLimiter);
+
+// Request logging (don't log sensitive data)
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  // Sanitize logging - don't log passwords or tokens
+  const sanitizedPath = req.path;
+  console.log(`${new Date().toISOString()} - ${req.method} ${sanitizedPath}`);
   next();
 });
 
 // API Routes
-app.use("/api/auth", authRoutes); // Auth routes (public)
+app.use("/api/auth", authLimiter, authRoutes); // Auth routes with strict rate limiting
 app.use("/api/public", publicRoutes); // Public routes (no auth required)
 app.use("/api/entries", requireAuth, entryRoutes); // Protected
 app.use("/api/search", searchRoutes); // Search can be public

@@ -1,18 +1,49 @@
 import express from "express";
+import { body, validationResult } from "express-validator";
 import { supabase, setAuthCookies, clearAuthCookies } from "../middleware/auth.js";
 
 const router = express.Router();
+
+// Input validation middleware
+const validateLogin = [
+  body("email")
+    .isEmail()
+    .normalizeEmail()
+    .withMessage("Valid email is required"),
+  body("password")
+    .isLength({ min: 6 })
+    .withMessage("Password must be at least 6 characters"),
+];
+
+const validateSignup = [
+  body("email")
+    .isEmail()
+    .normalizeEmail()
+    .withMessage("Valid email is required"),
+  body("password")
+    .isLength({ min: 8 })
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+    .withMessage("Password must be at least 8 characters with uppercase, lowercase, and number"),
+];
+
+// Handle validation errors
+const handleValidationErrors = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ 
+      error: errors.array()[0].msg,
+      errors: errors.array() 
+    });
+  }
+  next();
+};
 
 /**
  * POST /api/auth/login
  * Login with email and password, sets HTTP-only cookies
  */
-router.post("/login", async (req, res) => {
+router.post("/login", validateLogin, handleValidationErrors, async (req, res) => {
   const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ error: "Email and password required" });
-  }
 
   if (!supabase) {
     return res.status(500).json({ error: "Auth not configured" });
@@ -25,13 +56,14 @@ router.post("/login", async (req, res) => {
     });
 
     if (error) {
-      return res.status(401).json({ error: error.message });
+      // Generic error message to prevent user enumeration
+      return res.status(401).json({ error: "Invalid email or password" });
     }
 
     // Set HTTP-only cookies
     setAuthCookies(res, data.session);
 
-    // Return user info (without tokens)
+    // Return user info (without tokens - never expose tokens to client)
     res.json({
       user: {
         id: data.user.id,
@@ -40,7 +72,7 @@ router.post("/login", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Login error:", error);
+    console.error("Login error:", error.message); // Don't log full error object
     res.status(500).json({ error: "Login failed" });
   }
 });
@@ -49,12 +81,8 @@ router.post("/login", async (req, res) => {
  * POST /api/auth/signup
  * Sign up new user with email and password
  */
-router.post("/signup", async (req, res) => {
+router.post("/signup", validateSignup, handleValidationErrors, async (req, res) => {
   const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ error: "Email and password required" });
-  }
 
   if (!supabase) {
     return res.status(500).json({ error: "Auth not configured" });
@@ -67,7 +95,8 @@ router.post("/signup", async (req, res) => {
     });
 
     if (error) {
-      return res.status(400).json({ error: error.message });
+      // Don't reveal if email exists
+      return res.status(400).json({ error: "Could not create account" });
     }
 
     // If email confirmation is required, don't set cookies yet
@@ -88,7 +117,7 @@ router.post("/signup", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Signup error:", error);
+    console.error("Signup error:", error.message);
     res.status(500).json({ error: "Signup failed" });
   }
 });

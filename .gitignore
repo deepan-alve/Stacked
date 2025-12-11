@@ -44,3 +44,6 @@ Thumbs.db
 
 # Container Data
 /data
+
+backend/.env
+frontend/.env
