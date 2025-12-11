@@ -307,11 +307,14 @@ const DlangView = forwardRef(({ searchQuery = '', isDemo = false }, ref) => {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 overflow-y-auto">
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-md" onClick={closeModal} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-md transition-opacity" 
+            onClick={closeModal}
+          />
           
           <div 
-            className="relative w-full max-w-md bg-zinc-900/95 backdrop-blur-xl border border-zinc-800 shadow-2xl rounded-xl p-6 max-h-[85vh] overflow-y-auto my-8"
+            className="relative w-full max-w-md bg-zinc-900/95 backdrop-blur-xl border border-zinc-800 shadow-2xl rounded-xl p-6 flex flex-col max-h-[85vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
