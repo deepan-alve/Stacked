@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Check, Command, Search, Zap, Shield, Film, Tv, Book, X, Menu, BarChart3, PieChart, Activity, Layers, Database, Globe, Star, Clock, Play } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase'; // Keep for waitlist only
 
 // Sample media data with real TMDB/Jikan images
 const SAMPLE_MEDIA = [
@@ -73,6 +74,9 @@ export default function LandingPage({ onLogin }) {
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
+
+  const { login } = useAuth();
 
   const { scrollY } = useScroll();
   const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
@@ -96,20 +100,27 @@ export default function LandingPage({ onLogin }) {
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoginError('');
+    setLoginLoading(true);
     
     // Only allow beta user
     const ALLOWED_EMAIL = 'deepanalve@gmail.com';
     if (loginEmail.toLowerCase() !== ALLOWED_EMAIL.toLowerCase()) {
       setLoginError('Only beta users allowed. Join the waitlist!');
+      setLoginLoading(false);
       return;
     }
     
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
-      if (error) throw error;
-      if (data.user) onLogin(data.user);
+      // Use the new HTTP-only cookie auth
+      const user = await login(loginEmail, loginPassword);
+      if (user) {
+        onLogin(user);
+        setIsLoginModalOpen(false);
+      }
     } catch (error) {
       setLoginError(error.message);
+    } finally {
+      setLoginLoading(false);
     }
   };
 
@@ -177,26 +188,35 @@ export default function LandingPage({ onLogin }) {
             </FadeIn>
 
             <FadeIn delay={0.3}>
-              <form onSubmit={handleJoinWaitlist} className="max-w-lg relative group">
-                <div className="relative flex items-center bg-[#0A0A0A] border border-white/10 rounded-xl p-1.5 pl-4">
-                  <input
-                    type="email"
-                    placeholder="Enter your email..."
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    disabled={status === 'success'}
-                    className="flex-1 bg-transparent text-white placeholder-zinc-600 focus:outline-none text-sm py-1"
-                    required
-                  />
-                  <button
-                    type="submit"
-                    disabled={status === 'success' || status === 'loading'}
-                    className="bg-white text-black rounded-lg px-5 py-2.5 text-sm font-medium hover:bg-zinc-200 transition-colors disabled:opacity-50"
-                  >
-                    {status === 'loading' ? '...' : status === 'success' ? 'Joined ✓' : 'Get Access'}
-                  </button>
-                </div>
-              </form>
+              <div className="flex flex-col sm:flex-row gap-3 max-w-lg">
+                <form onSubmit={handleJoinWaitlist} className="flex-1 relative group">
+                  <div className="relative flex items-center bg-[#0A0A0A] border border-white/10 rounded-xl p-1.5 pl-4">
+                    <input
+                      type="email"
+                      placeholder="Enter your email..."
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      disabled={status === 'success'}
+                      className="flex-1 bg-transparent text-white placeholder-zinc-600 focus:outline-none text-sm py-1"
+                      required
+                    />
+                    <button
+                      type="submit"
+                      disabled={status === 'success' || status === 'loading'}
+                      className="bg-white text-black rounded-lg px-5 py-2.5 text-sm font-medium hover:bg-zinc-200 transition-colors disabled:opacity-50 whitespace-nowrap"
+                    >
+                      {status === 'loading' ? '...' : status === 'success' ? 'Joined ✓' : 'Get Access'}
+                    </button>
+                  </div>
+                </form>
+                <a
+                  href="/demo"
+                  className="inline-flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white rounded-xl px-5 py-3 text-sm font-medium transition-all group"
+                >
+                  <Play className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                  Live Demo
+                </a>
+              </div>
             </FadeIn>
           </div>
 
@@ -678,33 +698,42 @@ export default function LandingPage({ onLogin }) {
       </section>
 
       {/* CTA Section */}
-      <section className="px-6 pb-32 max-w-4xl mx-auto relative z-20 text-center">
+      <section id="join" className="px-6 pb-32 max-w-4xl mx-auto relative z-20 text-center">
         <FadeIn>
           <h2 className="text-4xl md:text-5xl font-medium mb-6">Ready to get started?</h2>
           <p className="text-xl text-zinc-500 mb-10 max-w-xl mx-auto">
             Join the private beta and be among the first to experience a new way to manage your media collection.
           </p>
-          <form onSubmit={handleJoinWaitlist} className="max-w-sm mx-auto relative group">
-            <div className="absolute -inset-1 bg-gradient-to-r from-white/10 to-white/5 rounded-full blur opacity-0 group-hover:opacity-100 transition duration-1000" />
-            <div className="relative flex items-center bg-[#0A0A0A] border border-white/10 rounded-full p-1.5 pl-5">
-              <input
-                type="email"
-                placeholder="Enter your email..."
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={status === 'success'}
-                className="flex-1 bg-transparent text-white placeholder-zinc-600 focus:outline-none text-sm"
-                required
-              />
-              <button
-                type="submit"
-                disabled={status === 'success' || status === 'loading'}
-                className="bg-white text-black rounded-full px-6 py-2.5 text-sm font-medium hover:bg-zinc-200 transition-colors disabled:opacity-50"
-              >
-                {status === 'loading' ? '...' : status === 'success' ? 'Joined' : 'Join Waitlist'}
-              </button>
-            </div>
-          </form>
+          <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+            <form onSubmit={handleJoinWaitlist} className="flex-1 relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-white/10 to-white/5 rounded-full blur opacity-0 group-hover:opacity-100 transition duration-1000" />
+              <div className="relative flex items-center bg-[#0A0A0A] border border-white/10 rounded-full p-1.5 pl-5">
+                <input
+                  type="email"
+                  placeholder="Enter your email..."
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={status === 'success'}
+                  className="flex-1 bg-transparent text-white placeholder-zinc-600 focus:outline-none text-sm"
+                  required
+                />
+                <button
+                  type="submit"
+                  disabled={status === 'success' || status === 'loading'}
+                  className="bg-white text-black rounded-full px-6 py-2.5 text-sm font-medium hover:bg-zinc-200 transition-colors disabled:opacity-50"
+                >
+                  {status === 'loading' ? '...' : status === 'success' ? 'Joined' : 'Join Waitlist'}
+                </button>
+              </div>
+            </form>
+            <a
+              href="/demo"
+              className="inline-flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white rounded-full px-6 py-3 text-sm font-medium transition-all"
+            >
+              <Play className="w-4 h-4" />
+              Try Demo
+            </a>
+          </div>
         </FadeIn>
       </section>
 
@@ -760,7 +789,8 @@ export default function LandingPage({ onLogin }) {
                     placeholder="Email address"
                     value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:border-white/20 transition-all text-sm"
+                    disabled={loginLoading}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:border-white/20 transition-all text-sm disabled:opacity-50"
                     required
                   />
                 </div>
@@ -770,7 +800,8 @@ export default function LandingPage({ onLogin }) {
                     placeholder="Password"
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:border-white/20 transition-all text-sm"
+                    disabled={loginLoading}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:border-white/20 transition-all text-sm disabled:opacity-50"
                     required
                   />
                 </div>
@@ -783,9 +814,10 @@ export default function LandingPage({ onLogin }) {
 
                 <button
                   type="submit"
-                  className="w-full bg-white text-black font-medium rounded-lg px-4 py-3 hover:bg-zinc-200 transition-colors mt-2 text-sm"
+                  disabled={loginLoading}
+                  className="w-full bg-white text-black font-medium rounded-lg px-4 py-3 hover:bg-zinc-200 transition-colors mt-2 text-sm disabled:opacity-50"
                 >
-                  Sign In
+                  {loginLoading ? 'Signing in...' : 'Sign In'}
                 </button>
               </form>
             </motion.div>

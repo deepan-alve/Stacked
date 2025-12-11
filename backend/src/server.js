@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import database from "./config/database.js";
 import entryRoutes from "./routes/entries.js";
@@ -8,7 +9,10 @@ import imdbRoutes from "./routes/imdb.js";
 import detailsRoutes from "./routes/details.js";
 import dlangRoutes from "./routes/dlang.js";
 import backupRoutes from "./routes/backup.js";
+import publicRoutes from "./routes/public.js";
+import authRoutes from "./routes/auth.js";
 import backupService from "./services/backupService.js";
+import { requireAuth } from "./middleware/auth.js";
 
 dotenv.config();
 
@@ -16,8 +20,17 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const BACKUP_INTERVAL_HOURS = parseInt(process.env.BACKUP_INTERVAL_HOURS) || 6;
 
+// CORS configuration for credentials (cookies)
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || "http://localhost:5173",
+  credentials: true, // Allow cookies to be sent
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -28,12 +41,14 @@ app.use((req, res, next) => {
 });
 
 // API Routes
-app.use("/api/entries", entryRoutes);
-app.use("/api/search", searchRoutes);
-app.use("/api/imdb", imdbRoutes);
-app.use("/api/details", detailsRoutes);
-app.use("/api/dlang", dlangRoutes);
-app.use("/api/backup", backupRoutes);
+app.use("/api/auth", authRoutes); // Auth routes (public)
+app.use("/api/public", publicRoutes); // Public routes (no auth required)
+app.use("/api/entries", requireAuth, entryRoutes); // Protected
+app.use("/api/search", searchRoutes); // Search can be public
+app.use("/api/imdb", requireAuth, imdbRoutes); // Protected
+app.use("/api/details", detailsRoutes); // Details can be public
+app.use("/api/dlang", requireAuth, dlangRoutes); // Protected
+app.use("/api/backup", requireAuth, backupRoutes); // Protected
 
 // Health check
 app.get("/api/health", (req, res) => {

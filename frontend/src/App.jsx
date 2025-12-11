@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Film, Tv, Sparkles, Book, Plus, Search, X, ChevronDown, Star, Inbox, ExternalLink } from 'lucide-react';
+import { Film, Tv, Sparkles, Book, Plus, Search, X, ChevronDown, Star, Inbox, ExternalLink, LogOut } from 'lucide-react';
 import { useEntries } from './hooks/useEntries';
 import SearchModal from './components/SearchModal';
 import SpotlightSearch from './components/SpotlightSearch';
 import DlangView from './components/DlangView';
-import { supabase } from './lib/supabase';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import LandingPage from './pages/LandingPage';
+import toast, { Toaster } from 'react-hot-toast';
+import { setDemoMode } from './services/api';
 
-function Dashboard() {
+function Dashboard({ isDemo = false, onLogout }) {
   const { entries, loading, createEntry, updateEntry, deleteEntry } = useEntries();
   const [filterType, setFilterType] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -17,6 +19,11 @@ function Dashboard() {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isSpotlightOpen, setIsSpotlightOpen] = useState(false);
   const dlangViewRef = useRef(null);
+
+  // Set demo mode in API service
+  useEffect(() => {
+    setDemoMode(isDemo);
+  }, [isDemo]);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -49,6 +56,21 @@ function Dashboard() {
   };
 
   const openModal = (entry = null) => {
+    // Allow viewing in demo mode, just not creating new entries
+    if (isDemo && !entry) {
+      toast.error(
+        <div className="flex flex-col gap-1">
+          <p className="font-medium text-sm">Read-Only Demo Mode</p>
+          <p className="text-xs">This is the creator's data.</p>
+          <a href="/#join" className="text-xs text-blue-400 hover:text-blue-300 mt-1 underline">Join the waitlist to track your own!</a>
+        </div>,
+        {
+          duration: 4000,
+        }
+      );
+      return;
+    }
+
     if (entry) {
       setCurrentEntry(entry);
       setFormData({
@@ -89,6 +111,20 @@ function Dashboard() {
   };
 
   const handleSpotlightSelect = async (result) => {
+    if (isDemo) {
+      toast.error(
+        <div className="flex flex-col gap-1">
+          <p className="font-medium text-sm">Read-Only Demo Mode</p>
+          <p className="text-xs">This is the creator's data.</p>
+          <a href="/#join" className="text-xs text-blue-400 hover:text-blue-300 mt-1 underline">Join the waitlist to track your own!</a>
+        </div>,
+        {
+          duration: 4000,
+        }
+      );
+      return;
+    }
+
     // Check if we're on Dlang page - save directly to dlang database
     if (currentView === 'dlang') {
       try {
@@ -147,6 +183,21 @@ function Dashboard() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (isDemo) {
+      toast.error(
+        <div className="flex flex-col gap-1">
+          <p className="font-medium text-sm">Read-Only Demo Mode</p>
+          <p className="text-xs">Cannot save changes to the creator's data.</p>
+          <a href="/#join" className="text-xs text-blue-400 hover:text-blue-300 mt-1 underline">Join the waitlist to track your own!</a>
+        </div>,
+        {
+          duration: 4000,
+        }
+      );
+      return;
+    }
+    
     try {
       const data = {
         ...formData,
@@ -166,6 +217,20 @@ function Dashboard() {
   };
 
   const handleDelete = async () => {
+    if (isDemo) {
+      toast.error(
+        <div className="flex flex-col gap-1">
+          <p className="font-medium text-sm">Read-Only Demo Mode</p>
+          <p className="text-xs">Cannot delete the creator's data.</p>
+          <a href="/#join" className="text-xs text-blue-400 hover:text-blue-300 mt-1 underline">Join the waitlist to track your own!</a>
+        </div>,
+        {
+          duration: 4000,
+        }
+      );
+      return;
+    }
+    
     if (window.confirm('Delete this entry?')) {
       try {
         await deleteEntry(currentEntry.id);
@@ -198,6 +263,16 @@ function Dashboard() {
 
   return (
     <div className="min-h-screen flex flex-col text-zinc-400 selection:bg-zinc-800 selection:text-zinc-200">
+      <Toaster 
+        toastOptions={{
+          className: '',
+          style: {
+            background: '#18181b',
+            color: '#fff',
+            border: '1px solid #27272a',
+          },
+        }}
+      />
       {/* Background Glow */}
       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-indigo-500/5 rounded-full blur-3xl pointer-events-none -z-10" />
 
@@ -268,6 +343,17 @@ function Dashboard() {
               <Plus className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">{currentView === 'dlang' ? 'Add Movie' : 'Add Entry'}</span>
             </button>
+
+            {/* Logout button - only show when not in demo mode */}
+            {!isDemo && onLogout && (
+              <button 
+                onClick={onLogout}
+                className="flex items-center gap-2 text-zinc-500 hover:text-zinc-300 text-xs font-medium py-1.5 px-2 rounded transition-colors"
+                title="Sign out"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
       </nav>
@@ -367,20 +453,23 @@ function Dashboard() {
               <div className="space-y-1.5">
                 <label className="text-xs text-zinc-500 flex items-center justify-between">
                   <span>Title</span>
-                  <button
-                    type="button"
-                    onClick={() => setIsSearchModalOpen(true)}
-                    className="text-blue-400 hover:text-blue-300 flex items-center gap-1 text-xs"
-                  >
-                    <ExternalLink size={11} />
-                    Search API
-                  </button>
+                  {!isDemo && (
+                    <button
+                      type="button"
+                      onClick={() => setIsSearchModalOpen(true)}
+                      className="text-blue-400 hover:text-blue-300 flex items-center gap-1 text-xs"
+                    >
+                      <ExternalLink size={11} />
+                      Search API
+                    </button>
+                  )}
                 </label>
                 <input 
                   type="text" 
                   required
                   value={formData.title}
                   onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  readOnly={isDemo}
                   className="w-full bg-zinc-800/50 border border-zinc-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-colors placeholder-zinc-600" 
                   placeholder="e.g. Inception" 
                 />
@@ -392,7 +481,8 @@ function Dashboard() {
                   <select 
                     value={formData.type}
                     onChange={(e) => setFormData({...formData, type: e.target.value})}
-                    className="w-full appearance-none bg-zinc-800/50 border border-zinc-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-colors cursor-pointer"
+                    disabled={isDemo}
+                    className="w-full appearance-none bg-zinc-800/50 border border-zinc-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-colors cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
                   >
                     <option value="Movie">Movie</option>
                     <option value="Series">Series</option>
@@ -413,6 +503,7 @@ function Dashboard() {
                     step="0.1"
                     value={formData.rating}
                     onChange={(e) => setFormData({...formData, rating: e.target.value})}
+                    readOnly={isDemo}
                     className="w-full bg-zinc-800/50 border border-zinc-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-colors placeholder-zinc-600" 
                     placeholder="-" 
                   />
@@ -423,6 +514,7 @@ function Dashboard() {
                     type="number" 
                     min="1"
                     disabled={formData.type !== 'Series' && formData.type !== 'Anime'}
+                    readOnly={isDemo}
                     value={formData.season}
                     onChange={(e) => setFormData({...formData, season: e.target.value})}
                     className="w-full bg-zinc-800/50 border border-zinc-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-colors placeholder-zinc-600 disabled:cursor-not-allowed disabled:opacity-50" 
@@ -437,28 +529,31 @@ function Dashboard() {
                   rows="3"
                   value={formData.notes}
                   onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                  readOnly={isDemo}
                   className="w-full bg-zinc-800/50 border border-zinc-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-colors placeholder-zinc-600 resize-none" 
                   placeholder="Thoughts, memorable quotes, or summary..." 
                 />
               </div>
 
-              <div className="flex flex-col gap-2 pt-4 border-t border-zinc-800">
-                <button 
-                  type="submit"
-                  className="w-full bg-white hover:bg-gray-100 text-zinc-950 font-medium text-sm py-2.5 rounded-lg transition-colors"
-                >
-                  Save Entry
-                </button>
-                {currentEntry && (
+              {!isDemo && (
+                <div className="flex flex-col gap-2 pt-4 border-t border-zinc-800">
                   <button 
-                    type="button"
-                    onClick={handleDelete}
-                    className="w-full bg-transparent hover:bg-red-500/10 text-red-400 hover:text-red-300 border border-zinc-700 hover:border-red-500/50 font-medium text-sm py-2.5 rounded-lg transition-colors"
+                    type="submit"
+                    className="w-full bg-white hover:bg-gray-100 text-zinc-950 font-medium text-sm py-2.5 rounded-lg transition-colors"
                   >
-                    Delete Entry
+                    Save Entry
                   </button>
-                )}
-              </div>
+                  {currentEntry && (
+                    <button 
+                      type="button"
+                      onClick={handleDelete}
+                      className="w-full bg-transparent hover:bg-red-500/10 text-red-400 hover:text-red-300 border border-zinc-700 hover:border-red-500/50 font-medium text-sm py-2.5 rounded-lg transition-colors"
+                    >
+                      Delete Entry
+                    </button>
+                  )}
+                </div>
+              )}
             </form>
           </div>
         </div>
@@ -860,34 +955,36 @@ function StatsView({ entries }) {
   );
 }
 
-function App() {
-  const [session, setSession] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
+function App({ isDemo = false }) {
+  const { user, loading: authLoading, logout } = useAuth();
 
+  // Set demo mode in API service
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setAuthLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+    setDemoMode(isDemo);
+  }, [isDemo]);
 
   if (authLoading) {
     return <div className="min-h-screen bg-[#050505] flex items-center justify-center text-white">Loading...</div>;
   }
 
-  if (!session) {
+  // In demo mode, always show dashboard
+  if (isDemo) {
+    return <Dashboard isDemo={true} />;
+  }
+
+  if (!user) {
     return <LandingPage onLogin={() => {}} />;
   }
 
-  return <Dashboard />;
+  return <Dashboard isDemo={false} onLogout={logout} />;
 }
 
-export default App;
+function AppWithAuth({ isDemo = false }) {
+  return (
+    <AuthProvider>
+      <App isDemo={isDemo} />
+    </AuthProvider>
+  );
+}
+
+export default AppWithAuth;

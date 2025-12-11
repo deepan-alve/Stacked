@@ -1,0 +1,180 @@
+import express from "express";
+import { supabase, setAuthCookies, clearAuthCookies } from "../middleware/auth.js";
+
+const router = express.Router();
+
+/**
+ * POST /api/auth/login
+ * Login with email and password, sets HTTP-only cookies
+ */
+router.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email and password required" });
+  }
+
+  if (!supabase) {
+    return res.status(500).json({ error: "Auth not configured" });
+  }
+
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      return res.status(401).json({ error: error.message });
+    }
+
+    // Set HTTP-only cookies
+    setAuthCookies(res, data.session);
+
+    // Return user info (without tokens)
+    res.json({
+      user: {
+        id: data.user.id,
+        email: data.user.email,
+        created_at: data.user.created_at,
+      },
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ error: "Login failed" });
+  }
+});
+
+/**
+ * POST /api/auth/signup
+ * Sign up new user with email and password
+ */
+router.post("/signup", async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email and password required" });
+  }
+
+  if (!supabase) {
+    return res.status(500).json({ error: "Auth not configured" });
+  }
+
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (error) {
+      return res.status(400).json({ error: error.message });
+    }
+
+    // If email confirmation is required, don't set cookies yet
+    if (!data.session) {
+      return res.json({
+        message: "Please check your email to confirm your account",
+        user: { email: data.user.email },
+      });
+    }
+
+    // Set HTTP-only cookies
+    setAuthCookies(res, data.session);
+
+    res.json({
+      user: {
+        id: data.user.id,
+        email: data.user.email,
+      },
+    });
+  } catch (error) {
+    console.error("Signup error:", error);
+    res.status(500).json({ error: "Signup failed" });
+  }
+});
+
+/**
+ * POST /api/auth/logout
+ * Clear auth cookies
+ */
+router.post("/logout", async (req, res) => {
+  clearAuthCookies(res);
+  res.json({ message: "Logged out successfully" });
+});
+
+/**
+ * GET /api/auth/me
+ * Get current user from cookie session
+ */
+router.get("/me", async (req, res) => {
+  if (!supabase) {
+    return res.status(500).json({ error: "Auth not configured" });
+  }
+
+  const accessToken = req.cookies?.["sb-access-token"];
+
+  if (!accessToken) {
+    return res.status(401).json({ error: "Not authenticated" });
+  }
+
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser(accessToken);
+
+    if (error || !user) {
+      clearAuthCookies(res);
+      return res.status(401).json({ error: "Invalid session" });
+    }
+
+    res.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        created_at: user.created_at,
+      },
+    });
+  } catch (error) {
+    console.error("Get user error:", error);
+    res.status(500).json({ error: "Failed to get user" });
+  }
+});
+
+/**
+ * POST /api/auth/refresh
+ * Refresh the session using the refresh token cookie
+ */
+router.post("/refresh", async (req, res) => {
+  if (!supabase) {
+    return res.status(500).json({ error: "Auth not configured" });
+  }
+
+  const refreshToken = req.cookies?.["sb-refresh-token"];
+
+  if (!refreshToken) {
+    return res.status(401).json({ error: "No refresh token" });
+  }
+
+  try {
+    const { data, error } = await supabase.auth.refreshSession({
+      refresh_token: refreshToken,
+    });
+
+    if (error || !data.session) {
+      clearAuthCookies(res);
+      return res.status(401).json({ error: "Failed to refresh session" });
+    }
+
+    setAuthCookies(res, data.session);
+
+    res.json({
+      user: {
+        id: data.user.id,
+        email: data.user.email,
+      },
+    });
+  } catch (error) {
+    console.error("Refresh error:", error);
+    res.status(500).json({ error: "Failed to refresh session" });
+  }
+});
+
+export default router;

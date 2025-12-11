@@ -2,11 +2,19 @@ import axios from "axios";
 
 const API_BASE_URL = "/api";
 
+// Check if we're in demo mode (can be set by app)
+let isDemoMode = false;
+
+export const setDemoMode = (isDemo) => {
+  isDemoMode = isDemo;
+};
+
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true, // Important: send cookies with all requests
   timeout: 10000,
 });
 
@@ -33,22 +41,39 @@ apiClient.interceptors.response.use(
 
 export const entryService = {
   // Get all entries
-  getAll: () => apiClient.get("/entries"),
+  getAll: () => apiClient.get(isDemoMode ? "/public/entries" : "/entries"),
 
   // Get single entry by ID
-  getById: (id) => apiClient.get(`/entries/${id}`),
+  getById: (id) =>
+    apiClient.get(isDemoMode ? `/public/entries/${id}` : `/entries/${id}`),
 
   // Create new entry
-  create: (data) => apiClient.post("/entries", data),
+  create: (data) => {
+    if (isDemoMode) {
+      return Promise.reject(new Error("DEMO_MODE"));
+    }
+    return apiClient.post("/entries", data);
+  },
 
   // Update entry
-  update: (id, data) => apiClient.put(`/entries/${id}`, data),
+  update: (id, data) => {
+    if (isDemoMode) {
+      return Promise.reject(new Error("DEMO_MODE"));
+    }
+    return apiClient.put(`/entries/${id}`, data);
+  },
 
   // Delete entry
-  delete: (id) => apiClient.delete(`/entries/${id}`),
+  delete: (id) => {
+    if (isDemoMode) {
+      return Promise.reject(new Error("DEMO_MODE"));
+    }
+    return apiClient.delete(`/entries/${id}`);
+  },
 
   // Get statistics
-  getStatistics: () => apiClient.get("/entries/stats"),
+  getStatistics: () =>
+    apiClient.get(isDemoMode ? "/public/stats" : "/entries/stats"),
 };
 
 export const searchService = {
