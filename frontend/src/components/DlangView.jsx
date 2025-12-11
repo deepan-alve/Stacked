@@ -300,7 +300,7 @@ const DlangView = forwardRef(({ searchQuery = '', isDemo = false }, ref) => {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
           {filteredMovies.map(movie => (
-            <MovieCard key={movie.id} movie={movie} onClick={() => openEditModal(movie)} />
+            <MovieCard key={movie.id} movie={movie} onClick={() => openEditModal(movie)} isDemo={isDemo} />
           ))}
         </div>
       )}
@@ -459,7 +459,7 @@ const DlangView = forwardRef(({ searchQuery = '', isDemo = false }, ref) => {
   );
 });
 
-function MovieCard({ movie, onClick }) {
+function MovieCard({ movie, onClick, isDemo = false }) {
   const [isFlipped, setIsFlipped] = useState(false);
 
   const handleClick = (e) => {
