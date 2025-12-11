@@ -1,9 +1,10 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Film, Star, Plus, X, Inbox, ChevronDown, Filter, Calendar, Globe, Tag } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const API_BASE = '';
 
-const DlangView = forwardRef(({ searchQuery = '' }, ref) => {
+const DlangView = forwardRef(({ searchQuery = '', isDemo = false }, ref) => {
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -37,7 +38,11 @@ const DlangView = forwardRef(({ searchQuery = '' }, ref) => {
 
   const fetchMovies = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/dlang`);
+      // Use public endpoint in demo mode, authenticated endpoint otherwise
+      const endpoint = isDemo ? `${API_BASE}/api/public/dlang` : `${API_BASE}/api/dlang`;
+      const res = await fetch(endpoint, {
+        credentials: 'include' // Send cookies for auth
+      });
       if (!res.ok) throw new Error('Failed to fetch');
       const data = await res.json();
       setMovies(data);
@@ -50,6 +55,20 @@ const DlangView = forwardRef(({ searchQuery = '' }, ref) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Block in demo mode
+    if (isDemo) {
+      toast.error(
+        <div className="flex flex-col gap-1">
+          <p className="font-medium text-sm">Read-Only Demo Mode</p>
+          <p className="text-xs">This is the creator's data.</p>
+          <a href="/#join" className="text-xs text-blue-400 hover:text-blue-300 mt-1 underline">Join the waitlist to track your own!</a>
+        </div>,
+        { duration: 4000 }
+      );
+      return;
+    }
+    
     try {
       const payload = {
         ...formData,
@@ -64,25 +83,51 @@ const DlangView = forwardRef(({ searchQuery = '' }, ref) => {
       const res = await fetch(url, {
         method: editingMovie ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(payload)
       });
 
-      if (!res.ok) throw new Error('Failed to save');
+      if (!res.ok) {
+        if (res.status === 401) throw new Error('Not authenticated');
+        throw new Error('Failed to save');
+      }
       await fetchMovies();
       closeModal();
+      toast.success(editingMovie ? 'Movie updated!' : 'Movie added!');
     } catch (error) {
-      alert('Failed to save: ' + error.message);
+      toast.error('Failed to save: ' + error.message);
     }
   };
 
   const handleDelete = async () => {
+    // Block in demo mode
+    if (isDemo) {
+      toast.error(
+        <div className="flex flex-col gap-1">
+          <p className="font-medium text-sm">Read-Only Demo Mode</p>
+          <p className="text-xs">This is the creator's data.</p>
+          <a href="/#join" className="text-xs text-blue-400 hover:text-blue-300 mt-1 underline">Join the waitlist to track your own!</a>
+        </div>,
+        { duration: 4000 }
+      );
+      return;
+    }
+    
     if (!window.confirm('Delete this movie?')) return;
     try {
-      await fetch(`${API_BASE}/api/dlang/${editingMovie.id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE}/api/dlang/${editingMovie.id}`, { 
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (!res.ok) {
+        if (res.status === 401) throw new Error('Not authenticated');
+        throw new Error('Failed to delete');
+      }
       await fetchMovies();
       closeModal();
+      toast.success('Movie deleted!');
     } catch (error) {
-      alert('Failed to delete: ' + error.message);
+      toast.error('Failed to delete: ' + error.message);
     }
   };
 
@@ -380,20 +425,30 @@ const DlangView = forwardRef(({ searchQuery = '' }, ref) => {
               </div>
 
               <div className="flex flex-col gap-2 pt-4 border-t border-zinc-800">
-                <button 
-                  type="submit"
-                  className="w-full bg-white hover:bg-gray-100 text-zinc-950 font-medium text-sm py-2.5 rounded-lg transition-colors"
-                >
-                  Save
-                </button>
-                {editingMovie && (
-                  <button 
-                    type="button"
-                    onClick={handleDelete}
-                    className="w-full bg-transparent hover:bg-red-500/10 text-red-400 hover:text-red-300 border border-zinc-700 hover:border-red-500/50 font-medium text-sm py-2.5 rounded-lg transition-colors"
-                  >
-                    Delete
-                  </button>
+                {/* Hide save/delete buttons in demo mode, show view-only message */}
+                {isDemo ? (
+                  <div className="text-center py-2">
+                    <p className="text-zinc-500 text-sm">View-only in demo mode</p>
+                    <a href="/#join" className="text-xs text-blue-400 hover:text-blue-300 underline">Join waitlist to track your own!</a>
+                  </div>
+                ) : (
+                  <>
+                    <button 
+                      type="submit"
+                      className="w-full bg-white hover:bg-gray-100 text-zinc-950 font-medium text-sm py-2.5 rounded-lg transition-colors"
+                    >
+                      Save
+                    </button>
+                    {editingMovie && (
+                      <button 
+                        type="button"
+                        onClick={handleDelete}
+                        className="w-full bg-transparent hover:bg-red-500/10 text-red-400 hover:text-red-300 border border-zinc-700 hover:border-red-500/50 font-medium text-sm py-2.5 rounded-lg transition-colors"
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
             </form>
@@ -500,7 +555,9 @@ function MovieCard({ movie, onClick }) {
               )}
 
               <div className="mt-auto pt-3">
-                <div className="text-[9px] text-zinc-600 uppercase tracking-wider">Click again to edit</div>
+                <div className="text-[9px] text-zinc-600 uppercase tracking-wider">
+                  {isDemo ? 'Click to view details' : 'Click again to edit'}
+                </div>
               </div>
             </div>
           </div>

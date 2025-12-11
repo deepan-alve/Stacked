@@ -422,7 +422,7 @@ function Dashboard({ isDemo = false, onLogout }) {
             )}
           </div>
         ) : currentView === 'dlang' ? (
-          <DlangView ref={dlangViewRef} searchQuery={searchQuery} />
+          <DlangView ref={dlangViewRef} searchQuery={searchQuery} isDemo={isDemo} />
         ) : (
           <StatsView entries={entries} />
         )}
