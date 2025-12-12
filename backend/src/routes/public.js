@@ -19,10 +19,9 @@ router.get("/entries", async (req, res) => {
 // Get single entry (public, read-only)
 router.get("/entries/:id", async (req, res) => {
   try {
-    const entry = await database.get(
-      "SELECT * FROM movies WHERE id = ?",
-      [req.params.id]
-    );
+    const entry = await database.get("SELECT * FROM movies WHERE id = ?", [
+      req.params.id,
+    ]);
     if (!entry) {
       return res.status(404).json({ error: "Entry not found" });
     }

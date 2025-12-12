@@ -4,22 +4,26 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 
 // Create Supabase client with service key for server-side verification
-const supabase = supabaseUrl && supabaseServiceKey 
-  ? createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-        detectSessionInUrl: false
-      }
-    })
-  : null;
+const supabase =
+  supabaseUrl && supabaseServiceKey
+    ? createClient(supabaseUrl, supabaseServiceKey, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+          detectSessionInUrl: false,
+        },
+      })
+    : null;
 
 /**
  * Auth middleware that validates the session from HTTP-only cookies
  */
 export const requireAuth = async (req, res, next) => {
   // Skip auth in development if SKIP_AUTH is set (NEVER use in production)
-  if (process.env.SKIP_AUTH === "true" && process.env.NODE_ENV !== "production") {
+  if (
+    process.env.SKIP_AUTH === "true" &&
+    process.env.NODE_ENV !== "production"
+  ) {
     req.user = { id: "dev-user", email: "dev@localhost" };
     return next();
   }
@@ -40,14 +44,18 @@ export const requireAuth = async (req, res, next) => {
     }
 
     // Verify the token with Supabase
-    const { data: { user }, error } = await supabase.auth.getUser(accessToken);
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser(accessToken);
 
     if (error || !user) {
       // Try to refresh the token if we have a refresh token
       if (refreshToken) {
-        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession({
-          refresh_token: refreshToken
-        });
+        const { data: refreshData, error: refreshError } =
+          await supabase.auth.refreshSession({
+            refresh_token: refreshToken,
+          });
 
         if (!refreshError && refreshData.session) {
           // Set new tokens in cookies
@@ -85,9 +93,11 @@ export const optionalAuth = async (req, res, next) => {
 
   try {
     const accessToken = req.cookies?.["sb-access-token"];
-    
+
     if (accessToken) {
-      const { data: { user } } = await supabase.auth.getUser(accessToken);
+      const {
+        data: { user },
+      } = await supabase.auth.getUser(accessToken);
       if (user) {
         req.user = {
           id: user.id,
@@ -99,7 +109,7 @@ export const optionalAuth = async (req, res, next) => {
   } catch (error) {
     // Silently continue without user
   }
-  
+
   next();
 };
 
@@ -109,11 +119,11 @@ export const optionalAuth = async (req, res, next) => {
  */
 export const setAuthCookies = (res, session) => {
   const isProduction = process.env.NODE_ENV === "production";
-  
+
   // Base cookie options following security best practices
   const baseCookieOptions = {
-    httpOnly: true,                          // Prevents XSS attacks from reading cookies
-    secure: isProduction,                    // Only send over HTTPS in production
+    httpOnly: true, // Prevents XSS attacks from reading cookies
+    secure: isProduction, // Only send over HTTPS in production
     sameSite: isProduction ? "strict" : "lax", // CSRF protection
     path: "/",
     domain: isProduction ? undefined : undefined, // Let browser handle domain

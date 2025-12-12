@@ -1,6 +1,10 @@
 import express from "express";
 import { body, validationResult } from "express-validator";
-import { supabase, setAuthCookies, clearAuthCookies } from "../middleware/auth.js";
+import {
+  supabase,
+  setAuthCookies,
+  clearAuthCookies,
+} from "../middleware/auth.js";
 
 const router = express.Router();
 
@@ -23,16 +27,18 @@ const validateSignup = [
   body("password")
     .isLength({ min: 8 })
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-    .withMessage("Password must be at least 8 characters with uppercase, lowercase, and number"),
+    .withMessage(
+      "Password must be at least 8 characters with uppercase, lowercase, and number"
+    ),
 ];
 
 // Handle validation errors
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ 
+    return res.status(400).json({
       error: errors.array()[0].msg,
-      errors: errors.array() 
+      errors: errors.array(),
     });
   }
   next();
@@ -42,85 +48,95 @@ const handleValidationErrors = (req, res, next) => {
  * POST /api/auth/login
  * Login with email and password, sets HTTP-only cookies
  */
-router.post("/login", validateLogin, handleValidationErrors, async (req, res) => {
-  const { email, password } = req.body;
+router.post(
+  "/login",
+  validateLogin,
+  handleValidationErrors,
+  async (req, res) => {
+    const { email, password } = req.body;
 
-  if (!supabase) {
-    return res.status(500).json({ error: "Auth not configured" });
-  }
-
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      // Generic error message to prevent user enumeration
-      return res.status(401).json({ error: "Invalid email or password" });
+    if (!supabase) {
+      return res.status(500).json({ error: "Auth not configured" });
     }
 
-    // Set HTTP-only cookies
-    setAuthCookies(res, data.session);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    // Return user info (without tokens - never expose tokens to client)
-    res.json({
-      user: {
-        id: data.user.id,
-        email: data.user.email,
-        created_at: data.user.created_at,
-      },
-    });
-  } catch (error) {
-    console.error("Login error:", error.message); // Don't log full error object
-    res.status(500).json({ error: "Login failed" });
+      if (error) {
+        // Generic error message to prevent user enumeration
+        return res.status(401).json({ error: "Invalid email or password" });
+      }
+
+      // Set HTTP-only cookies
+      setAuthCookies(res, data.session);
+
+      // Return user info (without tokens - never expose tokens to client)
+      res.json({
+        user: {
+          id: data.user.id,
+          email: data.user.email,
+          created_at: data.user.created_at,
+        },
+      });
+    } catch (error) {
+      console.error("Login error:", error.message); // Don't log full error object
+      res.status(500).json({ error: "Login failed" });
+    }
   }
-});
+);
 
 /**
  * POST /api/auth/signup
  * Sign up new user with email and password
  */
-router.post("/signup", validateSignup, handleValidationErrors, async (req, res) => {
-  const { email, password } = req.body;
+router.post(
+  "/signup",
+  validateSignup,
+  handleValidationErrors,
+  async (req, res) => {
+    const { email, password } = req.body;
 
-  if (!supabase) {
-    return res.status(500).json({ error: "Auth not configured" });
-  }
-
-  try {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
-    if (error) {
-      // Don't reveal if email exists
-      return res.status(400).json({ error: "Could not create account" });
+    if (!supabase) {
+      return res.status(500).json({ error: "Auth not configured" });
     }
 
-    // If email confirmation is required, don't set cookies yet
-    if (!data.session) {
-      return res.json({
-        message: "Please check your email to confirm your account",
-        user: { email: data.user.email },
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
       });
+
+      if (error) {
+        // Don't reveal if email exists
+        return res.status(400).json({ error: "Could not create account" });
+      }
+
+      // If email confirmation is required, don't set cookies yet
+      if (!data.session) {
+        return res.json({
+          message: "Please check your email to confirm your account",
+          user: { email: data.user.email },
+        });
+      }
+
+      // Set HTTP-only cookies
+      setAuthCookies(res, data.session);
+
+      res.json({
+        user: {
+          id: data.user.id,
+          email: data.user.email,
+        },
+      });
+    } catch (error) {
+      console.error("Signup error:", error.message);
+      res.status(500).json({ error: "Signup failed" });
     }
-
-    // Set HTTP-only cookies
-    setAuthCookies(res, data.session);
-
-    res.json({
-      user: {
-        id: data.user.id,
-        email: data.user.email,
-      },
-    });
-  } catch (error) {
-    console.error("Signup error:", error.message);
-    res.status(500).json({ error: "Signup failed" });
   }
-});
+);
 
 /**
  * POST /api/auth/logout
@@ -147,7 +163,10 @@ router.get("/me", async (req, res) => {
   }
 
   try {
-    const { data: { user }, error } = await supabase.auth.getUser(accessToken);
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser(accessToken);
 
     if (error || !user) {
       clearAuthCookies(res);
