@@ -1,9 +1,10 @@
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
-import dotenv from "dotenv";
+
 import database from "./config/database.js";
 import entryRoutes from "./routes/entries.js";
 import searchRoutes from "./routes/search.js";
@@ -16,7 +17,7 @@ import authRoutes from "./routes/auth.js";
 import backupService from "./services/backupService.js";
 import { requireAuth } from "./middleware/auth.js";
 
-dotenv.config();
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -28,22 +29,24 @@ const isProduction = process.env.NODE_ENV === "production";
 // ===================
 
 // Helmet - sets various HTTP security headers
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:", "http:"], // Allow external images for posters
-      connectSrc: ["'self'"],
-      fontSrc: ["'self'"],
-      objectSrc: ["'none'"],
-      mediaSrc: ["'self'"],
-      frameSrc: ["'none'"],
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", "data:", "https:", "http:"], // Allow external images for posters
+        connectSrc: ["'self'"],
+        fontSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'self'"],
+        frameSrc: ["'none'"],
+      },
     },
-  },
-  crossOriginEmbedderPolicy: false, // Disable for external images
-}));
+    crossOriginEmbedderPolicy: false, // Disable for external images
+  })
+);
 
 // Rate limiting - general API
 const generalLimiter = rateLimit({
@@ -82,7 +85,7 @@ const corsOptions = {
       // Allow same-origin requests and server-to-server
       return callback(null, true);
     }
-    
+
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
