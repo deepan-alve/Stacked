@@ -8,6 +8,9 @@ const __dirname = path.dirname(__filename);
 
 const dbPath = process.env.DB_PATH || path.join(__dirname, "../../movies.db");
 
+console.log("[DB] Database path configured:", dbPath);
+console.log("[DB] DB_PATH env:", process.env.DB_PATH);
+
 class Database {
   constructor() {
     this.db = null;
@@ -15,12 +18,13 @@ class Database {
 
   connect() {
     return new Promise((resolve, reject) => {
+      console.log("[DB] Attempting to connect to database at:", dbPath);
       this.db = new SQLiteDatabase(dbPath, (err) => {
         if (err) {
-          console.error("Error opening database:", err.message);
+          console.error("[DB] Error opening database:", err.message);
           reject(err);
         } else {
-          console.log("Connected to SQLite database");
+          console.log("[DB] ✓ Connected to SQLite database");
           this.initializeDatabase()
             .then(() => resolve())
             .catch(reject);

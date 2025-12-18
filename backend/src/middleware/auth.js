@@ -30,7 +30,7 @@ export const requireAuth = async (req, res, next) => {
 
   // Check if Supabase is configured
   if (!supabase) {
-    console.error("CRITICAL: Supabase not configured - blocking request");
+    console.error("[AUTH] CRITICAL: Supabase not configured - blocking request");
     return res.status(500).json({ error: "Server configuration error" });
   }
 
@@ -39,7 +39,10 @@ export const requireAuth = async (req, res, next) => {
     const accessToken = req.cookies?.["sb-access-token"];
     const refreshToken = req.cookies?.["sb-refresh-token"];
 
+    console.log("[AUTH] Request to:", req.path, "- Has access token:", !!accessToken, "- Has refresh token:", !!refreshToken);
+
     if (!accessToken) {
+      console.log("[AUTH] No access token found in cookies");
       return res.status(401).json({ error: "Authentication required" });
     }
 

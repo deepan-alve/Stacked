@@ -4,9 +4,12 @@ import googleSearchService from "../services/googleSearch.js";
 class EntryController {
   async getAll(req, res) {
     try {
+      console.log("[ENTRIES] Fetching all entries for user:", req.user?.id || 'unknown');
       const entries = await EntryModel.findAll();
+      console.log("[ENTRIES] Found", entries.length, "entries");
       res.json(entries);
     } catch (error) {
+      console.error("[ENTRIES] Error fetching entries:", error.message);
       res.status(500).json({ error: error.message });
     }
   }
