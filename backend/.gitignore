@@ -1,9 +1,9 @@
 # Dependencies
 node_modules/
 
-# Database
-*.db
+# Database (except production db)
 *.db-journal
+!movies.db
 
 # Environment
 .env
