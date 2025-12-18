@@ -55,7 +55,14 @@ router.post(
   async (req, res) => {
     const { email, password } = req.body;
 
+    console.log("[AUTH] Login attempt for:", email);
+    console.log("[AUTH] Supabase configured:", !!supabase);
+    console.log("[AUTH] Request origin:", req.headers.origin);
+
     if (!supabase) {
+      console.error("[AUTH] CRITICAL: Supabase not configured!");
+      console.error("[AUTH] SUPABASE_URL:", process.env.SUPABASE_URL ? "SET" : "NOT SET");
+      console.error("[AUTH] SUPABASE_SERVICE_KEY:", process.env.SUPABASE_SERVICE_KEY ? "SET" : "NOT SET");
       return res.status(500).json({ error: "Auth not configured" });
     }
 
@@ -66,12 +73,17 @@ router.post(
       });
 
       if (error) {
+        console.error("[AUTH] Login failed:", error.message);
         // Generic error message to prevent user enumeration
         return res.status(401).json({ error: "Invalid email or password" });
       }
 
+      console.log("[AUTH] Login successful for:", email);
+      
       // Set HTTP-only cookies
       setAuthCookies(res, data.session);
+
+      console.log("[AUTH] Cookies set for user:", data.user.id);
 
       // Return user info (without tokens - never expose tokens to client)
       res.json({
@@ -82,7 +94,7 @@ router.post(
         },
       });
     } catch (error) {
-      console.error("Login error:", error.message); // Don't log full error object
+      console.error("[AUTH] Login exception:", error.message);
       res.status(500).json({ error: "Login failed" });
     }
   }

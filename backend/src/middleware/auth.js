@@ -124,7 +124,7 @@ export const setAuthCookies = (res, session) => {
   const baseCookieOptions = {
     httpOnly: true, // Prevents XSS attacks from reading cookies
     secure: isProduction, // Only send over HTTPS in production
-    sameSite: isProduction ? "strict" : "lax", // CSRF protection
+    sameSite: "lax", // Same-origin requests (nginx proxy), 'lax' is appropriate
     path: "/",
     domain: isProduction ? undefined : undefined, // Let browser handle domain
   };
@@ -150,7 +150,7 @@ export const clearAuthCookies = (res) => {
   const cookieOptions = {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? "strict" : "lax",
+    sameSite: "lax", // Same-origin requests (nginx proxy), 'lax' is appropriate
     path: "/",
   };
 

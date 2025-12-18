@@ -7,6 +7,10 @@ services:
       - "com.centurylinklabs.watchtower.enable=true"
     environment:
       - DB_PATH=/data/movies.db
+      - NODE_ENV=production
+      - FRONTEND_URL=https://stacked.deepanalve.dev
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
     volumes:
       - ./data:/data
     healthcheck:
