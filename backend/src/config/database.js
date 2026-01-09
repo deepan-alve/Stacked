@@ -45,6 +45,13 @@ class Database {
           notes TEXT,
           assignee TEXT,
           due_date TEXT,
+          poster_url TEXT,
+          api_id TEXT,
+          api_provider TEXT,
+          description TEXT,
+          release_date TEXT,
+          year INTEGER DEFAULT 2025,
+          watch_date TEXT DEFAULT CURRENT_TIMESTAMP,
           created_at TEXT DEFAULT CURRENT_TIMESTAMP,
           updated_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
@@ -105,7 +112,10 @@ class Database {
             } else {
               this.db.run(createDlangTable, (err) => {
                 if (err) {
-                  console.error("Error creating dlang_movies table:", err.message);
+                  console.error(
+                    "Error creating dlang_movies table:",
+                    err.message
+                  );
                   reject(err);
                 } else {
                   console.log("Database tables ready");

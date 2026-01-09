@@ -61,8 +61,14 @@ router.post(
 
     if (!supabase) {
       console.error("[AUTH] CRITICAL: Supabase not configured!");
-      console.error("[AUTH] SUPABASE_URL:", process.env.SUPABASE_URL ? "SET" : "NOT SET");
-      console.error("[AUTH] SUPABASE_SERVICE_KEY:", process.env.SUPABASE_SERVICE_KEY ? "SET" : "NOT SET");
+      console.error(
+        "[AUTH] SUPABASE_URL:",
+        process.env.SUPABASE_URL ? "SET" : "NOT SET"
+      );
+      console.error(
+        "[AUTH] SUPABASE_SERVICE_KEY:",
+        process.env.SUPABASE_SERVICE_KEY ? "SET" : "NOT SET"
+      );
       return res.status(500).json({ error: "Auth not configured" });
     }
 
@@ -79,7 +85,7 @@ router.post(
       }
 
       console.log("[AUTH] Login successful for:", email);
-      
+
       // Set HTTP-only cookies
       setAuthCookies(res, data.session);
 

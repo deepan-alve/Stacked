@@ -17,8 +17,6 @@ import authRoutes from "./routes/auth.js";
 import backupService from "./services/backupService.js";
 import { requireAuth } from "./middleware/auth.js";
 
-
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 const BACKUP_INTERVAL_HOURS = parseInt(process.env.BACKUP_INTERVAL_HOURS) || 6;
@@ -26,7 +24,7 @@ const isProduction = process.env.NODE_ENV === "production";
 
 // Trust proxy - REQUIRED when behind nginx/traefik
 // This enables Express to trust X-Forwarded-* headers
-app.set('trust proxy', 1);
+app.set("trust proxy", 1);
 
 // ===================
 // SECURITY MIDDLEWARE
