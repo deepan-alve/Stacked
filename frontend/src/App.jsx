@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Film, Tv, Sparkles, Book, Plus, Search, X, ChevronDown, Star, Inbox, ExternalLink, LogOut } from 'lucide-react';
+import { Film, Tv, Sparkles, Book, Plus, Search, X, ChevronDown, Star, Inbox, ExternalLink, LogOut, Calendar } from 'lucide-react';
 import { useEntries } from './hooks/useEntries';
 import SearchModal from './components/SearchModal';
 import SpotlightSearch from './components/SpotlightSearch';
@@ -7,13 +7,19 @@ import DlangView from './components/DlangView';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import LandingPage from './pages/LandingPage';
 import toast, { Toaster } from 'react-hot-toast';
-import { setDemoMode } from './services/api';
+import { setDemoMode, entryService } from './services/api';
+
+// Archive feature is always enabled
+const currentYear = new Date().getFullYear();
 
 function Dashboard({ isDemo = false, onLogout }) {
-  const { entries, loading, createEntry, updateEntry, deleteEntry } = useEntries();
+  // Collection always shows current year only
+  const { entries, loading, createEntry, updateEntry, deleteEntry, loadEntries } = useEntries(currentYear);
   const [filterType, setFilterType] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentView, setCurrentView] = useState('collection');
+  const [selectedYear, setSelectedYear] = useState(null); // For archive view (null = all years)
+  const [availableYears, setAvailableYears] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentEntry, setCurrentEntry] = useState(null);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
@@ -24,6 +30,13 @@ function Dashboard({ isDemo = false, onLogout }) {
   useEffect(() => {
     setDemoMode(isDemo);
   }, [isDemo]);
+
+  // Load available years for archive view
+  useEffect(() => {
+    entryService.getAvailableYears().then(years => {
+      setAvailableYears(years); // All years
+    }).catch(err => console.error('Failed to load years:', err));
+  }, []);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -36,7 +49,9 @@ function Dashboard({ isDemo = false, onLogout }) {
     api_id: '',
     api_provider: '',
     description: '',
-    release_date: ''
+    release_date: '',
+    watch_date: new Date().toISOString().split('T')[0], // Default to today
+    year: currentYear // Default to current year
   });
 
   // Filter entries
@@ -55,7 +70,7 @@ function Dashboard({ isDemo = false, onLogout }) {
     books: entries.filter(e => e.type === 'Book').length,
   };
 
-  const openModal = (entry = null) => {
+  const openModal = (entry = null, defaultYear = null) => {
     // Allow viewing in demo mode, just not creating new entries
     if (isDemo && !entry) {
       toast.error(
@@ -83,10 +98,14 @@ function Dashboard({ isDemo = false, onLogout }) {
         api_id: entry.api_id || '',
         api_provider: entry.api_provider || '',
         description: entry.description || '',
-        release_date: entry.release_date || ''
+        release_date: entry.release_date || '',
+        watch_date: entry.watch_date ? entry.watch_date.split('T')[0] : new Date().toISOString().split('T')[0],
+        year: entry.year || currentYear
       });
     } else {
       setCurrentEntry(null);
+      // Use defaultYear if provided (for adding to archive), otherwise current year
+      const yearToUse = defaultYear || currentYear;
       setFormData({
         title: '',
         type: 'Movie',
@@ -97,7 +116,9 @@ function Dashboard({ isDemo = false, onLogout }) {
         api_id: '',
         api_provider: '',
         description: '',
-        release_date: ''
+        release_date: '',
+        watch_date: new Date().toISOString().split('T')[0],
+        year: yearToUse
       });
     }
     setIsModalOpen(true);
@@ -170,7 +191,8 @@ function Dashboard({ isDemo = false, onLogout }) {
       api_id: result.imdbId || '',
       api_provider: 'imdb',
       description: result.plot || '',
-      release_date: result.releaseDate || result.year || ''
+      release_date: result.releaseDate || result.year || '',
+      watch_date: new Date().toISOString().split('T')[0] // Add watch_date
     });
     setIsSpotlightOpen(false);
     setIsModalOpen(true);
@@ -183,7 +205,7 @@ function Dashboard({ isDemo = false, onLogout }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (isDemo) {
       toast.error(
         <div className="flex flex-col gap-1">
@@ -197,22 +219,40 @@ function Dashboard({ isDemo = false, onLogout }) {
       );
       return;
     }
-    
+
     try {
       const data = {
         ...formData,
         rating: formData.rating ? parseFloat(formData.rating) : null,
         season: formData.season ? parseInt(formData.season) : null,
+        year: formData.year ? parseInt(formData.year) : currentYear,
       };
 
       if (currentEntry) {
         await updateEntry(currentEntry.id, data);
+        // If year changed, entry will move to different view
+        if (currentEntry.year !== data.year) {
+          toast.success(`Entry moved to ${data.year}`);
+          // Reload entries if we're in collection view (to remove moved entry)
+          if (currentView === 'collection') {
+            loadEntries(currentYear);
+          }
+        }
       } else {
         await createEntry(data);
       }
       closeModal();
+      // Refresh available years in case a new year was added
+      entryService.getAvailableYears().then(years => {
+        setAvailableYears(years);
+      }).catch(err => console.error('Failed to refresh years:', err));
     } catch (error) {
-      alert('Failed to save entry: ' + error.message);
+      // Handle duplicate entry error
+      if (error.message.includes('Duplicate entry') || error.message.includes('already added')) {
+        toast.error(error.message);
+      } else {
+        toast.error('Failed to save entry: ' + error.message);
+      }
     }
   };
 
@@ -230,7 +270,7 @@ function Dashboard({ isDemo = false, onLogout }) {
       );
       return;
     }
-    
+
     if (window.confirm('Delete this entry?')) {
       try {
         await deleteEntry(currentEntry.id);
@@ -291,35 +331,45 @@ function Dashboard({ isDemo = false, onLogout }) {
             </div>
 
             <div className="hidden md:flex items-center gap-1">
-              <button 
+              <button
                 onClick={() => setCurrentView('collection')}
                 className={`text-xs font-medium px-3 py-1.5 rounded-md transition-all ${
-                  currentView === 'collection' 
-                    ? 'text-zinc-100 bg-zinc-800/50' 
+                  currentView === 'collection'
+                    ? 'text-zinc-100 bg-zinc-800/50'
                     : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30'
                 }`}
               >
                 Collection
               </button>
-              <button 
+              <button
                 onClick={() => setCurrentView('dlang')}
                 className={`text-xs font-medium px-3 py-1.5 rounded-md transition-all ${
-                  currentView === 'dlang' 
-                    ? 'text-zinc-100 bg-zinc-800/50' 
+                  currentView === 'dlang'
+                    ? 'text-zinc-100 bg-zinc-800/50'
                     : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30'
                 }`}
               >
                 Dlang
               </button>
-              <button 
+              <button
                 onClick={() => setCurrentView('stats')}
                 className={`text-xs font-medium px-3 py-1.5 rounded-md transition-all ${
-                  currentView === 'stats' 
-                    ? 'text-zinc-100 bg-zinc-800/50' 
+                  currentView === 'stats'
+                    ? 'text-zinc-100 bg-zinc-800/50'
                     : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30'
                 }`}
               >
                 Analytics
+              </button>
+              <button
+                onClick={() => setCurrentView('archive')}
+                className={`text-xs font-medium px-3 py-1.5 rounded-md transition-all ${
+                  currentView === 'archive'
+                    ? 'text-zinc-100 bg-zinc-800/50'
+                    : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30'
+                }`}
+              >
+                Archive
               </button>
             </div>
           </div>
@@ -421,6 +471,17 @@ function Dashboard({ isDemo = false, onLogout }) {
               </div>
             )}
           </div>
+        ) : currentView === 'archive' ? (
+          <ArchiveView
+            selectedYear={selectedYear}
+            availableYears={availableYears}
+            onYearChange={setSelectedYear}
+            onEntryClick={openModal}
+            onAddEntry={(year) => openModal(null, year)}
+            getTypeIcon={getTypeIcon}
+            getTypeColor={getTypeColor}
+            isDemo={isDemo}
+          />
         ) : currentView === 'dlang' ? (
           <DlangView ref={dlangViewRef} searchQuery={searchQuery} isDemo={isDemo} />
         ) : (
@@ -520,6 +581,40 @@ function Dashboard({ isDemo = false, onLogout }) {
                     className="w-full bg-zinc-800/50 border border-zinc-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-colors placeholder-zinc-600 disabled:cursor-not-allowed disabled:opacity-50" 
                     placeholder="#" 
                   />
+                </div>
+              </div>
+
+              {/* Watch Date and Year Fields */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs text-zinc-500 flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    Watch Date
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.watch_date}
+                    onChange={(e) => setFormData({...formData, watch_date: e.target.value})}
+                    readOnly={isDemo}
+                    className="w-full bg-zinc-800/50 border border-zinc-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-colors"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs text-zinc-500">Year (Collection)</label>
+                  <div className="relative">
+                    <select
+                      value={formData.year}
+                      onChange={(e) => setFormData({...formData, year: parseInt(e.target.value)})}
+                      disabled={isDemo}
+                      className="w-full appearance-none bg-zinc-800/50 border border-zinc-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-colors cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+                    >
+                      {/* Show available years plus current year */}
+                      {[...new Set([currentYear, ...availableYears])].sort((a, b) => b - a).map(year => (
+                        <option key={year} value={year}>{year}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-zinc-500 pointer-events-none" />
+                  </div>
                 </div>
               </div>
 
@@ -715,6 +810,171 @@ function EntryCard({ entry, onClick, getTypeIcon, getTypeColor }) {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function ArchiveView({ selectedYear, availableYears, onYearChange, onEntryClick, onAddEntry, getTypeIcon, getTypeColor, isDemo }) {
+  const [archiveEntries, setArchiveEntries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filterType, setFilterType] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Load entries - all years if selectedYear is null, otherwise specific year
+  useEffect(() => {
+    setLoading(true);
+    entryService.getAll(selectedYear)
+      .then(data => {
+        setArchiveEntries(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Failed to load archive entries:', err);
+        setLoading(false);
+      });
+  }, [selectedYear]);
+
+  // Filter entries
+  const filteredEntries = archiveEntries.filter(entry => {
+    const matchesType = filterType === 'All' || entry.type === filterType;
+    const matchesSearch = entry.title.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesType && matchesSearch;
+  });
+
+  // Statistics for displayed entries
+  const stats = {
+    total: archiveEntries.length,
+    movies: archiveEntries.filter(e => e.type === 'Movie').length,
+    series: archiveEntries.filter(e => e.type === 'Series').length,
+    anime: archiveEntries.filter(e => e.type === 'Anime').length,
+    books: archiveEntries.filter(e => e.type === 'Book').length,
+  };
+
+  return (
+    <div className="fade-in">
+      {/* Header with Year Selector */}
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <h2 className="text-lg font-medium text-zinc-100 tracking-tight">Archive</h2>
+          <div className="relative">
+            <select
+              value={selectedYear || ''}
+              onChange={(e) => onYearChange(e.target.value ? parseInt(e.target.value) : null)}
+              className="bg-zinc-900/50 border border-zinc-800 text-zinc-300 text-sm rounded-lg px-4 py-2 pr-10 focus:outline-none focus:ring-1 focus:ring-zinc-600 focus:border-zinc-600 cursor-pointer appearance-none"
+            >
+              <option value="">All Years</option>
+              {availableYears.map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
+          </div>
+          {/* Year tabs for quick access */}
+          <div className="hidden lg:flex items-center gap-1">
+            <button
+              onClick={() => onYearChange(null)}
+              className={`px-2 py-1 text-xs font-medium rounded transition-all ${
+                selectedYear === null
+                  ? 'text-zinc-100 bg-zinc-800'
+                  : 'text-zinc-500 hover:text-zinc-300'
+              }`}
+            >
+              All
+            </button>
+            {availableYears.slice(0, 5).map(year => (
+              <button
+                key={year}
+                onClick={() => onYearChange(year)}
+                className={`px-2 py-1 text-xs font-medium rounded transition-all ${
+                  selectedYear === year
+                    ? 'text-zinc-100 bg-zinc-800'
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                {year}
+              </button>
+            ))}
+          </div>
+        </div>
+        {!isDemo && (
+          <button
+            onClick={() => onAddEntry(selectedYear || currentYear)}
+            className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 text-xs font-medium py-2 px-3 rounded-lg transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Add to {selectedYear || 'Archive'}
+          </button>
+        )}
+      </div>
+
+      {/* Statistics Summary */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        <StatCard label={selectedYear ? `${selectedYear} Total` : "All Time Total"} value={stats.total} />
+        <StatCard label="Movies" value={stats.movies} />
+        <StatCard label="Series" value={stats.series} />
+        <StatCard label="Anime" value={stats.anime} />
+        <StatCard label="Books" value={stats.books} />
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-1 p-1 bg-zinc-900/50 border border-zinc-800/50 rounded-lg w-max">
+          {['All', 'Movie', 'Series', 'Anime', 'Book'].map(type => (
+            <button
+              key={type}
+              onClick={() => setFilterType(type)}
+              className={`px-3 py-1 text-xs font-medium rounded transition-all ${
+                filterType === type
+                  ? 'text-zinc-100 bg-zinc-800 shadow-sm'
+                  : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
+              }`}
+            >
+              {type === 'Book' ? 'Books' : type === 'All' ? 'All' : `${type}s`}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="relative w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+            <input
+              type="text"
+              placeholder="Search archive..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-zinc-900/50 border border-zinc-800 text-zinc-300 text-sm rounded-md py-1.5 pl-9 pr-4 focus:outline-none focus:ring-1 focus:ring-zinc-600 focus:border-zinc-600 placeholder-zinc-600"
+            />
+          </div>
+          <span className="text-xs text-zinc-500">{filteredEntries.length} entr{filteredEntries.length === 1 ? 'y' : 'ies'}</span>
+        </div>
+      </div>
+
+      {/* Grid */}
+      {loading ? (
+        <div className="text-center py-20 text-zinc-500">Loading...</div>
+      ) : filteredEntries.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-zinc-800 rounded-xl bg-zinc-900/10">
+          <div className="w-12 h-12 bg-zinc-900 rounded-full flex items-center justify-center mb-4 text-zinc-600">
+            <Inbox className="w-5 h-5" />
+          </div>
+          <h3 className="text-zinc-200 font-medium text-sm mb-1">No entries found</h3>
+          <p className="text-zinc-500 text-xs max-w-xs mx-auto">
+            {selectedYear ? `No entries for ${selectedYear}. Try selecting a different year or add new entries.` : 'Your archive is empty. Start adding entries to build your collection!'}
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+          {filteredEntries.map(entry => (
+            <EntryCard
+              key={entry.id}
+              entry={entry}
+              onClick={() => onEntryClick(entry)}
+              getTypeIcon={getTypeIcon}
+              getTypeColor={getTypeColor}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

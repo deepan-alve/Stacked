@@ -4,8 +4,15 @@ import googleSearchService from "../services/googleSearch.js";
 class EntryController {
   async getAll(req, res) {
     try {
-      console.log("[ENTRIES] Fetching all entries for user:", req.user?.id || 'unknown');
-      const entries = await EntryModel.findAll();
+      const yearParam = req.query.year ? parseInt(req.query.year) : null;
+      const year = yearParam && !isNaN(yearParam) ? yearParam : null;
+      console.log(
+        "[ENTRIES] Fetching entries for user:",
+        req.user?.id || "unknown",
+        "Year filter:",
+        year || "all"
+      );
+      const entries = await EntryModel.findAll(year);
       console.log("[ENTRIES] Found", entries.length, "entries");
       res.json(entries);
     } catch (error) {
@@ -28,10 +35,23 @@ class EntryController {
 
   async create(req, res) {
     try {
-      const { title, type } = req.body;
+      const { title, type, api_id, api_provider } = req.body;
 
       if (!title || !type) {
         return res.status(400).json({ error: "Title and type are required" });
+      }
+
+      // Check for duplicates (only if feature is enabled - after 2026)
+      const currentYear = new Date().getFullYear();
+      if (currentYear >= 2026) {
+        const duplicate = await EntryModel.checkDuplicate(title, api_id, api_provider);
+        if (duplicate) {
+          return res.status(409).json({ 
+            error: "Duplicate entry",
+            message: `You've already added "${duplicate.title}" in ${duplicate.year}!`,
+            existingEntry: duplicate
+          });
+        }
       }
 
       const entry = await EntryModel.create(req.body);
@@ -58,6 +78,19 @@ class EntryController {
 
       if (!details || !details.title || details.title === "Unknown") {
         return res.status(404).json({ error: "Movie not found on IMDB" });
+      }
+
+      // Check for duplicates (only if feature is enabled - after 2026)
+      const currentYear = new Date().getFullYear();
+      if (currentYear >= 2026) {
+        const duplicate = await EntryModel.checkDuplicate(details.title, imdbId, "imdb");
+        if (duplicate) {
+          return res.status(409).json({ 
+            error: "Duplicate entry",
+            message: `You've already added "${duplicate.title}" in ${duplicate.year}!`,
+            existingEntry: duplicate
+          });
+        }
       }
 
       // Create entry with fetched details
@@ -114,8 +147,34 @@ class EntryController {
 
   async getStatistics(req, res) {
     try {
-      const stats = await EntryModel.getStatistics();
+      const yearParam = req.query.year ? parseInt(req.query.year) : null;
+      const year = yearParam && !isNaN(yearParam) ? yearParam : null;
+      const stats = await EntryModel.getStatistics(year);
       res.json(stats);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  async checkDuplicate(req, res) {
+    try {
+      const { title, api_id, api_provider } = req.query;
+      
+      if (!title && !api_id) {
+        return res.status(400).json({ error: "Title or api_id is required" });
+      }
+      
+      const duplicate = await EntryModel.checkDuplicate(title, api_id, api_provider);
+      res.json({ isDuplicate: !!duplicate, entry: duplicate || null });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  async getAvailableYears(req, res) {
+    try {
+      const years = await EntryModel.getAvailableYears();
+      res.json(years);
     } catch (error) {
       res.status(500).json({ error: error.message });
     }

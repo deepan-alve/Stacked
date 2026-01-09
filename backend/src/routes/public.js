@@ -6,9 +6,19 @@ const router = express.Router();
 // Get all entries (public, read-only)
 router.get("/entries", async (req, res) => {
   try {
-    const entries = await database.all(
-      `SELECT * FROM movies ORDER BY created_at DESC`
-    );
+    const yearParam = req.query.year ? parseInt(req.query.year) : null;
+    const year = yearParam && !isNaN(yearParam) ? yearParam : null;
+    let query = "SELECT * FROM movies";
+    const params = [];
+    
+    if (year !== null) {
+      query += " WHERE year = ?";
+      params.push(year);
+    }
+    
+    query += " ORDER BY COALESCE(watch_date, created_at) DESC, created_at DESC";
+    
+    const entries = await database.all(query, params);
     res.json(entries);
   } catch (error) {
     console.error("Error fetching public entries:", error);
@@ -32,35 +42,63 @@ router.get("/entries/:id", async (req, res) => {
   }
 });
 
+// Get available years (public, read-only)
+router.get("/years", async (req, res) => {
+  try {
+    const years = await database.all(
+      "SELECT DISTINCT year FROM movies ORDER BY year DESC"
+    );
+    res.json(years.map(row => row.year));
+  } catch (error) {
+    console.error("Error fetching public years:", error);
+    res.status(500).json({ error: "Failed to fetch years" });
+  }
+});
+
 // Get statistics (public, read-only)
 router.get("/stats", async (req, res) => {
   try {
+    const yearParam = req.query.year ? parseInt(req.query.year) : null;
+    const year = yearParam && !isNaN(yearParam) ? yearParam : null;
     const stats = {};
+    const whereClause = year !== null ? " WHERE year = ?" : "";
+    const params = year !== null ? [year] : [];
 
     // Total count
     const totalResult = await database.get(
-      "SELECT COUNT(*) as count FROM movies"
+      `SELECT COUNT(*) as count FROM movies${whereClause}`,
+      params
     );
     stats.total = totalResult.count;
 
     // Count by type
     const types = ["Movie", "Series", "Anime", "Book"];
     for (const type of types) {
+      const typeWhere = year !== null
+        ? " WHERE type = ? AND year = ?"
+        : " WHERE type = ?";
+      const typeParams = year !== null ? [type, year] : [type];
       const result = await database.get(
-        "SELECT COUNT(*) as count FROM movies WHERE type = ?",
-        [type]
+        `SELECT COUNT(*) as count FROM movies${typeWhere}`,
+        typeParams
       );
       stats[type.toLowerCase()] = result.count;
     }
 
     // Average rating
+    const ratingWhere = year !== null
+      ? " WHERE rating IS NOT NULL AND rating != '' AND year = ?"
+      : " WHERE rating IS NOT NULL AND rating != ''";
+    const ratingParams = year !== null ? [year] : [];
     const avgRating = await database.get(
-      "SELECT AVG(rating) as avg FROM movies WHERE rating IS NOT NULL AND rating != ''"
+      `SELECT AVG(rating) as avg FROM movies${ratingWhere}`,
+      ratingParams
     );
     stats.averageRating = avgRating.avg
       ? parseFloat(avgRating.avg).toFixed(1)
       : 0;
 
+    stats.year = year;
     res.json(stats);
   } catch (error) {
     console.error("Error fetching public stats:", error);

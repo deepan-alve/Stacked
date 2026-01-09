@@ -32,16 +32,22 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    const message =
-      error.response?.data?.error || error.message || "An error occurred";
+    // For duplicate errors, pass the full message from backend
+    const message = error.response?.data?.message 
+      || error.response?.data?.error 
+      || error.message 
+      || "An error occurred";
     console.error("API Error:", message);
     return Promise.reject(new Error(message));
   }
 );
 
 export const entryService = {
-  // Get all entries
-  getAll: () => apiClient.get(isDemoMode ? "/public/entries" : "/entries"),
+  // Get all entries with optional year filter
+  getAll: (year = null) => {
+    const url = isDemoMode ? "/public/entries" : "/entries";
+    return apiClient.get(year ? `${url}?year=${year}` : url);
+  },
 
   // Get single entry by ID
   getById: (id) =>
@@ -74,6 +80,18 @@ export const entryService = {
   // Get statistics
   getStatistics: () =>
     apiClient.get(isDemoMode ? "/public/stats" : "/entries/stats"),
+
+  // Check for duplicate
+  checkDuplicate: (title, api_id = null, api_provider = null) => {
+    let url = `/entries/check-duplicate?title=${encodeURIComponent(title)}`;
+    if (api_id) url += `&api_id=${api_id}`;
+    if (api_provider) url += `&api_provider=${api_provider}`;
+    return apiClient.get(url);
+  },
+
+  // Get available years
+  getAvailableYears: () =>
+    apiClient.get(isDemoMode ? "/public/years" : "/entries/years"),
 };
 
 export const searchService = {

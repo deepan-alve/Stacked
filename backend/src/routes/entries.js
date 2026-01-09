@@ -9,6 +9,12 @@ router.get("/", EntryController.getAll);
 // Get statistics
 router.get("/stats", EntryController.getStatistics);
 
+// Get available years
+router.get("/years", EntryController.getAvailableYears);
+
+// Check for duplicate
+router.get("/check-duplicate", EntryController.checkDuplicate);
+
 // Get single entry
 router.get("/:id", EntryController.getById);
 

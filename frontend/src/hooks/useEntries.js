@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import { entryService } from "../services/api";
 
-export const useEntries = () => {
+export const useEntries = (year = null) => {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const loadEntries = async () => {
+  const loadEntries = async (filterYear = year) => {
     try {
       setLoading(true);
-      const data = await entryService.getAll();
+      const data = await entryService.getAll(filterYear);
       setEntries(data);
       setError(null);
     } catch (err) {
@@ -21,8 +21,9 @@ export const useEntries = () => {
   };
 
   useEffect(() => {
-    loadEntries();
-  }, []);
+    loadEntries(year);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [year]);
 
   const createEntry = async (data) => {
     try {
