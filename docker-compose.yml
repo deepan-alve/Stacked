@@ -18,6 +18,8 @@ services:
     volumes:
       - stacked-data:/app/data
       - stacked-backups:/app/backups
+    networks:
+      - stacked-network
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
       interval: 30s
@@ -32,6 +34,8 @@ services:
     restart: unless-stopped
     depends_on:
       - backend
+    networks:
+      - stacked-network
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
       interval: 30s
@@ -41,3 +45,7 @@ services:
 volumes:
   stacked-data:
   stacked-backups:
+
+networks:
+  stacked-network:
+    driver: bridge
