@@ -1,15 +1,11 @@
-# Backend Dockerfile
+# Backend Dockerfile for Dokploy
 FROM node:20-alpine
 
 # Set working directory
 WORKDIR /app
 
-# Build arguments for Supabase
-ARG SUPABASE_DB_HOST
-ARG SUPABASE_DB_PASSWORD
-
-# Install git for git backup functionality
-RUN apk add --no-cache git
+# Install git for git backup functionality and wget for healthcheck
+RUN apk add --no-cache git wget
 
 # Copy package files
 COPY package*.json ./
@@ -17,23 +13,18 @@ COPY package*.json ./
 # Install dependencies
 RUN npm ci --only=production
 
-# Copy source code
+# Copy application code
 COPY src/ ./src/
 COPY scripts/ ./scripts/
+COPY migrations/ ./migrations/
 
-# Create data directory for SQLite
-RUN mkdir -p /data
+# Create directories for database and backups
+RUN mkdir -p /app/data /app/backups
 
 # Set environment variables
 ENV NODE_ENV=production
 ENV PORT=3000
-ENV DB_PATH=/data/movies.db
-ENV SUPABASE_DB_HOST=$SUPABASE_DB_HOST
-ENV SUPABASE_DB_PORT=5432
-ENV SUPABASE_DB_NAME=postgres
-ENV SUPABASE_DB_USER=postgres
-ENV SUPABASE_DB_PASSWORD=$SUPABASE_DB_PASSWORD
-ENV BACKUP_INTERVAL_HOURS=6
+ENV DB_PATH=/app/data/stacked.db
 
 # Expose port
 EXPOSE 3000

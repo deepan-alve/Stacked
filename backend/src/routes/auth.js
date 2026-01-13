@@ -1,9 +1,13 @@
 import express from "express";
 import { body, validationResult } from "express-validator";
+import database from "../config/database.js";
 import {
-  supabase,
   setAuthCookies,
   clearAuthCookies,
+  generateAccessToken,
+  generateRefreshToken,
+  hashPassword,
+  verifyToken,
 } from "../middleware/auth.js";
 
 const router = express.Router();
@@ -56,47 +60,45 @@ router.post(
     const { email, password } = req.body;
 
     console.log("[AUTH] Login attempt for:", email);
-    console.log("[AUTH] Supabase configured:", !!supabase);
-    console.log("[AUTH] Request origin:", req.headers.origin);
-
-    if (!supabase) {
-      console.error("[AUTH] CRITICAL: Supabase not configured!");
-      console.error(
-        "[AUTH] SUPABASE_URL:",
-        process.env.SUPABASE_URL ? "SET" : "NOT SET"
-      );
-      console.error(
-        "[AUTH] SUPABASE_SERVICE_KEY:",
-        process.env.SUPABASE_SERVICE_KEY ? "SET" : "NOT SET"
-      );
-      return res.status(500).json({ error: "Auth not configured" });
-    }
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const hashedPassword = hashPassword(password);
+
+      // Get user from database
+      const user = await new Promise((resolve, reject) => {
+        database.db.get(
+          "SELECT * FROM users WHERE email = ? AND password = ?",
+          [email, hashedPassword],
+          (err, row) => {
+            if (err) reject(err);
+            else resolve(row);
+          }
+        );
       });
 
-      if (error) {
-        console.error("[AUTH] Login failed:", error.message);
+      if (!user) {
+        console.error("[AUTH] Login failed: invalid credentials");
         // Generic error message to prevent user enumeration
         return res.status(401).json({ error: "Invalid email or password" });
       }
 
       console.log("[AUTH] Login successful for:", email);
 
-      // Set HTTP-only cookies
-      setAuthCookies(res, data.session);
+      // Generate tokens
+      const accessToken = generateAccessToken(user);
+      const refreshToken = generateRefreshToken(user);
 
-      console.log("[AUTH] Cookies set for user:", data.user.id);
+      // Set HTTP-only cookies
+      setAuthCookies(res, accessToken, refreshToken);
+
+      console.log("[AUTH] Cookies set for user:", user.id);
 
       // Return user info (without tokens - never expose tokens to client)
       res.json({
         user: {
-          id: data.user.id,
-          email: data.user.email,
-          created_at: data.user.created_at,
+          id: user.id,
+          email: user.email,
+          created_at: user.created_at,
         },
       });
     } catch (error) {
@@ -117,40 +119,67 @@ router.post(
   async (req, res) => {
     const { email, password } = req.body;
 
-    if (!supabase) {
-      return res.status(500).json({ error: "Auth not configured" });
-    }
-
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
+      const hashedPassword = hashPassword(password);
+
+      // Check if user already exists
+      const existingUser = await new Promise((resolve, reject) => {
+        database.db.get(
+          "SELECT id FROM users WHERE email = ?",
+          [email],
+          (err, row) => {
+            if (err) reject(err);
+            else resolve(row);
+          }
+        );
       });
 
-      if (error) {
-        // Don't reveal if email exists
-        return res.status(400).json({ error: "Could not create account" });
+      if (existingUser) {
+        return res.status(400).json({ error: "Email already registered" });
       }
 
-      // If email confirmation is required, don't set cookies yet
-      if (!data.session) {
-        return res.json({
-          message: "Please check your email to confirm your account",
-          user: { email: data.user.email },
-        });
-      }
+      // Create new user
+      const result = await new Promise((resolve, reject) => {
+        database.db.run(
+          "INSERT INTO users (email, password, created_at) VALUES (?, ?, datetime('now'))",
+          [email, hashedPassword],
+          function (err) {
+            if (err) reject(err);
+            else resolve({ id: this.lastID });
+          }
+        );
+      });
+
+      console.log("[AUTH] User created:", email, "ID:", result.id);
+
+      // Get the created user
+      const newUser = await new Promise((resolve, reject) => {
+        database.db.get(
+          "SELECT id, email, created_at FROM users WHERE id = ?",
+          [result.id],
+          (err, row) => {
+            if (err) reject(err);
+            else resolve(row);
+          }
+        );
+      });
+
+      // Generate tokens
+      const accessToken = generateAccessToken(newUser);
+      const refreshToken = generateRefreshToken(newUser);
 
       // Set HTTP-only cookies
-      setAuthCookies(res, data.session);
+      setAuthCookies(res, accessToken, refreshToken);
 
       res.json({
         user: {
-          id: data.user.id,
-          email: data.user.email,
+          id: newUser.id,
+          email: newUser.email,
+          created_at: newUser.created_at,
         },
       });
     } catch (error) {
-      console.error("Signup error:", error.message);
+      console.error("[AUTH] Signup error:", error.message);
       res.status(500).json({ error: "Signup failed" });
     }
   }
@@ -170,25 +199,35 @@ router.post("/logout", async (req, res) => {
  * Get current user from cookie session
  */
 router.get("/me", async (req, res) => {
-  if (!supabase) {
-    return res.status(500).json({ error: "Auth not configured" });
-  }
-
-  const accessToken = req.cookies?.["sb-access-token"];
+  const accessToken = req.cookies?.["access-token"];
 
   if (!accessToken) {
     return res.status(401).json({ error: "Not authenticated" });
   }
 
   try {
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser(accessToken);
+    const decoded = verifyToken(accessToken);
 
-    if (error || !user) {
+    if (!decoded || decoded.type === "refresh") {
       clearAuthCookies(res);
       return res.status(401).json({ error: "Invalid session" });
+    }
+
+    // Get user from database
+    const user = await new Promise((resolve, reject) => {
+      database.db.get(
+        "SELECT id, email, created_at FROM users WHERE id = ?",
+        [decoded.id],
+        (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        }
+      );
+    });
+
+    if (!user) {
+      clearAuthCookies(res);
+      return res.status(401).json({ error: "User not found" });
     }
 
     res.json({
@@ -199,7 +238,7 @@ router.get("/me", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Get user error:", error);
+    console.error("[AUTH] Get user error:", error);
     res.status(500).json({ error: "Failed to get user" });
   }
 });
@@ -209,36 +248,51 @@ router.get("/me", async (req, res) => {
  * Refresh the session using the refresh token cookie
  */
 router.post("/refresh", async (req, res) => {
-  if (!supabase) {
-    return res.status(500).json({ error: "Auth not configured" });
-  }
-
-  const refreshToken = req.cookies?.["sb-refresh-token"];
+  const refreshToken = req.cookies?.["refresh-token"];
 
   if (!refreshToken) {
     return res.status(401).json({ error: "No refresh token" });
   }
 
   try {
-    const { data, error } = await supabase.auth.refreshSession({
-      refresh_token: refreshToken,
-    });
+    const decoded = verifyToken(refreshToken);
 
-    if (error || !data.session) {
+    if (!decoded || decoded.type !== "refresh") {
       clearAuthCookies(res);
-      return res.status(401).json({ error: "Failed to refresh session" });
+      return res.status(401).json({ error: "Invalid refresh token" });
     }
 
-    setAuthCookies(res, data.session);
+    // Get user from database
+    const user = await new Promise((resolve, reject) => {
+      database.db.get(
+        "SELECT id, email FROM users WHERE id = ?",
+        [decoded.id],
+        (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        }
+      );
+    });
+
+    if (!user) {
+      clearAuthCookies(res);
+      return res.status(401).json({ error: "User not found" });
+    }
+
+    // Generate new tokens
+    const newAccessToken = generateAccessToken(user);
+    const newRefreshToken = generateRefreshToken(user);
+
+    setAuthCookies(res, newAccessToken, newRefreshToken);
 
     res.json({
       user: {
-        id: data.user.id,
-        email: data.user.email,
+        id: user.id,
+        email: user.email,
       },
     });
   } catch (error) {
-    console.error("Refresh error:", error);
+    console.error("[AUTH] Refresh error:", error);
     res.status(500).json({ error: "Failed to refresh session" });
   }
 });

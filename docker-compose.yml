@@ -1,52 +1,54 @@
+version: '3.8'
+
 services:
   backend:
-    image: ghcr.io/deepan-alve/stacked-backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: stacked-backend
     restart: unless-stopped
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
     environment:
-      - DB_PATH=/app/stacked.db
-      - NODE_ENV=production
-      - FRONTEND_URL=https://stacked.deepanalve.dev
-      - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=3000
+      - DB_PATH=/app/data/stacked.db
+      - JWT_SECRET=${JWT_SECRET}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - TMDB_API_KEY=${TMDB_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - GOOGLE_SEARCH_ENGINE_ID=${GOOGLE_SEARCH_ENGINE_ID}
+      - BACKUP_INTERVAL_HOURS=${BACKUP_INTERVAL_HOURS:-6}
     volumes:
-      - ./backend/stacked.db:/app/stacked.db
+      - ./data:/app/data
+      - ./backups:/app/backups
     healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://localhost:3000/api/health",
-        ]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
+    networks:
+      - app-network
 
   frontend:
-    image: ghcr.io/deepan-alve/stacked-frontend:latest
-    restart: unless-stopped
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://backend:3000}
     container_name: stacked-frontend
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-      - "traefik.enable=true"
-      - "traefik.http.routers.stacked-frontend.rule=Host(`stacked.deepanalve.dev`)"
-      - "traefik.docker.network=traefik_net"
-      - "traefik.http.services.stacked-frontend.loadbalancer.server.port=80"
-      - "traefik.http.routers.stacked-frontend.entrypoints=websecure"
-      - "traefik.http.routers.stacked-frontend.tls=true"
-      - "traefik.http.routers.stacked-frontend.tls.certresolver=le"
+    restart: unless-stopped
+    ports:
+      - "${PORT:-80}:80"
+    depends_on:
+      - backend
     healthcheck:
-      test: ["CMD", "curl", "-q", "http://localhost:80"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     networks:
-      - default
-      - traefik_net
+      - app-network
 
 networks:
-  traefik_net:
-    external: true
+  app-network:
+    driver: bridge

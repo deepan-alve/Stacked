@@ -1,16 +1,14 @@
-# Frontend Dockerfile
+# Frontend Dockerfile for Dokploy
 FROM node:20-alpine AS builder
 
 # Set working directory
 WORKDIR /app
 
 # Build arguments for Vite env vars
-ARG VITE_SUPABASE_URL
-ARG VITE_SUPABASE_ANON_KEY
+ARG VITE_API_URL=http://backend:3000
 
-# Set as environment variables for build
-ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
-ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
+# Set as environment variable for build
+ENV VITE_API_URL=$VITE_API_URL
 
 # Copy package files
 COPY package*.json ./
@@ -26,6 +24,9 @@ RUN npm run build
 
 # Production stage - serve with nginx
 FROM nginx:alpine
+
+# Install wget for healthcheck
+RUN apk add --no-cache wget
 
 # Copy custom nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf

@@ -35,6 +35,15 @@ class Database {
 
   initializeDatabase() {
     return new Promise((resolve, reject) => {
+      const createUsersTable = `
+        CREATE TABLE IF NOT EXISTS users (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          email TEXT UNIQUE NOT NULL,
+          password TEXT NOT NULL,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+      `;
+
       const createMoviesTable = `
         CREATE TABLE IF NOT EXISTS movies (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -100,26 +109,34 @@ class Database {
         )
       `;
 
-      this.db.run(createMoviesTable, (err) => {
+      this.db.run(createUsersTable, (err) => {
         if (err) {
-          console.error("Error creating movies table:", err.message);
+          console.error("[DB] Error creating users table:", err.message);
           reject(err);
         } else {
-          this.db.run(createDetailsTable, (err) => {
+          console.log("[DB] ✓ Users table ready");
+          this.db.run(createMoviesTable, (err) => {
             if (err) {
-              console.error("Error creating movie_details table:", err.message);
+              console.error("[DB] Error creating movies table:", err.message);
               reject(err);
             } else {
-              this.db.run(createDlangTable, (err) => {
+              this.db.run(createDetailsTable, (err) => {
                 if (err) {
-                  console.error(
-                    "Error creating dlang_movies table:",
-                    err.message
-                  );
+                  console.error("[DB] Error creating movie_details table:", err.message);
                   reject(err);
                 } else {
-                  console.log("Database tables ready");
-                  resolve();
+                  this.db.run(createDlangTable, (err) => {
+                    if (err) {
+                      console.error(
+                        "[DB] Error creating dlang_movies table:",
+                        err.message
+                      );
+                      reject(err);
+                    } else {
+                      console.log("[DB] ✓ All database tables ready");
+                      resolve();
+                    }
+                  });
                 }
               });
             }

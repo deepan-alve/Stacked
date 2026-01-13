@@ -9,16 +9,23 @@ build/
 .next/
 out/
 
-# Database
+# Database files (controlled by data/.gitignore)
 *.db-journal
-!backend/movies.db
+*.db-wal
+*.db-shm
 
-# Environment
+# Environment files
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Backend specific
+backend/.env
+
+# Frontend specific
+frontend/.env
 
 # IDE
 .idea/
@@ -32,18 +39,22 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 *.log
+logs/
 
 # OS
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # Cache
 .cache/
 .eslintcache
 .vite/
 
-# Container Data
-/data
+# Temporary files
+*.tmp
+*.temp
 
-backend/.env
-frontend/.env
+# Docker volumes (if running locally)
+# Note: data/ and backups/ directories are tracked but files inside are ignored
+# See data/.gitignore and backups/.gitignore

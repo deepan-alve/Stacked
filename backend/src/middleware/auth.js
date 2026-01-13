@@ -1,22 +1,62 @@
-import { createClient } from "@supabase/supabase-js";
+import jwt from "jsonwebtoken";
+import crypto from "crypto";
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+const JWT_SECRET = process.env.JWT_SECRET || "change-this-secret-in-production";
+const JWT_EXPIRES_IN = "7d"; // 7 days
+const JWT_REFRESH_EXPIRES_IN = "30d"; // 30 days
 
-// Create Supabase client with service key for server-side verification
-const supabase =
-  supabaseUrl && supabaseServiceKey
-    ? createClient(supabaseUrl, supabaseServiceKey, {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-          detectSessionInUrl: false,
-        },
-      })
-    : null;
+if (!process.env.JWT_SECRET) {
+  console.warn("[AUTH] WARNING: Using default JWT_SECRET. Set JWT_SECRET in production!");
+}
 
 /**
- * Auth middleware that validates the session from HTTP-only cookies
+ * Generate JWT access token
+ */
+export const generateAccessToken = (user) => {
+  return jwt.sign(
+    {
+      id: user.id,
+      email: user.email,
+    },
+    JWT_SECRET,
+    { expiresIn: JWT_EXPIRES_IN }
+  );
+};
+
+/**
+ * Generate JWT refresh token
+ */
+export const generateRefreshToken = (user) => {
+  return jwt.sign(
+    {
+      id: user.id,
+      type: "refresh",
+    },
+    JWT_SECRET,
+    { expiresIn: JWT_REFRESH_EXPIRES_IN }
+  );
+};
+
+/**
+ * Hash password using SHA-256
+ */
+export const hashPassword = (password) => {
+  return crypto.createHash("sha256").update(password).digest("hex");
+};
+
+/**
+ * Verify JWT token
+ */
+export const verifyToken = (token) => {
+  try {
+    return jwt.verify(token, JWT_SECRET);
+  } catch (error) {
+    return null;
+  }
+};
+
+/**
+ * Auth middleware that validates the JWT from HTTP-only cookies
  */
 export const requireAuth = async (req, res, next) => {
   // Skip auth in development if SKIP_AUTH is set (NEVER use in production)
@@ -28,18 +68,10 @@ export const requireAuth = async (req, res, next) => {
     return next();
   }
 
-  // Check if Supabase is configured
-  if (!supabase) {
-    console.error(
-      "[AUTH] CRITICAL: Supabase not configured - blocking request"
-    );
-    return res.status(500).json({ error: "Server configuration error" });
-  }
-
   try {
     // Get the access token from HTTP-only cookie
-    const accessToken = req.cookies?.["sb-access-token"];
-    const refreshToken = req.cookies?.["sb-refresh-token"];
+    const accessToken = req.cookies?.["access-token"];
+    const refreshToken = req.cookies?.["refresh-token"];
 
     console.log(
       "[AUTH] Request to:",
@@ -55,24 +87,21 @@ export const requireAuth = async (req, res, next) => {
       return res.status(401).json({ error: "Authentication required" });
     }
 
-    // Verify the token with Supabase
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser(accessToken);
+    // Verify the token
+    const decoded = verifyToken(accessToken);
 
-    if (error || !user) {
+    if (!decoded || decoded.type === "refresh") {
       // Try to refresh the token if we have a refresh token
       if (refreshToken) {
-        const { data: refreshData, error: refreshError } =
-          await supabase.auth.refreshSession({
-            refresh_token: refreshToken,
-          });
+        const refreshDecoded = verifyToken(refreshToken);
 
-        if (!refreshError && refreshData.session) {
-          // Set new tokens in cookies
-          setAuthCookies(res, refreshData.session);
-          req.user = refreshData.user;
+        if (refreshDecoded && refreshDecoded.type === "refresh") {
+          // Generate new tokens
+          const newAccessToken = generateAccessToken({ id: refreshDecoded.id, email: refreshDecoded.email });
+          const newRefreshToken = generateRefreshToken({ id: refreshDecoded.id });
+
+          setAuthCookies(res, newAccessToken, newRefreshToken);
+          req.user = { id: refreshDecoded.id, email: refreshDecoded.email };
           return next();
         }
       }
@@ -84,13 +113,12 @@ export const requireAuth = async (req, res, next) => {
 
     // Attach user to request (only safe fields)
     req.user = {
-      id: user.id,
-      email: user.email,
-      role: user.role,
+      id: decoded.id,
+      email: decoded.email,
     };
     next();
   } catch (error) {
-    console.error("Auth middleware error:", error.message);
+    console.error("[AUTH] Auth middleware error:", error.message);
     return res.status(500).json({ error: "Authentication error" });
   }
 };
@@ -99,22 +127,15 @@ export const requireAuth = async (req, res, next) => {
  * Optional auth - doesn't require auth but attaches user if present
  */
 export const optionalAuth = async (req, res, next) => {
-  if (!supabase) {
-    return next();
-  }
-
   try {
-    const accessToken = req.cookies?.["sb-access-token"];
+    const accessToken = req.cookies?.["access-token"];
 
     if (accessToken) {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser(accessToken);
-      if (user) {
+      const decoded = verifyToken(accessToken);
+      if (decoded && decoded.type !== "refresh") {
         req.user = {
-          id: user.id,
-          email: user.email,
-          role: user.role,
+          id: decoded.id,
+          email: decoded.email,
         };
       }
     }
@@ -129,7 +150,7 @@ export const optionalAuth = async (req, res, next) => {
  * Set auth cookies with secure settings
  * Following OWASP guidelines for secure cookie configuration
  */
-export const setAuthCookies = (res, session) => {
+export const setAuthCookies = (res, accessToken, refreshToken) => {
   const isProduction = process.env.NODE_ENV === "production";
 
   // Base cookie options following security best practices
@@ -138,19 +159,18 @@ export const setAuthCookies = (res, session) => {
     secure: isProduction, // Only send over HTTPS in production
     sameSite: "lax", // Same-origin requests (nginx proxy), 'lax' is appropriate
     path: "/",
-    domain: isProduction ? undefined : undefined, // Let browser handle domain
   };
 
-  // Access token - short lived (1 hour)
-  res.cookie("sb-access-token", session.access_token, {
-    ...baseCookieOptions,
-    maxAge: 60 * 60 * 1000, // 1 hour
-  });
-
-  // Refresh token - longer lived (7 days) but still bounded
-  res.cookie("sb-refresh-token", session.refresh_token, {
+  // Access token - 7 days
+  res.cookie("access-token", accessToken, {
     ...baseCookieOptions,
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  });
+
+  // Refresh token - 30 days
+  res.cookie("refresh-token", refreshToken, {
+    ...baseCookieOptions,
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
   });
 };
 
@@ -162,12 +182,10 @@ export const clearAuthCookies = (res) => {
   const cookieOptions = {
     httpOnly: true,
     secure: isProduction,
-    sameSite: "lax", // Same-origin requests (nginx proxy), 'lax' is appropriate
+    sameSite: "lax",
     path: "/",
   };
 
-  res.clearCookie("sb-access-token", cookieOptions);
-  res.clearCookie("sb-refresh-token", cookieOptions);
+  res.clearCookie("access-token", cookieOptions);
+  res.clearCookie("refresh-token", cookieOptions);
 };
-
-export { supabase };

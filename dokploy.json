@@ -1,0 +1,23 @@
+{
+  "name": "stacked-app",
+  "compose": {
+    "type": "docker-compose",
+    "composeFile": "docker-compose.yml",
+    "env": [
+      "NODE_ENV=production",
+      "JWT_SECRET",
+      "FRONTEND_URL",
+      "TMDB_API_KEY",
+      "GOOGLE_API_KEY",
+      "GOOGLE_SEARCH_ENGINE_ID"
+    ]
+  },
+  "domains": [
+    {
+      "host": "${DOMAIN}",
+      "port": 80,
+      "https": true,
+      "certificateType": "letsencrypt"
+    }
+  ]
+}
