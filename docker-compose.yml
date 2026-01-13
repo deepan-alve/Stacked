@@ -5,50 +5,39 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: stacked-backend
     restart: unless-stopped
     environment:
-      - NODE_ENV=${NODE_ENV:-production}
+      - NODE_ENV=production
       - PORT=3000
       - DB_PATH=/app/data/stacked.db
       - JWT_SECRET=${JWT_SECRET}
-      - FRONTEND_URL=${FRONTEND_URL}
       - TMDB_API_KEY=${TMDB_API_KEY}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - GOOGLE_SEARCH_ENGINE_ID=${GOOGLE_SEARCH_ENGINE_ID}
       - BACKUP_INTERVAL_HOURS=${BACKUP_INTERVAL_HOURS:-6}
     volumes:
-      - ./data:/app/data
-      - ./backups:/app/backups
+      - stacked-data:/app/data
+      - stacked-backups:/app/backups
     healthcheck:
-      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health" ]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
-    networks:
-      - app-network
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        - VITE_API_URL=${VITE_API_URL:-http://backend:3000}
-    container_name: stacked-frontend
     restart: unless-stopped
-    ports:
-      - "${PORT:-80}:80"
     depends_on:
       - backend
     healthcheck:
-      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80" ]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
       interval: 30s
       timeout: 10s
       retries: 3
-    networks:
-      - app-network
 
-networks:
-  app-network:
-    driver: bridge
+volumes:
+  stacked-data:
+  stacked-backups:
