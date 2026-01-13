@@ -6,7 +6,9 @@ const JWT_EXPIRES_IN = "7d"; // 7 days
 const JWT_REFRESH_EXPIRES_IN = "30d"; // 30 days
 
 if (!process.env.JWT_SECRET) {
-  console.warn("[AUTH] WARNING: Using default JWT_SECRET. Set JWT_SECRET in production!");
+  console.warn(
+    "[AUTH] WARNING: Using default JWT_SECRET. Set JWT_SECRET in production!"
+  );
 }
 
 /**
@@ -97,8 +99,13 @@ export const requireAuth = async (req, res, next) => {
 
         if (refreshDecoded && refreshDecoded.type === "refresh") {
           // Generate new tokens
-          const newAccessToken = generateAccessToken({ id: refreshDecoded.id, email: refreshDecoded.email });
-          const newRefreshToken = generateRefreshToken({ id: refreshDecoded.id });
+          const newAccessToken = generateAccessToken({
+            id: refreshDecoded.id,
+            email: refreshDecoded.email,
+          });
+          const newRefreshToken = generateRefreshToken({
+            id: refreshDecoded.id,
+          });
 
           setAuthCookies(res, newAccessToken, newRefreshToken);
           req.user = { id: refreshDecoded.id, email: refreshDecoded.email };

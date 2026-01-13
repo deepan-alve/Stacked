@@ -122,7 +122,10 @@ class Database {
             } else {
               this.db.run(createDetailsTable, (err) => {
                 if (err) {
-                  console.error("[DB] Error creating movie_details table:", err.message);
+                  console.error(
+                    "[DB] Error creating movie_details table:",
+                    err.message
+                  );
                   reject(err);
                 } else {
                   this.db.run(createDlangTable, (err) => {
