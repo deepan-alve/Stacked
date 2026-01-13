@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Film, Tv, Sparkles, Book, Plus, Search, X, ChevronDown, Star, Inbox, ExternalLink, LogOut, Calendar } from 'lucide-react';
+import { Film, Tv, Sparkles, Book, Plus, Search, X, ChevronDown, Star, Inbox, ExternalLink, LogOut, Calendar, BarChart3, Archive, Menu } from 'lucide-react';
 import { useEntries } from './hooks/useEntries';
 import SearchModal from './components/SearchModal';
 import SpotlightSearch from './components/SpotlightSearch';
@@ -24,6 +24,7 @@ function Dashboard({ isDemo = false, onLogout }) {
   const [currentEntry, setCurrentEntry] = useState(null);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isSpotlightOpen, setIsSpotlightOpen] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const dlangViewRef = useRef(null);
 
   // Set demo mode in API service
@@ -374,19 +375,28 @@ function Dashboard({ isDemo = false, onLogout }) {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
+            {/* Desktop Search */}
             <div className="hidden md:flex items-center relative w-64 group">
               <Search className="absolute left-3 w-4 h-4 text-zinc-500 group-focus-within:text-zinc-300 transition-colors" />
-              <input 
-                type="text" 
-                placeholder="Search..." 
+              <input
+                type="text"
+                placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-zinc-900/50 border border-zinc-800 text-zinc-300 text-sm rounded-md py-1.5 pl-9 pr-4 focus:outline-none focus:ring-1 focus:ring-zinc-600 focus:border-zinc-600 placeholder-zinc-600 transition-all" 
+                className="w-full bg-zinc-900/50 border border-zinc-800 text-zinc-300 text-sm rounded-md py-1.5 pl-9 pr-4 focus:outline-none focus:ring-1 focus:ring-zinc-600 focus:border-zinc-600 placeholder-zinc-600 transition-all"
               />
             </div>
 
-            <button 
+            {/* Mobile Search Toggle */}
+            <button
+              onClick={() => setIsMobileSearchOpen(true)}
+              className="md:hidden flex items-center justify-center w-8 h-8 text-zinc-400 hover:text-zinc-200 transition-colors"
+            >
+              <Search className="w-4 h-4" />
+            </button>
+
+            <button
               onClick={() => setIsSpotlightOpen(true)}
               className="flex items-center gap-2 bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-medium py-1.5 px-3 rounded transition-colors shadow-[0_0_15px_rgba(255,255,255,0.1)]"
             >
@@ -396,9 +406,9 @@ function Dashboard({ isDemo = false, onLogout }) {
 
             {/* Logout button - only show when not in demo mode */}
             {!isDemo && onLogout && (
-              <button 
+              <button
                 onClick={onLogout}
-                className="flex items-center gap-2 text-zinc-500 hover:text-zinc-300 text-xs font-medium py-1.5 px-2 rounded transition-colors"
+                className="hidden md:flex items-center gap-2 text-zinc-500 hover:text-zinc-300 text-xs font-medium py-1.5 px-2 rounded transition-colors"
                 title="Sign out"
               >
                 <LogOut className="w-4 h-4" />
@@ -409,7 +419,7 @@ function Dashboard({ isDemo = false, onLogout }) {
       </nav>
 
       {/* Main Content */}
-      <main className="flex-grow pt-24 pb-12 px-6 max-w-6xl mx-auto w-full">
+      <main className="flex-grow pt-24 pb-24 md:pb-12 px-4 md:px-6 max-w-6xl mx-auto w-full">
         {currentView === 'collection' ? (
           <div className="fade-in">
             {/* Statistics Summary */}
@@ -423,20 +433,22 @@ function Dashboard({ isDemo = false, onLogout }) {
 
             {/* Filters */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-              <div className="flex items-center gap-1 p-1 bg-zinc-900/50 border border-zinc-800/50 rounded-lg w-max">
-                {['All', 'Movie', 'Series', 'Anime', 'Book'].map(type => (
-                  <button
-                    key={type}
-                    onClick={() => setFilterType(type)}
-                    className={`px-3 py-1 text-xs font-medium rounded transition-all ${
-                      filterType === type
-                        ? 'text-zinc-100 bg-zinc-800 shadow-sm'
-                        : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
-                    }`}
-                  >
-                    {type === 'Book' ? 'Books' : type === 'All' ? 'All' : `${type}s`}
-                  </button>
-                ))}
+              <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
+                <div className="flex items-center gap-1 p-1 bg-zinc-900/50 border border-zinc-800/50 rounded-lg w-max">
+                  {['All', 'Movie', 'Series', 'Anime', 'Book'].map(type => (
+                    <button
+                      key={type}
+                      onClick={() => setFilterType(type)}
+                      className={`px-3 py-1.5 text-xs font-medium rounded transition-all whitespace-nowrap ${
+                        filterType === type
+                          ? 'text-zinc-100 bg-zinc-800 shadow-sm'
+                          : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
+                      }`}
+                    >
+                      {type === 'Book' ? 'Books' : type === 'All' ? 'All' : `${type}s`}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="flex items-center gap-2 text-xs text-zinc-500">
@@ -668,6 +680,80 @@ function Dashboard({ isDemo = false, onLogout }) {
         onClose={() => setIsSpotlightOpen(false)}
         onSelect={handleSpotlightSelect}
       />
+
+      {/* Mobile Search Overlay */}
+      {isMobileSearchOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsMobileSearchOpen(false)} />
+          <div className="relative p-4 pt-safe">
+            <div className="flex items-center gap-3 bg-zinc-900 border border-zinc-700 rounded-xl p-3">
+              <Search className="w-5 h-5 text-zinc-400 flex-shrink-0" />
+              <input
+                type="text"
+                placeholder="Search your collection..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                autoFocus
+                className="flex-1 bg-transparent text-white text-base outline-none placeholder-zinc-500"
+              />
+              <button onClick={() => setIsMobileSearchOpen(false)} className="text-zinc-400 hover:text-zinc-200">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-zinc-900/95 backdrop-blur-lg border-t border-zinc-800">
+        <div className="flex items-center justify-around py-2 px-2 safe-area-bottom">
+          <button
+            onClick={() => setCurrentView('collection')}
+            className={`flex flex-col items-center gap-1 py-2 px-4 rounded-lg transition-all ${
+              currentView === 'collection' ? 'text-zinc-100 bg-zinc-800/50' : 'text-zinc-500'
+            }`}
+          >
+            <Film className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Collection</span>
+          </button>
+          <button
+            onClick={() => setCurrentView('dlang')}
+            className={`flex flex-col items-center gap-1 py-2 px-4 rounded-lg transition-all ${
+              currentView === 'dlang' ? 'text-zinc-100 bg-zinc-800/50' : 'text-zinc-500'
+            }`}
+          >
+            <Tv className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Dlang</span>
+          </button>
+          <button
+            onClick={() => setCurrentView('stats')}
+            className={`flex flex-col items-center gap-1 py-2 px-4 rounded-lg transition-all ${
+              currentView === 'stats' ? 'text-zinc-100 bg-zinc-800/50' : 'text-zinc-500'
+            }`}
+          >
+            <BarChart3 className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Analytics</span>
+          </button>
+          <button
+            onClick={() => setCurrentView('archive')}
+            className={`flex flex-col items-center gap-1 py-2 px-4 rounded-lg transition-all ${
+              currentView === 'archive' ? 'text-zinc-100 bg-zinc-800/50' : 'text-zinc-500'
+            }`}
+          >
+            <Archive className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Archive</span>
+          </button>
+          {!isDemo && onLogout && (
+            <button
+              onClick={onLogout}
+              className="flex flex-col items-center gap-1 py-2 px-4 rounded-lg text-zinc-500"
+            >
+              <LogOut className="w-5 h-5" />
+              <span className="text-[10px] font-medium">Logout</span>
+            </button>
+          )}
+        </div>
+      </nav>
     </div>
   );
 }
@@ -918,24 +1004,26 @@ function ArchiveView({ selectedYear, availableYears, onYearChange, onEntryClick,
 
       {/* Filters */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-1 p-1 bg-zinc-900/50 border border-zinc-800/50 rounded-lg w-max">
-          {['All', 'Movie', 'Series', 'Anime', 'Book'].map(type => (
-            <button
-              key={type}
-              onClick={() => setFilterType(type)}
-              className={`px-3 py-1 text-xs font-medium rounded transition-all ${
-                filterType === type
-                  ? 'text-zinc-100 bg-zinc-800 shadow-sm'
-                  : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
-              }`}
-            >
-              {type === 'Book' ? 'Books' : type === 'All' ? 'All' : `${type}s`}
-            </button>
-          ))}
+        <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
+          <div className="flex items-center gap-1 p-1 bg-zinc-900/50 border border-zinc-800/50 rounded-lg w-max">
+            {['All', 'Movie', 'Series', 'Anime', 'Book'].map(type => (
+              <button
+                key={type}
+                onClick={() => setFilterType(type)}
+                className={`px-3 py-1.5 text-xs font-medium rounded transition-all whitespace-nowrap ${
+                  filterType === type
+                    ? 'text-zinc-100 bg-zinc-800 shadow-sm'
+                    : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
+                }`}
+              >
+                {type === 'Book' ? 'Books' : type === 'All' ? 'All' : `${type}s`}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="relative w-64">
+          <div className="relative flex-1 md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
             <input
               type="text"
@@ -945,7 +1033,7 @@ function ArchiveView({ selectedYear, availableYears, onYearChange, onEntryClick,
               className="w-full bg-zinc-900/50 border border-zinc-800 text-zinc-300 text-sm rounded-md py-1.5 pl-9 pr-4 focus:outline-none focus:ring-1 focus:ring-zinc-600 focus:border-zinc-600 placeholder-zinc-600"
             />
           </div>
-          <span className="text-xs text-zinc-500">{filteredEntries.length} entr{filteredEntries.length === 1 ? 'y' : 'ies'}</span>
+          <span className="text-xs text-zinc-500 whitespace-nowrap">{filteredEntries.length} entr{filteredEntries.length === 1 ? 'y' : 'ies'}</span>
         </div>
       </div>
 

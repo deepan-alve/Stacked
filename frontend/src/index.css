@@ -83,3 +83,21 @@ input[type=number]::-webkit-outer-spin-button {
 .flip-card-back {
   transform: rotateY(180deg);
 }
+
+/* Hide scrollbar for horizontal scroll areas */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Safe area padding for mobile devices with notches */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.pt-safe {
+  padding-top: max(16px, env(safe-area-inset-top, 16px));
+}
