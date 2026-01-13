@@ -13,6 +13,8 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - TMDB_API_KEY=${TMDB_API_KEY}
       - BACKUP_INTERVAL_HOURS=${BACKUP_INTERVAL_HOURS:-6}
+    volumes:
+      - stacked-data:/app/data
     networks:
       - stacked-network
     healthcheck:
@@ -40,3 +42,6 @@ services:
 networks:
   stacked-network:
     driver: bridge
+
+volumes:
+  stacked-data:

@@ -18,9 +18,15 @@ COPY src/ ./src/
 COPY scripts/ ./scripts/
 COPY migrations/ ./migrations/
 
-# Create data directory and copy database
-RUN mkdir -p /app/data
-COPY data/movies.db /app/data/movies.db
+# Create directories
+RUN mkdir -p /app/data /app/seed
+
+# Copy seed database (will only be used if no existing db)
+COPY data/movies.db /app/seed/movies.db
+
+# Copy entrypoint script
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 # Set environment variables
 ENV NODE_ENV=production
@@ -34,5 +40,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
 
-# Start the application
-CMD ["node", "src/server.js"]
+# Start with entrypoint script
+CMD ["/app/entrypoint.sh"]
