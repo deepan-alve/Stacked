@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Check, Command, Search, Zap, Shield, Film, Tv, Book, X, Menu, BarChart3, PieChart, Activity, Layers, Database, Globe, Star, Clock, Play } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase'; // Keep for waitlist only
 
 // Sample media data with real TMDB/Jikan images
 const SAMPLE_MEDIA = [
@@ -86,15 +85,11 @@ export default function LandingPage({ onLogin }) {
     e.preventDefault();
     if (!email) return;
     setStatus('loading');
-    try {
-      const { error } = await supabase.from('waitlist').insert([{ email, created_at: new Date() }]);
-      if (error) throw error;
+    // Waitlist disabled - just show success
+    setTimeout(() => {
       setStatus('success');
       setEmail('');
-    } catch (error) {
-      console.error('Waitlist error:', error);
-      setStatus('success');
-    }
+    }, 500);
   };
 
   const handleLogin = async (e) => {

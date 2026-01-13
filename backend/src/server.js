@@ -195,25 +195,9 @@ database
       console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
     });
 
-    // Initialize Supabase backup if connection is configured
-    if (process.env.SUPABASE_DB_HOST) {
-      try {
-        const connected = await backupService.testConnection();
-        if (connected) {
-          await backupService.initSupabaseTables();
-          // Start periodic sync
-          backupService.startPeriodicSync(BACKUP_INTERVAL_HOURS);
-          console.log(
-            `Backup enabled: syncing every ${BACKUP_INTERVAL_HOURS} hours`
-          );
-        }
-      } catch (error) {
-        console.error("Backup initialization failed:", error.message);
-        console.log("Server will continue without backup functionality");
-      }
-    } else {
-      console.log("SUPABASE_DB_URL not set - backup disabled");
-    }
+    // Start periodic file backups
+    backupService.startPeriodicBackup(BACKUP_INTERVAL_HOURS);
+    console.log(`Backup enabled: every ${BACKUP_INTERVAL_HOURS} hours`);
   })
   .catch((error) => {
     console.error("Failed to start server:", error);
