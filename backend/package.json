@@ -8,7 +8,9 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "scrape:content": "node scripts/scrapeMovieContent.js",
-    "export:ai": "node scripts/exportForAI.js"
+    "export:ai": "node scripts/exportForAI.js",
+    "sync:pull": "node scripts/sync-from-github.js",
+    "sync:push": "node scripts/sync-to-github.js"
   },
   "keywords": [
     "movie",

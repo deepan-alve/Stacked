@@ -14,7 +14,9 @@ import dlangRoutes from "./routes/dlang.js";
 import backupRoutes from "./routes/backup.js";
 import publicRoutes from "./routes/public.js";
 import authRoutes from "./routes/auth.js";
+import syncRoutes from "./routes/sync.js";
 import backupService from "./services/backupService.js";
+import gitSyncService from "./services/gitSyncService.js";
 import { requireAuth } from "./middleware/auth.js";
 
 const app = express();
@@ -127,6 +129,7 @@ app.use("/api/imdb", requireAuth, imdbRoutes); // Protected
 app.use("/api/details", detailsRoutes); // Details can be public
 app.use("/api/dlang", requireAuth, dlangRoutes); // Protected
 app.use("/api/backup", requireAuth, backupRoutes); // Protected
+app.use("/api/sync", requireAuth, syncRoutes); // Protected - Git sync
 
 // Health check
 app.get("/api/health", (req, res) => {
@@ -198,6 +201,19 @@ database
     // Start periodic file backups
     backupService.startPeriodicBackup(BACKUP_INTERVAL_HOURS);
     console.log(`Backup enabled: every ${BACKUP_INTERVAL_HOURS} hours`);
+
+    // Start periodic Git sync (every 30 minutes if GITHUB_TOKEN is set)
+    if (process.env.GITHUB_TOKEN) {
+      console.log("Git sync enabled - syncing to GitHub every 30 minutes");
+      setInterval(() => {
+        gitSyncService.syncToGitHub().catch(console.error);
+      }, 30 * 60 * 1000); // 30 minutes
+
+      // Initial sync after 1 minute
+      setTimeout(() => {
+        gitSyncService.syncToGitHub().catch(console.error);
+      }, 60 * 1000);
+    }
   })
   .catch((error) => {
     console.error("Failed to start server:", error);
