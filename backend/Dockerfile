@@ -4,8 +4,8 @@ FROM node:20-alpine
 # Set working directory
 WORKDIR /app
 
-# Install git for git backup functionality and wget for healthcheck
-RUN apk add --no-cache git wget
+# Install wget for healthcheck
+RUN apk add --no-cache wget
 
 # Copy package files
 COPY package*.json ./
@@ -18,13 +18,14 @@ COPY src/ ./src/
 COPY scripts/ ./scripts/
 COPY migrations/ ./migrations/
 
-# Create directories for database and backups
-RUN mkdir -p /app/data /app/backups
+# Create data directory and copy database
+RUN mkdir -p /app/data
+COPY data/movies.db /app/data/movies.db
 
 # Set environment variables
 ENV NODE_ENV=production
 ENV PORT=3000
-ENV DB_PATH=/app/data/stacked.db
+ENV DB_PATH=/app/data/movies.db
 
 # Expose port
 EXPOSE 3000

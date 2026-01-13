@@ -6,7 +6,7 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const dbPath = process.env.DB_PATH || path.join(__dirname, "../../movies.db");
+const dbPath = process.env.DB_PATH || path.join(__dirname, "../../data/movies.db");
 
 console.log("[DB] Database path configured:", dbPath);
 console.log("[DB] DB_PATH env:", process.env.DB_PATH);

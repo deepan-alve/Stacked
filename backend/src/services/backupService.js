@@ -11,7 +11,7 @@ class BackupService {
     this.lastBackupTime = null;
     this.backupInterval = null;
     this.backupDir = process.env.BACKUP_DIR || "/app/backups";
-    this.dbPath = process.env.DB_PATH || path.join(__dirname, "../../data/stacked.db");
+    this.dbPath = process.env.DB_PATH || path.join(__dirname, "../../data/movies.db");
   }
 
   /**

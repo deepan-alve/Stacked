@@ -9,15 +9,12 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - DB_PATH=/app/data/stacked.db
+      - DB_PATH=/app/data/movies.db
       - JWT_SECRET=${JWT_SECRET}
       - TMDB_API_KEY=${TMDB_API_KEY}
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
-      - GOOGLE_SEARCH_ENGINE_ID=${GOOGLE_SEARCH_ENGINE_ID}
       - BACKUP_INTERVAL_HOURS=${BACKUP_INTERVAL_HOURS:-6}
     volumes:
-      - stacked-data:/app/data
-      - stacked-backups:/app/backups
+      - ../files/data:/app/data
     networks:
       - stacked-network
     healthcheck:
@@ -41,10 +38,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-
-volumes:
-  stacked-data:
-  stacked-backups:
 
 networks:
   stacked-network:
