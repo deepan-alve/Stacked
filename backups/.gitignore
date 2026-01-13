@@ -1,8 +1,0 @@
-# Backups directory - keep structure but ignore backup files
-*.db
-*.sql
-*.zip
-*.tar.gz
-
-# Keep this file
-!.gitignore
