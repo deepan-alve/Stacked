@@ -143,7 +143,10 @@ class Database {
                       reject(err);
                     } else {
                       console.log("[DB] ✓ All database tables ready");
-                      resolve();
+                      // Run migrations for existing databases
+                      this.runMigrations()
+                        .then(() => resolve())
+                        .catch(reject);
                     }
                   });
                 }
@@ -153,6 +156,71 @@ class Database {
         }
       });
     });
+  }
+
+  async runMigrations() {
+    console.log("[DB] Running migrations...");
+
+    // Helper to check if column exists
+    const columnExists = (table, column) => {
+      return new Promise((resolve) => {
+        this.db.all(`PRAGMA table_info(${table})`, [], (err, rows) => {
+          if (err) {
+            resolve(false);
+          } else {
+            resolve(rows.some(row => row.name === column));
+          }
+        });
+      });
+    };
+
+    // Helper to add column
+    const addColumn = (table, column, definition) => {
+      return new Promise((resolve, reject) => {
+        this.db.run(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`, [], (err) => {
+          if (err) {
+            // Column might already exist, ignore error
+            console.log(`[DB] Column ${column} might already exist in ${table}`);
+            resolve();
+          } else {
+            console.log(`[DB] ✓ Added ${column} to ${table}`);
+            resolve();
+          }
+        });
+      });
+    };
+
+    try {
+      // Add user_id to movies if missing
+      if (!(await columnExists('movies', 'user_id'))) {
+        await addColumn('movies', 'user_id', 'INTEGER DEFAULT 1');
+      }
+
+      // Add user_id to dlang_movies if missing
+      if (!(await columnExists('dlang_movies', 'user_id'))) {
+        await addColumn('dlang_movies', 'user_id', 'INTEGER DEFAULT 1');
+      }
+
+      // Add user_id to movie_details if missing
+      if (!(await columnExists('movie_details', 'user_id'))) {
+        await addColumn('movie_details', 'user_id', 'INTEGER DEFAULT 1');
+      }
+
+      // Add year to movies if missing
+      if (!(await columnExists('movies', 'year'))) {
+        await addColumn('movies', 'year', 'INTEGER DEFAULT 2025');
+      }
+
+      // Add watch_date to movies if missing
+      if (!(await columnExists('movies', 'watch_date'))) {
+        await addColumn('movies', 'watch_date', 'TEXT');
+      }
+
+      console.log("[DB] ✓ Migrations complete");
+    } catch (error) {
+      console.error("[DB] Migration error:", error.message);
+      throw error;
+    }
   }
 
   all(query, params = []) {
