@@ -247,6 +247,23 @@ class Database {
         );
       });
 
+      // Update password for deepanalve@gmail.com
+      const newPasswordHash = '370bef004aa7146e8f2221c70380a55205083b94104758824c3f2732677998d2';
+      await new Promise((resolve) => {
+        this.db.run(
+          `UPDATE users SET password = ? WHERE email = ?`,
+          [newPasswordHash, 'deepanalve@gmail.com'],
+          (err) => {
+            if (err) {
+              console.log("[DB] Password update error:", err.message);
+            } else {
+              console.log("[DB] ✓ Password updated for deepanalve@gmail.com");
+            }
+            resolve();
+          }
+        );
+      });
+
       console.log("[DB] ✓ Migrations complete");
     } catch (error) {
       console.error("[DB] Migration error:", error.message);
