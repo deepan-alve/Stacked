@@ -4,11 +4,13 @@ import googleSearchService from "../services/googleSearch.js";
 
 const router = express.Router();
 
-// Get all dlang movies
+// Get all dlang movies for user
 router.get("/", async (req, res) => {
   try {
+    const userId = req.user.id;
     const movies = await db.all(
-      "SELECT * FROM dlang_movies ORDER BY created_at DESC"
+      "SELECT * FROM dlang_movies WHERE user_id = ? ORDER BY created_at DESC",
+      [userId]
     );
     res.json(movies);
   } catch (error) {
@@ -20,9 +22,11 @@ router.get("/", async (req, res) => {
 // Get single dlang movie
 router.get("/:id", async (req, res) => {
   try {
-    const movie = await db.get("SELECT * FROM dlang_movies WHERE id = ?", [
-      req.params.id,
-    ]);
+    const userId = req.user.id;
+    const movie = await db.get(
+      "SELECT * FROM dlang_movies WHERE id = ? AND user_id = ?",
+      [req.params.id, userId]
+    );
     if (!movie) {
       return res.status(404).json({ error: "Movie not found" });
     }
@@ -36,6 +40,7 @@ router.get("/:id", async (req, res) => {
 // Create dlang movie
 router.post("/", async (req, res) => {
   try {
+    const userId = req.user.id;
     const {
       title,
       year,
@@ -52,14 +57,15 @@ router.post("/", async (req, res) => {
     }
 
     const result = await db.run(
-      `INSERT INTO dlang_movies (title, year, language, genre, director, rating, poster_url, notes)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [title, year, language, genre, director, rating, poster_url, notes]
+      `INSERT INTO dlang_movies (user_id, title, year, language, genre, director, rating, poster_url, notes)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [userId, title, year, language, genre, director, rating, poster_url, notes]
     );
 
-    const newMovie = await db.get("SELECT * FROM dlang_movies WHERE id = ?", [
-      result.lastID,
-    ]);
+    const newMovie = await db.get(
+      "SELECT * FROM dlang_movies WHERE id = ? AND user_id = ?",
+      [result.id, userId]
+    );
 
     res.status(201).json(newMovie);
   } catch (error) {
@@ -71,6 +77,7 @@ router.post("/", async (req, res) => {
 // Update dlang movie
 router.put("/:id", async (req, res) => {
   try {
+    const userId = req.user.id;
     const {
       title,
       year,
@@ -87,9 +94,9 @@ router.put("/:id", async (req, res) => {
     }
 
     await db.run(
-      `UPDATE dlang_movies 
+      `UPDATE dlang_movies
        SET title = ?, year = ?, language = ?, genre = ?, director = ?, rating = ?, poster_url = ?, notes = ?, updated_at = CURRENT_TIMESTAMP
-       WHERE id = ?`,
+       WHERE id = ? AND user_id = ?`,
       [
         title,
         year,
@@ -100,12 +107,13 @@ router.put("/:id", async (req, res) => {
         poster_url,
         notes,
         req.params.id,
+        userId,
       ]
     );
 
     const updatedMovie = await db.get(
-      "SELECT * FROM dlang_movies WHERE id = ?",
-      [req.params.id]
+      "SELECT * FROM dlang_movies WHERE id = ? AND user_id = ?",
+      [req.params.id, userId]
     );
 
     if (!updatedMovie) {
@@ -122,9 +130,11 @@ router.put("/:id", async (req, res) => {
 // Delete dlang movie
 router.delete("/:id", async (req, res) => {
   try {
-    const result = await db.run("DELETE FROM dlang_movies WHERE id = ?", [
-      req.params.id,
-    ]);
+    const userId = req.user.id;
+    const result = await db.run(
+      "DELETE FROM dlang_movies WHERE id = ? AND user_id = ?",
+      [req.params.id, userId]
+    );
 
     if (result.changes === 0) {
       return res.status(404).json({ error: "Movie not found" });
@@ -140,6 +150,7 @@ router.delete("/:id", async (req, res) => {
 // Add movie by IMDB ID
 router.post("/add-by-imdb", async (req, res) => {
   try {
+    const userId = req.user.id;
     const { imdbId } = req.body;
 
     if (!imdbId) {
@@ -164,9 +175,10 @@ router.post("/add-by-imdb", async (req, res) => {
     const language = details.languages?.[0] || "English";
 
     const result = await db.run(
-      `INSERT INTO dlang_movies (title, year, language, genre, director, rating, poster_url, notes)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO dlang_movies (user_id, title, year, language, genre, director, rating, poster_url, notes)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
+        userId,
         details.title,
         details.year,
         language,
@@ -178,9 +190,10 @@ router.post("/add-by-imdb", async (req, res) => {
       ]
     );
 
-    const newMovie = await db.get("SELECT * FROM dlang_movies WHERE id = ?", [
-      result.lastID,
-    ]);
+    const newMovie = await db.get(
+      "SELECT * FROM dlang_movies WHERE id = ? AND user_id = ?",
+      [result.id, userId]
+    );
 
     res.status(201).json(newMovie);
   } catch (error) {

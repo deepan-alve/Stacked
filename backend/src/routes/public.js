@@ -3,21 +3,24 @@ import database from "../config/database.js";
 
 const router = express.Router();
 
-// Get all entries (public, read-only)
+// Demo mode always shows deepanalve's data (user_id = 1)
+const DEMO_USER_ID = 1;
+
+// Get all entries (public, read-only - shows demo user's data)
 router.get("/entries", async (req, res) => {
   try {
     const yearParam = req.query.year ? parseInt(req.query.year) : null;
     const year = yearParam && !isNaN(yearParam) ? yearParam : null;
-    let query = "SELECT * FROM movies";
-    const params = [];
-    
+    let query = "SELECT * FROM movies WHERE user_id = ?";
+    const params = [DEMO_USER_ID];
+
     if (year !== null) {
-      query += " WHERE year = ?";
+      query += " AND year = ?";
       params.push(year);
     }
-    
+
     query += " ORDER BY COALESCE(watch_date, created_at) DESC, created_at DESC";
-    
+
     const entries = await database.all(query, params);
     res.json(entries);
   } catch (error) {
@@ -29,9 +32,10 @@ router.get("/entries", async (req, res) => {
 // Get single entry (public, read-only)
 router.get("/entries/:id", async (req, res) => {
   try {
-    const entry = await database.get("SELECT * FROM movies WHERE id = ?", [
-      req.params.id,
-    ]);
+    const entry = await database.get(
+      "SELECT * FROM movies WHERE id = ? AND user_id = ?",
+      [req.params.id, DEMO_USER_ID]
+    );
     if (!entry) {
       return res.status(404).json({ error: "Entry not found" });
     }
@@ -42,11 +46,12 @@ router.get("/entries/:id", async (req, res) => {
   }
 });
 
-// Get available years (public, read-only)
+// Get available years (public, read-only - shows demo user's years)
 router.get("/years", async (req, res) => {
   try {
     const years = await database.all(
-      "SELECT DISTINCT year FROM movies ORDER BY year DESC"
+      "SELECT DISTINCT year FROM movies WHERE user_id = ? ORDER BY year DESC",
+      [DEMO_USER_ID]
     );
     res.json(years.map(row => row.year));
   } catch (error) {
@@ -55,45 +60,47 @@ router.get("/years", async (req, res) => {
   }
 });
 
-// Get statistics (public, read-only)
+// Get statistics (public, read-only - shows demo user's stats)
 router.get("/stats", async (req, res) => {
   try {
     const yearParam = req.query.year ? parseInt(req.query.year) : null;
     const year = yearParam && !isNaN(yearParam) ? yearParam : null;
     const stats = {};
-    const whereClause = year !== null ? " WHERE year = ?" : "";
-    const params = year !== null ? [year] : [];
+
+    // Base params always include user_id
+    const baseParams = [DEMO_USER_ID];
 
     // Total count
-    const totalResult = await database.get(
-      `SELECT COUNT(*) as count FROM movies${whereClause}`,
-      params
-    );
+    let totalQuery = "SELECT COUNT(*) as count FROM movies WHERE user_id = ?";
+    const totalParams = [...baseParams];
+    if (year !== null) {
+      totalQuery += " AND year = ?";
+      totalParams.push(year);
+    }
+    const totalResult = await database.get(totalQuery, totalParams);
     stats.total = totalResult.count;
 
     // Count by type
     const types = ["Movie", "Series", "Anime", "Book"];
     for (const type of types) {
-      const typeWhere = year !== null
-        ? " WHERE type = ? AND year = ?"
-        : " WHERE type = ?";
-      const typeParams = year !== null ? [type, year] : [type];
-      const result = await database.get(
-        `SELECT COUNT(*) as count FROM movies${typeWhere}`,
-        typeParams
-      );
+      let typeQuery = "SELECT COUNT(*) as count FROM movies WHERE user_id = ? AND type = ?";
+      const typeParams = [DEMO_USER_ID, type];
+      if (year !== null) {
+        typeQuery += " AND year = ?";
+        typeParams.push(year);
+      }
+      const result = await database.get(typeQuery, typeParams);
       stats[type.toLowerCase()] = result.count;
     }
 
     // Average rating
-    const ratingWhere = year !== null
-      ? " WHERE rating IS NOT NULL AND rating != '' AND year = ?"
-      : " WHERE rating IS NOT NULL AND rating != ''";
-    const ratingParams = year !== null ? [year] : [];
-    const avgRating = await database.get(
-      `SELECT AVG(rating) as avg FROM movies${ratingWhere}`,
-      ratingParams
-    );
+    let ratingQuery = "SELECT AVG(rating) as avg FROM movies WHERE user_id = ? AND rating IS NOT NULL AND rating != ''";
+    const ratingParams = [DEMO_USER_ID];
+    if (year !== null) {
+      ratingQuery += " AND year = ?";
+      ratingParams.push(year);
+    }
+    const avgRating = await database.get(ratingQuery, ratingParams);
     stats.averageRating = avgRating.avg
       ? parseFloat(avgRating.avg).toFixed(1)
       : 0;
@@ -106,11 +113,12 @@ router.get("/stats", async (req, res) => {
   }
 });
 
-// Get all dlang movies (public, read-only)
+// Get all dlang movies (public, read-only - shows demo user's data)
 router.get("/dlang", async (req, res) => {
   try {
     const movies = await database.all(
-      "SELECT * FROM dlang_movies ORDER BY created_at DESC"
+      "SELECT * FROM dlang_movies WHERE user_id = ? ORDER BY created_at DESC",
+      [DEMO_USER_ID]
     );
     res.json(movies);
   } catch (error) {
@@ -123,8 +131,8 @@ router.get("/dlang", async (req, res) => {
 router.get("/dlang/:id", async (req, res) => {
   try {
     const movie = await database.get(
-      "SELECT * FROM dlang_movies WHERE id = ?",
-      [req.params.id]
+      "SELECT * FROM dlang_movies WHERE id = ? AND user_id = ?",
+      [req.params.id, DEMO_USER_ID]
     );
     if (!movie) {
       return res.status(404).json({ error: "Movie not found" });

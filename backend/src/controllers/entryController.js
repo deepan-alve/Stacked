@@ -4,15 +4,16 @@ import googleSearchService from "../services/googleSearch.js";
 class EntryController {
   async getAll(req, res) {
     try {
+      const userId = req.user.id;
       const yearParam = req.query.year ? parseInt(req.query.year) : null;
       const year = yearParam && !isNaN(yearParam) ? yearParam : null;
       console.log(
         "[ENTRIES] Fetching entries for user:",
-        req.user?.id || "unknown",
+        userId,
         "Year filter:",
         year || "all"
       );
-      const entries = await EntryModel.findAll(year);
+      const entries = await EntryModel.findAll(year, userId);
       console.log("[ENTRIES] Found", entries.length, "entries");
       res.json(entries);
     } catch (error) {
@@ -23,7 +24,8 @@ class EntryController {
 
   async getById(req, res) {
     try {
-      const entry = await EntryModel.findById(req.params.id);
+      const userId = req.user.id;
+      const entry = await EntryModel.findById(req.params.id, userId);
       if (!entry) {
         return res.status(404).json({ error: "Entry not found" });
       }
@@ -35,6 +37,7 @@ class EntryController {
 
   async create(req, res) {
     try {
+      const userId = req.user.id;
       const { title, type, api_id, api_provider } = req.body;
 
       if (!title || !type) {
@@ -44,9 +47,9 @@ class EntryController {
       // Check for duplicates (only if feature is enabled - after 2026)
       const currentYear = new Date().getFullYear();
       if (currentYear >= 2026) {
-        const duplicate = await EntryModel.checkDuplicate(title, api_id, api_provider);
+        const duplicate = await EntryModel.checkDuplicate(title, api_id, api_provider, userId);
         if (duplicate) {
-          return res.status(409).json({ 
+          return res.status(409).json({
             error: "Duplicate entry",
             message: `You've already added "${duplicate.title}" in ${duplicate.year}!`,
             existingEntry: duplicate
@@ -54,7 +57,7 @@ class EntryController {
         }
       }
 
-      const entry = await EntryModel.create(req.body);
+      const entry = await EntryModel.create(req.body, userId);
       res.status(201).json(entry);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -63,6 +66,7 @@ class EntryController {
 
   async addByImdb(req, res) {
     try {
+      const userId = req.user.id;
       const { imdbId, type } = req.body;
 
       if (!imdbId) {
@@ -83,9 +87,9 @@ class EntryController {
       // Check for duplicates (only if feature is enabled - after 2026)
       const currentYear = new Date().getFullYear();
       if (currentYear >= 2026) {
-        const duplicate = await EntryModel.checkDuplicate(details.title, imdbId, "imdb");
+        const duplicate = await EntryModel.checkDuplicate(details.title, imdbId, "imdb", userId);
         if (duplicate) {
-          return res.status(409).json({ 
+          return res.status(409).json({
             error: "Duplicate entry",
             message: `You've already added "${duplicate.title}" in ${duplicate.year}!`,
             existingEntry: duplicate
@@ -106,7 +110,7 @@ class EntryController {
         notes: "",
       };
 
-      const entry = await EntryModel.create(entryData);
+      const entry = await EntryModel.create(entryData, userId);
       res.status(201).json(entry);
     } catch (error) {
       console.error("Error adding by IMDB:", error);
@@ -116,13 +120,14 @@ class EntryController {
 
   async update(req, res) {
     try {
+      const userId = req.user.id;
       const { title, type } = req.body;
 
       if (!title || !type) {
         return res.status(400).json({ error: "Title and type are required" });
       }
 
-      const entry = await EntryModel.update(req.params.id, req.body);
+      const entry = await EntryModel.update(req.params.id, req.body, userId);
       if (!entry) {
         return res.status(404).json({ error: "Entry not found" });
       }
@@ -135,7 +140,8 @@ class EntryController {
 
   async delete(req, res) {
     try {
-      const deleted = await EntryModel.delete(req.params.id);
+      const userId = req.user.id;
+      const deleted = await EntryModel.delete(req.params.id, userId);
       if (!deleted) {
         return res.status(404).json({ error: "Entry not found" });
       }
@@ -147,9 +153,10 @@ class EntryController {
 
   async getStatistics(req, res) {
     try {
+      const userId = req.user.id;
       const yearParam = req.query.year ? parseInt(req.query.year) : null;
       const year = yearParam && !isNaN(yearParam) ? yearParam : null;
-      const stats = await EntryModel.getStatistics(year);
+      const stats = await EntryModel.getStatistics(year, userId);
       res.json(stats);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -158,13 +165,14 @@ class EntryController {
 
   async checkDuplicate(req, res) {
     try {
+      const userId = req.user.id;
       const { title, api_id, api_provider } = req.query;
-      
+
       if (!title && !api_id) {
         return res.status(400).json({ error: "Title or api_id is required" });
       }
-      
-      const duplicate = await EntryModel.checkDuplicate(title, api_id, api_provider);
+
+      const duplicate = await EntryModel.checkDuplicate(title, api_id, api_provider, userId);
       res.json({ isDuplicate: !!duplicate, entry: duplicate || null });
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -173,7 +181,8 @@ class EntryController {
 
   async getAvailableYears(req, res) {
     try {
-      const years = await EntryModel.getAvailableYears();
+      const userId = req.user.id;
+      const years = await EntryModel.getAvailableYears(userId);
       res.json(years);
     } catch (error) {
       res.status(500).json({ error: error.message });

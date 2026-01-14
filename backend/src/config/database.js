@@ -47,6 +47,7 @@ class Database {
       const createMoviesTable = `
         CREATE TABLE IF NOT EXISTS movies (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER DEFAULT 1,
           title TEXT NOT NULL,
           type TEXT NOT NULL,
           rating REAL,
@@ -62,13 +63,15 @@ class Database {
           year INTEGER DEFAULT 2025,
           watch_date TEXT DEFAULT CURRENT_TIMESTAMP,
           created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-          updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
       `;
 
       const createDetailsTable = `
         CREATE TABLE IF NOT EXISTS movie_details (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER DEFAULT 1,
           entry_id INTEGER UNIQUE NOT NULL,
           wikipedia_url TEXT,
           wikipedia_summary TEXT,
@@ -89,6 +92,7 @@ class Database {
           last_synced DATETIME,
           created_at TEXT DEFAULT CURRENT_TIMESTAMP,
           updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
           FOREIGN KEY (entry_id) REFERENCES movies(id) ON DELETE CASCADE
         )
       `;
@@ -96,6 +100,7 @@ class Database {
       const createDlangTable = `
         CREATE TABLE IF NOT EXISTS dlang_movies (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER DEFAULT 1,
           title TEXT NOT NULL,
           year INTEGER,
           language TEXT,
@@ -105,7 +110,8 @@ class Database {
           poster_url TEXT,
           notes TEXT,
           created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-          updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
       `;
 

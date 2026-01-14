@@ -1,19 +1,19 @@
 import database from "../config/database.js";
 
 class EntryModel {
-  async findAll(year = null) {
+  async findAll(year = null, userId) {
     try {
-      let query = "SELECT * FROM movies";
-      const params = [];
-      
+      let query = "SELECT * FROM movies WHERE user_id = ?";
+      const params = [userId];
+
       if (year !== null) {
-        query += " WHERE year = ?";
+        query += " AND year = ?";
         params.push(year);
       }
-      
+
       // Order by watch_date (with NULL handling), then by id DESC
       query += " ORDER BY COALESCE(watch_date, created_at) DESC, id DESC";
-      
+
       const entries = await database.all(query, params);
       return entries;
     } catch (error) {
@@ -21,18 +21,19 @@ class EntryModel {
     }
   }
 
-  async findById(id) {
+  async findById(id, userId) {
     try {
-      const entry = await database.get("SELECT * FROM movies WHERE id = ?", [
-        id,
-      ]);
+      const entry = await database.get(
+        "SELECT * FROM movies WHERE id = ? AND user_id = ?",
+        [id, userId]
+      );
       return entry;
     } catch (error) {
       throw new Error(`Error fetching entry: ${error.message}`);
     }
   }
 
-  async create(data) {
+  async create(data, userId) {
     const {
       title,
       type,
@@ -49,15 +50,16 @@ class EntryModel {
     } = data;
     const now = new Date().toISOString();
     const currentYear = new Date().getFullYear();
-    
+
     // Default to current year and today's date
     const entryYear = year || currentYear;
     const entryWatchDate = watch_date || now;
 
     try {
       const result = await database.run(
-        "INSERT INTO movies (title, type, rating, season, notes, poster_url, api_id, api_provider, description, release_date, year, watch_date, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO movies (user_id, title, type, rating, season, notes, poster_url, api_id, api_provider, description, release_date, year, watch_date, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [
+          userId,
           title,
           type,
           rating || null,
@@ -77,6 +79,7 @@ class EntryModel {
 
       return {
         id: result.id,
+        user_id: userId,
         title,
         type,
         rating: rating || null,
@@ -97,7 +100,7 @@ class EntryModel {
     }
   }
 
-  async update(id, data) {
+  async update(id, data, userId) {
     const {
       title,
       type,
@@ -154,8 +157,9 @@ class EntryModel {
       updateFields.push("updated_at = ?");
       params.push(now);
       params.push(id);
+      params.push(userId);
 
-      const query = `UPDATE movies SET ${updateFields.join(", ")} WHERE id = ?`;
+      const query = `UPDATE movies SET ${updateFields.join(", ")} WHERE id = ? AND user_id = ?`;
       const result = await database.run(query, params);
 
       if (result.changes === 0) {
@@ -163,25 +167,29 @@ class EntryModel {
       }
 
       // Fetch the complete entry to return all fields including year and created_at
-      const updatedEntry = await database.get("SELECT * FROM movies WHERE id = ?", [id]);
+      const updatedEntry = await database.get(
+        "SELECT * FROM movies WHERE id = ? AND user_id = ?",
+        [id, userId]
+      );
       return updatedEntry;
     } catch (error) {
       throw new Error(`Error updating entry: ${error.message}`);
     }
   }
 
-  async delete(id) {
+  async delete(id, userId) {
     try {
-      const result = await database.run("DELETE FROM movies WHERE id = ?", [
-        id,
-      ]);
+      const result = await database.run(
+        "DELETE FROM movies WHERE id = ? AND user_id = ?",
+        [id, userId]
+      );
       return result.changes > 0;
     } catch (error) {
       throw new Error(`Error deleting entry: ${error.message}`);
     }
   }
 
-  async getStatistics(year = null) {
+  async getStatistics(year = null, userId) {
     try {
       let statsQuery = `
         SELECT
@@ -189,13 +197,14 @@ class EntryModel {
           COUNT(*) as count,
           AVG(rating) as avg_rating
         FROM movies
+        WHERE user_id = ?
       `;
-      let totalQuery = "SELECT COUNT(*) as count FROM movies";
-      const params = [];
+      let totalQuery = "SELECT COUNT(*) as count FROM movies WHERE user_id = ?";
+      const params = [userId];
 
       if (year !== null) {
-        statsQuery += " WHERE year = ?";
-        totalQuery += " WHERE year = ?";
+        statsQuery += " AND year = ?";
+        totalQuery += " AND year = ?";
         params.push(year);
       }
 
@@ -214,11 +223,11 @@ class EntryModel {
     }
   }
 
-  async checkDuplicate(title, api_id = null, api_provider = null) {
+  async checkDuplicate(title, api_id = null, api_provider = null, userId) {
     try {
-      let query = "SELECT id, title, year FROM movies WHERE ";
-      const params = [];
-      
+      let query = "SELECT id, title, year FROM movies WHERE user_id = ? AND ";
+      const params = [userId];
+
       // Check by API ID first (more accurate)
       if (api_id && api_provider) {
         query += "api_id = ? AND api_provider = ?";
@@ -228,7 +237,7 @@ class EntryModel {
         query += "LOWER(title) = LOWER(?)";
         params.push(title);
       }
-      
+
       const duplicate = await database.get(query, params);
       return duplicate;
     } catch (error) {
@@ -236,10 +245,11 @@ class EntryModel {
     }
   }
 
-  async getAvailableYears() {
+  async getAvailableYears(userId) {
     try {
       const years = await database.all(
-        "SELECT DISTINCT year FROM movies ORDER BY year DESC"
+        "SELECT DISTINCT year FROM movies WHERE user_id = ? ORDER BY year DESC",
+        [userId]
       );
       return years.map(row => row.year);
     } catch (error) {
