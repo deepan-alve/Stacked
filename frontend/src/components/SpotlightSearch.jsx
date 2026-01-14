@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, Loader2, CheckCircle2, X } from 'lucide-react';
+import { Search, Loader2, CheckCircle2, X, Link, Plus } from 'lucide-react';
 
 const SpotlightSearch = ({ isOpen, onClose, onSelect }) => {
   const [query, setQuery] = useState('');
@@ -7,7 +7,17 @@ const SpotlightSearch = ({ isOpen, onClose, onSelect }) => {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [addingByImdb, setAddingByImdb] = useState(false);
   const inputRef = useRef(null);
+
+  // Extract IMDB ID from URL or direct ID
+  const extractImdbId = (input) => {
+    // Match IMDB ID pattern (tt followed by digits)
+    const match = input.match(/tt\d{7,}/);
+    return match ? match[0] : null;
+  };
+
+  const isImdbInput = extractImdbId(query) !== null;
 
   // Focus input when modal opens
   useEffect(() => {
@@ -87,6 +97,36 @@ const SpotlightSearch = ({ isOpen, onClose, onSelect }) => {
     onClose(); // Auto-close spotlight after selection
   };
 
+  const handleAddByImdb = async (type = 'Movie') => {
+    const imdbId = extractImdbId(query);
+    if (!imdbId) return;
+
+    setAddingByImdb(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/entries/add-by-imdb', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imdbId, type })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add movie');
+      }
+
+      const entry = await response.json();
+      onSelect(entry); // This will trigger a refresh
+      onClose();
+    } catch (err) {
+      console.error('Add by IMDB error:', err);
+      setError(err.message || 'Failed to add from IMDB');
+    } finally {
+      setAddingByImdb(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -155,9 +195,47 @@ const SpotlightSearch = ({ isOpen, onClose, onSelect }) => {
               </div>
             )}
 
-            {!loading && !error && results.length === 0 && query && (
-              <div className="text-center py-12 text-zinc-500 text-sm">
-                No results found for "{query}"
+            {!loading && !error && results.length === 0 && query && !isImdbInput && (
+              <div className="p-6">
+                <div className="text-center py-4 text-zinc-500 text-sm mb-4">
+                  No results found for "{query}"
+                </div>
+                <div className="text-zinc-500 text-xs mb-2 uppercase tracking-wide">Or paste an IMDB link</div>
+                <div className="text-zinc-600 text-xs">
+                  Paste an IMDB URL like: https://imdb.com/title/tt1234567
+                </div>
+              </div>
+            )}
+
+            {/* IMDB Link Detected */}
+            {!loading && !error && isImdbInput && (
+              <div className="p-4">
+                <div className="text-zinc-500 text-xs mb-3 uppercase tracking-wide flex items-center gap-2">
+                  <Link size={12} />
+                  IMDB Link Detected
+                </div>
+                <div className="bg-zinc-800/50 rounded-lg p-3 mb-3">
+                  <div className="text-xs text-zinc-400 mb-1">IMDB ID:</div>
+                  <div className="text-sm text-white font-mono">{extractImdbId(query)}</div>
+                </div>
+                <div className="text-zinc-500 text-xs mb-2">Add as:</div>
+                <div className="grid grid-cols-2 gap-2">
+                  {['Movie', 'Series', 'Anime'].map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => handleAddByImdb(type)}
+                      disabled={addingByImdb}
+                      className="flex items-center justify-center gap-2 px-3 py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm text-white transition-colors disabled:opacity-50"
+                    >
+                      {addingByImdb ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <Plus size={14} />
+                      )}
+                      {type}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
