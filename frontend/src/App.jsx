@@ -568,17 +568,17 @@ function Dashboard({ isDemo = false, onLogout }) {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="text-xs text-zinc-500">Rating (0-10)</label>
-                  <input 
-                    type="number" 
-                    min="0" 
-                    max="10" 
-                    step="0.1"
+                  <label className="text-xs text-zinc-500">Rating (0-5)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="5"
+                    step="0.5"
                     value={formData.rating}
                     onChange={(e) => setFormData({...formData, rating: e.target.value})}
                     readOnly={isDemo}
-                    className="w-full bg-zinc-800/50 border border-zinc-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-colors placeholder-zinc-600" 
-                    placeholder="-" 
+                    className="w-full bg-zinc-800/50 border border-zinc-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-colors placeholder-zinc-600"
+                    placeholder="-"
                   />
                 </div>
                 <div className={`space-y-1.5 ${formData.type !== 'Series' && formData.type !== 'Anime' ? 'opacity-50' : ''}`}>
@@ -1106,13 +1106,13 @@ function StatsView({ entries }) {
     .sort((a, b) => b.rating - a.rating)
     .slice(0, 5);
 
-  // Calculate rating distribution
+  // Calculate rating distribution (5-star scale)
   const ratingBuckets = [
-    { range: '9-10', min: 9, max: 10, color: 'bg-emerald-500' },
-    { range: '7-8.9', min: 7, max: 8.9, color: 'bg-green-500' },
-    { range: '5-6.9', min: 5, max: 6.9, color: 'bg-yellow-500' },
-    { range: '3-4.9', min: 3, max: 4.9, color: 'bg-orange-500' },
-    { range: '0-2.9', min: 0, max: 2.9, color: 'bg-red-500' }
+    { range: '4.5-5', min: 4.5, max: 5, color: 'bg-emerald-500' },
+    { range: '3.5-4', min: 3.5, max: 4.4, color: 'bg-green-500' },
+    { range: '2.5-3', min: 2.5, max: 3.4, color: 'bg-yellow-500' },
+    { range: '1.5-2', min: 1.5, max: 2.4, color: 'bg-orange-500' },
+    { range: '0-1', min: 0, max: 1.4, color: 'bg-red-500' }
   ];
 
   const ratingDistribution = ratingBuckets.map(bucket => ({
