@@ -1068,11 +1068,13 @@ function ArchiveView({ selectedYear, availableYears, onYearChange, onEntryClick,
 }
 
 function StatsView({ entries }) {
+  // Only show 2026+ entries in analytics
+  const filteredEntries = entries.filter(e => e.year >= 2026);
   const types = ['Movie', 'Series', 'Anime', 'Book'];
-  
+
   const avgRatings = types.reduce((acc, type) => {
-    const typeEntries = entries.filter(e => e.type === type && e.rating != null);
-    acc[type] = typeEntries.length > 0 
+    const typeEntries = filteredEntries.filter(e => e.type === type && e.rating != null);
+    acc[type] = typeEntries.length > 0
       ? (typeEntries.reduce((sum, e) => sum + e.rating, 0) / typeEntries.length).toFixed(1)
       : '0.0';
     return acc;
@@ -1080,9 +1082,9 @@ function StatsView({ entries }) {
 
   const distribution = types.map(type => ({
     type,
-    count: entries.filter(e => e.type === type).length,
-    percentage: entries.length > 0 
-      ? (entries.filter(e => e.type === type).length / entries.length) * 100 
+    count: filteredEntries.filter(e => e.type === type).length,
+    percentage: filteredEntries.length > 0
+      ? (filteredEntries.filter(e => e.type === type).length / filteredEntries.length) * 100
       : 0
   }));
 
@@ -1101,7 +1103,7 @@ function StatsView({ entries }) {
   };
 
   // Calculate top rated entries
-  const topRated = [...entries]
+  const topRated = [...filteredEntries]
     .filter(e => e.rating != null)
     .sort((a, b) => b.rating - a.rating)
     .slice(0, 5);
@@ -1117,13 +1119,13 @@ function StatsView({ entries }) {
 
   const ratingDistribution = ratingBuckets.map(bucket => ({
     ...bucket,
-    count: entries.filter(e => e.rating >= bucket.min && e.rating <= bucket.max).length
+    count: filteredEntries.filter(e => e.rating >= bucket.min && e.rating <= bucket.max).length
   }));
 
   const maxRatingCount = Math.max(...ratingDistribution.map(r => r.count), 1);
 
   // Calculate overall stats
-  const ratedEntries = entries.filter(e => e.rating != null);
+  const ratedEntries = filteredEntries.filter(e => e.rating != null);
   const overallAvg = ratedEntries.length > 0
     ? (ratedEntries.reduce((sum, e) => sum + e.rating, 0) / ratedEntries.length).toFixed(1)
     : '0.0';
@@ -1137,7 +1139,7 @@ function StatsView({ entries }) {
     : '0.0';
 
   // Recent additions (last 10)
-  const recentAdditions = [...entries]
+  const recentAdditions = [...filteredEntries]
     .sort((a, b) => b.id - a.id)
     .slice(0, 10);
 
@@ -1145,7 +1147,7 @@ function StatsView({ entries }) {
     <div className="fade-in space-y-6">
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-lg font-medium text-zinc-100 tracking-tight">Analytics</h2>
-        <span className="text-xs text-zinc-500">{entries.length} total entries</span>
+        <span className="text-xs text-zinc-500">{filteredEntries.length} total entries (2026+)</span>
       </div>
 
       {/* Overall Stats Row */}
@@ -1154,7 +1156,7 @@ function StatsView({ entries }) {
           <span className="text-xs font-medium text-zinc-400 block mb-2">Overall Average</span>
           <div className="flex items-baseline gap-2">
             <h3 className="text-2xl font-semibold text-zinc-100 tracking-tight">{overallAvg}</h3>
-            <span className="text-xs text-zinc-600">/ 10</span>
+            <span className="text-xs text-zinc-600">/ 5</span>
           </div>
         </div>
         <div className="p-4 rounded-lg border border-zinc-800 bg-gradient-to-br from-emerald-900/20 to-zinc-900/30">
@@ -1168,14 +1170,14 @@ function StatsView({ entries }) {
           <span className="text-xs font-medium text-red-400/70 block mb-2">Lowest Rated</span>
           <div className="flex items-baseline gap-2">
             <h3 className="text-2xl font-semibold text-red-400 tracking-tight">{lowestRated}</h3>
-            <span className="text-xs text-red-500">/ 10</span>
+            <span className="text-xs text-red-500">/ 5</span>
           </div>
         </div>
         <div className="p-4 rounded-lg border border-zinc-800 bg-gradient-to-br from-blue-900/20 to-zinc-900/30">
           <span className="text-xs font-medium text-blue-400/70 block mb-2">With Ratings</span>
           <div className="flex items-baseline gap-2">
             <h3 className="text-2xl font-semibold text-blue-400 tracking-tight">{ratedEntries.length}</h3>
-            <span className="text-xs text-zinc-600">/ {entries.length}</span>
+            <span className="text-xs text-zinc-600">/ {filteredEntries.length}</span>
           </div>
         </div>
       </div>
@@ -1190,7 +1192,7 @@ function StatsView({ entries }) {
             </div>
             <div className="flex items-baseline gap-2">
               <h3 className="text-2xl font-semibold text-zinc-100 tracking-tight">{avgRatings[type]}</h3>
-              <span className="text-xs text-zinc-600">/ 10</span>
+              <span className="text-xs text-zinc-600">/ 5</span>
             </div>
           </div>
         ))}
