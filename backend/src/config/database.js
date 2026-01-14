@@ -216,6 +216,37 @@ class Database {
         await addColumn('movies', 'watch_date', 'TEXT');
       }
 
+      // Convert 10-scale ratings to 5-scale (ratings > 5 need conversion)
+      // Formula: round to nearest 0.5 after dividing by 2
+      await new Promise((resolve, reject) => {
+        this.db.run(
+          `UPDATE movies SET rating = ROUND(rating / 2.0 * 2) / 2 WHERE rating > 5`,
+          [],
+          (err) => {
+            if (err) {
+              console.log("[DB] Rating conversion error:", err.message);
+            } else {
+              console.log("[DB] ✓ Ratings converted to 5-star scale");
+            }
+            resolve();
+          }
+        );
+      });
+
+      // Also convert dlang_movies ratings
+      await new Promise((resolve, reject) => {
+        this.db.run(
+          `UPDATE dlang_movies SET rating = ROUND(rating / 2.0 * 2) / 2 WHERE rating > 5`,
+          [],
+          (err) => {
+            if (err) {
+              console.log("[DB] Dlang rating conversion error:", err.message);
+            }
+            resolve();
+          }
+        );
+      });
+
       console.log("[DB] ✓ Migrations complete");
     } catch (error) {
       console.error("[DB] Migration error:", error.message);
