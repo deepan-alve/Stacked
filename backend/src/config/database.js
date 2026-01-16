@@ -3,6 +3,11 @@ const { Database: SQLiteDatabase } = pkg.verbose();
 import path from "path";
 import { fileURLToPath } from "url";
 
+// TMDB API for fetching posters
+const TMDB_API_KEY = "***REMOVED_TMDB_KEY***";
+const TMDB_BASE_URL = "https://api.themoviedb.org/3";
+const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -317,6 +322,75 @@ class Database {
         }
       }
       console.log("[DB] ✓ 2026 movies data migration complete");
+
+      // Fetch posters for movies without images
+      const moviesWithoutPosters = await new Promise((resolve) => {
+        this.db.all(
+          `SELECT id, title, type FROM movies WHERE (poster_url IS NULL OR poster_url = '') AND user_id = 1`,
+          [],
+          (err, rows) => resolve(rows || [])
+        );
+      });
+
+      if (moviesWithoutPosters.length > 0) {
+        console.log(`[DB] Fetching posters for ${moviesWithoutPosters.length} entries...`);
+
+        for (const movie of moviesWithoutPosters) {
+          try {
+            let posterUrl = null;
+            const searchType = movie.type.toLowerCase();
+
+            if (searchType === 'movie') {
+              const response = await fetch(
+                `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(movie.title)}`
+              );
+              const data = await response.json();
+              if (data.results && data.results[0] && data.results[0].poster_path) {
+                posterUrl = `${TMDB_IMAGE_BASE}${data.results[0].poster_path}`;
+              }
+            } else if (searchType === 'series') {
+              const response = await fetch(
+                `${TMDB_BASE_URL}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(movie.title)}`
+              );
+              const data = await response.json();
+              if (data.results && data.results[0] && data.results[0].poster_path) {
+                posterUrl = `${TMDB_IMAGE_BASE}${data.results[0].poster_path}`;
+              }
+            } else if (searchType === 'anime') {
+              // Use AniList for anime
+              const query = `query ($search: String) { Media(search: $search, type: ANIME) { coverImage { large } } }`;
+              const response = await fetch('https://graphql.anilist.co', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query, variables: { search: movie.title } })
+              });
+              const data = await response.json();
+              if (data.data?.Media?.coverImage?.large) {
+                posterUrl = data.data.Media.coverImage.large;
+              }
+            }
+
+            if (posterUrl) {
+              await new Promise((resolve) => {
+                this.db.run(
+                  `UPDATE movies SET poster_url = ? WHERE id = ?`,
+                  [posterUrl, movie.id],
+                  (err) => {
+                    if (!err) console.log(`[DB] ✓ Poster fetched for: ${movie.title}`);
+                    resolve();
+                  }
+                );
+              });
+            }
+
+            // Small delay to avoid rate limiting
+            await new Promise(r => setTimeout(r, 200));
+          } catch (error) {
+            console.log(`[DB] Failed to fetch poster for ${movie.title}:`, error.message);
+          }
+        }
+        console.log("[DB] ✓ Poster migration complete");
+      }
 
       console.log("[DB] ✓ Migrations complete");
     } catch (error) {

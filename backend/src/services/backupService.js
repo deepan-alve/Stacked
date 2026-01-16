@@ -14,18 +14,22 @@ class BackupService {
     this.backupDir = process.env.BACKUP_DIR || "/app/backups";
     this.dbPath = process.env.DB_PATH || path.join(__dirname, "../../data/movies.db");
     this.supabase = null;
+    this.supabaseInitialized = false;
     this.bucketName = "stacked-backups";
-
-    // Initialize Supabase if credentials are provided
-    this.initSupabase();
   }
 
   /**
-   * Initialize Supabase client
+   * Initialize Supabase client (lazy initialization)
    */
   initSupabase() {
+    if (this.supabaseInitialized) return;
+    this.supabaseInitialized = true;
+
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY;
+
+    console.log("[Backup] SUPABASE_URL:", supabaseUrl ? "set" : "not set");
+    console.log("[Backup] SUPABASE_SERVICE_KEY:", supabaseKey ? "set" : "not set");
 
     if (supabaseUrl && supabaseKey) {
       this.supabase = createClient(supabaseUrl, supabaseKey);
@@ -258,6 +262,9 @@ class BackupService {
    */
   startPeriodicBackup(intervalHours = 6) {
     const intervalMs = intervalHours * 60 * 60 * 1000;
+
+    // Initialize Supabase now that env vars are loaded
+    this.initSupabase();
 
     console.log(`⏰ Starting periodic backup every ${intervalHours} hours`);
 
