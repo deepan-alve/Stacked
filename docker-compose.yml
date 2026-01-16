@@ -3,7 +3,6 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: stacked-backend
     restart: unless-stopped
     environment:
       - NODE_ENV=production
@@ -27,7 +26,6 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: stacked-frontend
     restart: unless-stopped
     depends_on:
       backend:
