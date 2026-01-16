@@ -202,18 +202,16 @@ database
     backupService.startPeriodicBackup(BACKUP_INTERVAL_HOURS);
     console.log(`Backup enabled: every ${BACKUP_INTERVAL_HOURS} hours`);
 
-    // Start periodic Git sync (every 30 minutes if GITHUB_TOKEN is set)
-    if (process.env.GITHUB_TOKEN) {
-      console.log("Git sync enabled - syncing to GitHub every 30 minutes");
-      setInterval(() => {
-        gitSyncService.syncToGitHub().catch(console.error);
-      }, 30 * 60 * 1000); // 30 minutes
+    // Start periodic Git sync (every 30 minutes)
+    console.log("Git sync enabled - syncing to GitHub every 30 minutes");
+    setInterval(() => {
+      gitSyncService.syncToGitHub().catch(console.error);
+    }, 30 * 60 * 1000); // 30 minutes
 
-      // Initial sync after 1 minute
-      setTimeout(() => {
-        gitSyncService.syncToGitHub().catch(console.error);
-      }, 60 * 1000);
-    }
+    // Initial sync after 1 minute
+    setTimeout(() => {
+      gitSyncService.syncToGitHub().catch(console.error);
+    }, 60 * 1000);
   })
   .catch((error) => {
     console.error("Failed to start server:", error);
