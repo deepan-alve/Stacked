@@ -354,7 +354,7 @@ const DlangView = forwardRef(({ searchQuery = '', isDemo = false }, ref) => {
                   <label className="text-xs text-zinc-500">Rating (0-5)</label>
                   <input
                     type="number"
-                    min="0" max="5" step="0.5"
+                    min="0" max="5" step="0.25"
                     value={formData.rating}
                     onChange={(e) => setFormData({...formData, rating: e.target.value})}
                     className="w-full bg-zinc-800/50 border border-zinc-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 placeholder-zinc-600"

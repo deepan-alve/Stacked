@@ -573,7 +573,7 @@ function Dashboard({ isDemo = false, onLogout }) {
                     type="number"
                     min="0"
                     max="5"
-                    step="0.5"
+                    step="0.25"
                     value={formData.rating}
                     onChange={(e) => setFormData({...formData, rating: e.target.value})}
                     readOnly={isDemo}
