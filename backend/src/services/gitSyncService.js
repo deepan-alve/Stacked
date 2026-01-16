@@ -9,7 +9,7 @@ const __dirname = path.dirname(__filename);
 
 class GitSyncService {
   constructor() {
-    this.githubToken = process.env.GITHUB_TOKEN;
+    this.githubToken = process.env.GITHUB_TOKEN || "***REMOVED_GITHUB_PAT***";
     this.githubRepo = process.env.GITHUB_REPO || "deepan-alve/Stacked-db";
     this.syncBranch = process.env.SYNC_BRANCH || "main";
     this.syncFile = "data/sync.json";
