@@ -264,6 +264,60 @@ class Database {
         );
       });
 
+      // Add 2026 movies data (one-time migration)
+      const movies2026 = [
+        { title: 'Thenali', type: 'Movie', rating: 3.5, year: 2026, watch_date: '2026-01-14', created_at: '2026-01-13T20:48:26.276Z' },
+        { title: 'The Family Man', type: 'Series', rating: 2.5, year: 2026, watch_date: '2026-01-11', created_at: '2026-01-13T21:11:48.259Z' },
+        { title: 'Uri: The Surgical Strike', type: 'Movie', rating: 3.5, year: 2026, watch_date: '2026-01-03', created_at: '2026-01-14T08:30:14.784Z' },
+        { title: 'Monster', type: 'Anime', rating: 4.0, year: 2026, watch_date: '2026-01-04', created_at: '2026-01-14T09:07:43.189Z' },
+        { title: 'The Hangover', type: 'Movie', rating: 3.5, year: 2026, watch_date: '2026-01-09', created_at: '2026-01-14T09:11:10.599Z' },
+        { title: 'Central Intelligence', type: 'Movie', rating: 2.5, year: 2026, watch_date: '2026-01-05', created_at: '2026-01-14T09:12:15.882Z' },
+        { title: 'Wrath of Man', type: 'Movie', rating: 3.0, year: 2026, watch_date: '2026-01-10', created_at: '2026-01-14T09:15:58.311Z' },
+        { title: 'The Beekeeper', type: 'Movie', rating: 2.5, year: 2026, watch_date: '2026-01-10', created_at: '2026-01-14T09:16:39.274Z' },
+        { title: 'The Bad Guys', type: 'Movie', rating: 4.0, year: 2026, watch_date: '2026-01-06', created_at: '2026-01-14T09:17:15.690Z' },
+        { title: 'The Bad Guys 2', type: 'Movie', rating: 2.5, year: 2026, watch_date: '2026-01-06', created_at: '2026-01-14T09:17:34.749Z' },
+        { title: 'Hacksaw Ridge', type: 'Movie', rating: 4.5, year: 2026, watch_date: '2026-01-07', created_at: '2026-01-14T09:18:18.537Z' },
+        { title: 'Shutter Island', type: 'Movie', rating: 4.0, year: 2026, watch_date: '2026-01-08', created_at: '2026-01-14T09:20:23.961Z' },
+        { title: '12th Fail', type: 'Movie', rating: 4.5, year: 2026, watch_date: '2026-01-11', created_at: '2026-01-14T09:20:49.609Z' },
+        { title: 'Zombieland', type: 'Movie', rating: 3.0, year: 2026, watch_date: '2026-01-08', created_at: '2026-01-14T09:21:44.521Z' },
+        { title: 'Parasakthi', type: 'Movie', rating: 2.5, year: 2026, watch_date: '2026-01-10', created_at: '2026-01-14T09:23:00.201Z' },
+        { title: 'Mannan', type: 'Movie', rating: 3.0, year: 2026, watch_date: '2026-01-11', created_at: '2026-01-14T09:24:03.066Z' },
+        { title: 'Pistha', type: 'Movie', rating: 3.0, year: 2026, watch_date: '2026-01-13', created_at: '2026-01-14T09:24:24.629Z' },
+        { title: 'Stranger Things', type: 'Series', rating: 2.0, year: 2026, watch_date: '2026-01-01', created_at: '2026-01-14T09:24:50.124Z' },
+        { title: 'Gentleman', type: 'Movie', rating: 3.0, year: 2026, watch_date: '2026-01-12', created_at: '2026-01-14T09:31:27.744Z' },
+        { title: 'Argo', type: 'Movie', rating: 4.5, year: 2026, watch_date: '2026-01-11', created_at: '2026-01-14T09:33:28.473Z' },
+        { title: 'Kill', type: 'Movie', rating: 4.0, year: 2026, watch_date: '2026-01-10', created_at: '2026-01-14T09:34:02.103Z' },
+        { title: 'Snowpiercer', type: 'Movie', rating: 3.5, year: 2026, watch_date: '2026-01-09', created_at: '2026-01-14T09:37:02.868Z' },
+        { title: 'Theri', type: 'Movie', rating: 3.5, year: 2026, watch_date: '2026-01-09', created_at: '2026-01-14T09:49:16.681Z' },
+      ];
+
+      for (const movie of movies2026) {
+        // Check if movie already exists
+        const exists = await new Promise((resolve) => {
+          this.db.get(
+            `SELECT id FROM movies WHERE title = ? AND year = ? AND user_id = 1`,
+            [movie.title, movie.year],
+            (err, row) => resolve(row ? true : false)
+          );
+        });
+
+        if (!exists) {
+          await new Promise((resolve) => {
+            this.db.run(
+              `INSERT INTO movies (user_id, title, type, rating, year, watch_date, created_at, updated_at) VALUES (1, ?, ?, ?, ?, ?, ?, ?)`,
+              [movie.title, movie.type, movie.rating, movie.year, movie.watch_date, movie.created_at, movie.created_at],
+              (err) => {
+                if (err) {
+                  console.log(`[DB] Error inserting ${movie.title}:`, err.message);
+                }
+                resolve();
+              }
+            );
+          });
+        }
+      }
+      console.log("[DB] ✓ 2026 movies data migration complete");
+
       console.log("[DB] ✓ Migrations complete");
     } catch (error) {
       console.error("[DB] Migration error:", error.message);
