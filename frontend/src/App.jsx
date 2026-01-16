@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Film, Tv, Sparkles, Book, Plus, Search, X, ChevronDown, Star, Inbox, ExternalLink, LogOut, Calendar, BarChart3, Archive, Menu } from 'lucide-react';
+import { Film, Tv, Sparkles, Book, Plus, Search, X, ChevronDown, Star, Inbox, ExternalLink, LogOut, Calendar, BarChart3, Archive, Menu, Download } from 'lucide-react';
 import { useEntries } from './hooks/useEntries';
 import SearchModal from './components/SearchModal';
 import SpotlightSearch from './components/SpotlightSearch';
@@ -743,6 +743,35 @@ function Dashboard({ isDemo = false, onLogout }) {
             <Archive className="w-5 h-5" />
             <span className="text-[10px] font-medium">Archive</span>
           </button>
+          {!isDemo && (
+            <button
+              onClick={async () => {
+                try {
+                  toast.loading('Preparing download...', { id: 'download' });
+                  const response = await fetch('/api/backup/download', {
+                    credentials: 'include'
+                  });
+                  if (!response.ok) throw new Error('Download failed');
+                  const blob = await response.blob();
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'stacked-backup.db';
+                  document.body.appendChild(a);
+                  a.click();
+                  window.URL.revokeObjectURL(url);
+                  a.remove();
+                  toast.success('Download complete!', { id: 'download' });
+                } catch (error) {
+                  toast.error('Download failed', { id: 'download' });
+                }
+              }}
+              className="flex flex-col items-center gap-1 py-2 px-4 rounded-lg text-zinc-500"
+            >
+              <Download className="w-5 h-5" />
+              <span className="text-[10px] font-medium">Export</span>
+            </button>
+          )}
           {!isDemo && onLogout && (
             <button
               onClick={onLogout}
