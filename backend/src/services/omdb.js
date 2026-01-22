@@ -14,30 +14,30 @@ class OMDbService {
   // Cache for TMDB poster lookups to avoid duplicate requests
   posterCache = new Map();
 
-  async getTMDBPoster(title, year, type) {
-    const cacheKey = `${title}-${year}-${type}`;
-    if (this.posterCache.has(cacheKey)) {
-      return this.posterCache.get(cacheKey);
+  async getTMDBPosterByImdbId(imdbId) {
+    if (this.posterCache.has(imdbId)) {
+      return this.posterCache.get(imdbId);
     }
 
     try {
-      const searchType = type === "Series" ? "tv" : "movie";
-      const yearParam = year ? `&year=${year}` : "";
+      // Use TMDB's find endpoint - looks up by IMDB ID (more accurate)
       const response = await fetch(
-        `${TMDB_BASE_URL}/search/${searchType}?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(title)}${yearParam}`
+        `${TMDB_BASE_URL}/find/${imdbId}?api_key=${TMDB_API_KEY}&external_source=imdb_id`
       );
       const data = await response.json();
 
-      if (data.results && data.results.length > 0 && data.results[0].poster_path) {
-        const poster = `${TMDB_IMAGE_BASE}${data.results[0].poster_path}`;
-        this.posterCache.set(cacheKey, poster);
+      // Check movie results first, then TV
+      const result = data.movie_results?.[0] || data.tv_results?.[0];
+      if (result?.poster_path) {
+        const poster = `${TMDB_IMAGE_BASE}${result.poster_path}`;
+        this.posterCache.set(imdbId, poster);
         return poster;
       }
     } catch (error) {
       // Silently fail - will use OMDb poster or null
     }
 
-    this.posterCache.set(cacheKey, null);
+    this.posterCache.set(imdbId, null);
     return null;
   }
 
@@ -53,14 +53,14 @@ class OMDbService {
         return [];
       }
 
-      // Get TMDB posters in parallel for all results
+      // Get TMDB posters in parallel for all results (using IMDB ID lookup)
       const results = await Promise.all(
         (data.Search || []).map(async (item) => {
           const type = item.Type === "movie" ? "Movie" : item.Type === "series" ? "Series" : item.Type;
           const year = item.Year ? parseInt(item.Year) : null;
 
-          // Try TMDB poster first (more reliable), fall back to OMDb
-          const tmdbPoster = await this.getTMDBPoster(item.Title, year, type);
+          // Try TMDB poster first (by IMDB ID - more accurate), fall back to OMDb
+          const tmdbPoster = await this.getTMDBPosterByImdbId(item.imdbID);
           const omdbPoster = item.Poster !== "N/A" ? item.Poster : null;
 
           return {
