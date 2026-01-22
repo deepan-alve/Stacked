@@ -3,6 +3,7 @@ import anilistService from "../services/anilist.js";
 import openlibraryService from "../services/openlibrary.js";
 import imdbService from "../services/imdb.js";
 import googleSearchService from "../services/googleSearch.js";
+import omdbService from "../services/omdb.js";
 import db from "../config/database.js";
 
 const searchController = {
@@ -167,7 +168,7 @@ const searchController = {
     }
   },
 
-  // Spotlight search - Uses TMDB multi-search
+  // Spotlight search - Uses OMDb (IMDB data)
   spotlightSearch: async (req, res) => {
     try {
       const { query } = req.query;
@@ -188,8 +189,8 @@ const searchController = {
           query.replace(/^anime\s+/i, "")
         );
       } else {
-        // Use TMDB multi-search for movies and series
-        searchResults = await tmdbService.searchMulti(query);
+        // Use OMDb API (has IMDB's full database including regional films)
+        searchResults = await omdbService.search(query);
       }
 
       console.log("Sending", searchResults.length, "results");
