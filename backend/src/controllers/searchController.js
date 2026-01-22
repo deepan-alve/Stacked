@@ -167,7 +167,7 @@ const searchController = {
     }
   },
 
-  // Spotlight search - IMDB scraper
+  // Spotlight search - Uses TMDB multi-search
   spotlightSearch: async (req, res) => {
     try {
       const { query } = req.query;
@@ -181,12 +181,16 @@ const searchController = {
       // Check if query includes "anime" prefix
       const isAnimeQuery = query.toLowerCase().startsWith("anime ");
 
-      // Search using Google scraper
-      const searchResults = isAnimeQuery
-        ? await googleSearchService.searchWithAnime(
-            query.replace(/^anime\s+/i, "")
-          )
-        : await googleSearchService.searchIMDB(query);
+      let searchResults;
+      if (isAnimeQuery) {
+        // For anime queries, use AniList
+        searchResults = await anilistService.searchAnime(
+          query.replace(/^anime\s+/i, "")
+        );
+      } else {
+        // Use TMDB multi-search for movies and series
+        searchResults = await tmdbService.searchMulti(query);
+      }
 
       console.log("Sending", searchResults.length, "results");
 

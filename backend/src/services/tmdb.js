@@ -123,6 +123,44 @@ class TMDBService {
       throw new Error("Failed to get TV show details");
     }
   }
+
+  async searchMulti(query) {
+    try {
+      const response = await fetch(
+        `${TMDB_BASE_URL}/search/multi?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(
+          query
+        )}`
+      );
+      const data = await response.json();
+
+      return data.results
+        .filter((item) => item.media_type === "movie" || item.media_type === "tv")
+        .map((item) => {
+          const isMovie = item.media_type === "movie";
+          return {
+            id: item.id,
+            title: isMovie ? item.title : item.name,
+            year: isMovie
+              ? item.release_date
+                ? new Date(item.release_date).getFullYear()
+                : null
+              : item.first_air_date
+              ? new Date(item.first_air_date).getFullYear()
+              : null,
+            poster: item.poster_path
+              ? `${TMDB_IMAGE_BASE}${item.poster_path}`
+              : null,
+            plot: item.overview,
+            rating: item.vote_average,
+            type: isMovie ? "Movie" : "Series",
+            provider: "tmdb",
+          };
+        });
+    } catch (error) {
+      console.error("TMDB Multi Search Error:", error);
+      throw new Error("Failed to search");
+    }
+  }
 }
 
 export default new TMDBService();
