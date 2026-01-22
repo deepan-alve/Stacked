@@ -4,6 +4,7 @@ import openlibraryService from "../services/openlibrary.js";
 import imdbService from "../services/imdb.js";
 import googleSearchService from "../services/googleSearch.js";
 import omdbService from "../services/omdb.js";
+import imdbScraper from "../services/imdbScraper.js";
 import db from "../config/database.js";
 
 const searchController = {
@@ -168,7 +169,7 @@ const searchController = {
     }
   },
 
-  // Spotlight search - Uses OMDb (IMDB data)
+  // Spotlight search - Uses IMDB suggestion API scraper
   spotlightSearch: async (req, res) => {
     try {
       const { query } = req.query;
@@ -189,8 +190,8 @@ const searchController = {
           query.replace(/^anime\s+/i, "")
         );
       } else {
-        // Use OMDb API (has IMDB's full database including regional films)
-        searchResults = await omdbService.search(query);
+        // Use IMDB scraper (suggestion API - no rate limits, full database)
+        searchResults = await imdbScraper.search(query);
       }
 
       console.log("Sending", searchResults.length, "results");
