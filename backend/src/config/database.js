@@ -390,6 +390,50 @@ class Database {
         });
       });
 
+      // Backfill activity_log from existing entries that have no activity record
+      const unloggedEntries = await new Promise((resolve) => {
+        this.db.all(
+          `SELECT m.id, m.user_id, m.title, m.type, m.created_at
+           FROM movies m
+           LEFT JOIN activity_log a ON a.entry_id = m.id AND a.user_id = m.user_id AND a.action = 'added'
+           WHERE a.id IS NULL`,
+          [],
+          (err, rows) => {
+            if (err) {
+              console.log("[DB] Backfill query error:", err.message);
+              resolve([]);
+            } else {
+              resolve(rows || []);
+            }
+          }
+        );
+      });
+
+      if (unloggedEntries.length > 0) {
+        for (const entry of unloggedEntries) {
+          await new Promise((resolve) => {
+            this.db.run(
+              `INSERT INTO activity_log (user_id, action, entry_id, entry_title, entry_type, created_at)
+               VALUES (?, 'added', ?, ?, ?, ?)`,
+              [entry.user_id, entry.id, entry.title, entry.type, entry.created_at || new Date().toISOString()],
+              (err) => {
+                if (err) console.log(`[DB] Backfill error for ${entry.title}:`, err.message);
+                resolve();
+              }
+            );
+          });
+        }
+        console.log(`[DB] ✓ Backfilled ${unloggedEntries.length} activity_log entries`);
+      }
+
+      // Add display_name and bio columns to users
+      if (!(await columnExists('users', 'display_name'))) {
+        await addColumn('users', 'display_name', 'TEXT');
+      }
+      if (!(await columnExists('users', 'bio'))) {
+        await addColumn('users', 'bio', 'TEXT');
+      }
+
       console.log("[DB] ✓ Migrations complete");
     } catch (error) {
       console.error("[DB] Migration error:", error.message);

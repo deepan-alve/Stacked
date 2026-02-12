@@ -83,6 +83,10 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  const updateUser = useCallback((userData) => {
+    setUser(prev => prev ? { ...prev, ...userData } : prev);
+  }, []);
+
   const value = {
     user,
     loading,
@@ -92,6 +96,7 @@ export function AuthProvider({ children }) {
     signup,
     logout,
     checkAuth,
+    updateUser,
   };
 
   return (

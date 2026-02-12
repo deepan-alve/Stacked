@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Film, Tv, Sparkles, Book, Plus, Search, X, ChevronDown, Star, Inbox, ExternalLink, LogOut, Calendar, BarChart3, Menu, Download, Home, LayoutGrid, Heart, Flame, Target, Clock, TrendingUp, Upload, Share2, Tag, ArrowUpDown, Play, List, Eye, Trash2, Archive } from 'lucide-react';
+import { Film, Tv, Sparkles, Book, Plus, Search, X, ChevronDown, Star, Inbox, ExternalLink, LogOut, Calendar, BarChart3, Menu, Download, Home, LayoutGrid, Heart, Flame, Target, Clock, TrendingUp, Upload, Share2, Tag, ArrowUpDown, Play, List, Eye, Trash2, Archive, User, Link, Copy, Check, Lock, Settings } from 'lucide-react';
 import { useEntries } from './hooks/useEntries';
 import SearchModal from './components/SearchModal';
 import SpotlightSearch from './components/SpotlightSearch';
@@ -8,10 +8,12 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import LandingPage from './pages/LandingPage';
 import toast, { Toaster } from 'react-hot-toast';
 import { setDemoMode, entryService, activityService, goalService, recommendationService, csvService, shareService } from './services/api';
+import authService from './services/auth';
 
 const currentYear = new Date().getFullYear();
 
 function Dashboard({ isDemo = false, onLogout }) {
+  const { user: authUser, updateUser } = useAuth();
   const { entries, loading, createEntry, updateEntry, deleteEntry, quickRate, loadEntries } = useEntries(null);
   const [filterType, setFilterType] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -28,6 +30,7 @@ function Dashboard({ isDemo = false, onLogout }) {
   const [archiveYearFrom, setArchiveYearFrom] = useState(null);
   const [archiveYearTo, setArchiveYearTo] = useState(null);
   const dlangViewRef = useRef(null);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   useEffect(() => {
     entryService.getAvailableYears().then(years => {
@@ -398,9 +401,14 @@ function Dashboard({ isDemo = false, onLogout }) {
             </button>
 
             {!isDemo && onLogout && (
-              <button onClick={onLogout} className="hidden md:flex items-center justify-center w-8 h-8 text-cinema-subtle hover:text-gold transition-colors" title="Sign out">
-                <LogOut className="w-4 h-4" />
-              </button>
+              <>
+                <button onClick={() => setCurrentView('profile')} className={`hidden md:flex items-center justify-center w-8 h-8 transition-colors ${currentView === 'profile' ? 'text-gold' : 'text-cinema-subtle hover:text-gold'}`} title="Profile">
+                  <User className="w-4 h-4" />
+                </button>
+                <button onClick={onLogout} className="hidden md:flex items-center justify-center w-8 h-8 text-cinema-subtle hover:text-gold transition-colors" title="Sign out">
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </>
             )}
           </div>
         </div>
@@ -424,6 +432,7 @@ function Dashboard({ isDemo = false, onLogout }) {
             onQuickRate={handleQuickRate}
             getTypeIcon={getTypeIcon}
             isDemo={isDemo}
+            onShareClick={() => setIsShareModalOpen(true)}
           />
         ) : currentView === 'watchlist' ? (
           <WatchlistView
@@ -464,6 +473,8 @@ function Dashboard({ isDemo = false, onLogout }) {
           />
         ) : currentView === 'favorites' ? (
           <DlangView ref={dlangViewRef} searchQuery={searchQuery} isDemo={isDemo} />
+        ) : currentView === 'profile' ? (
+          <ProfileView user={authUser} updateUser={updateUser} entries={entries} />
         ) : (
           <StatsView entries={entries} isDemo={isDemo} />
         )}
@@ -645,6 +656,7 @@ function Dashboard({ isDemo = false, onLogout }) {
 
       <SearchModal isOpen={isSearchModalOpen} onClose={() => setIsSearchModalOpen(false)} onSelect={handleSearchSelect} type={formData.type} />
       <SpotlightSearch isOpen={isSpotlightOpen} onClose={() => setIsSpotlightOpen(false)} onSelect={handleSpotlightSelect} />
+      <ShareModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} />
 
       {/* Mobile Search Overlay */}
       {isMobileSearchOpen && (
@@ -680,9 +692,13 @@ function Dashboard({ isDemo = false, onLogout }) {
             </button>
           ))}
           {!isDemo && onLogout && (
-            <button onClick={onLogout} className="flex flex-col items-center gap-1 py-2 px-4 text-cinema-subtle hover:text-gold transition-colors">
-              <LogOut className="w-5 h-5" /><span className="text-[10px] font-medium">Logout</span>
-            </button>
+            <>
+              <button onClick={() => setCurrentView('profile')}
+                className={`flex flex-col items-center gap-1 py-2 px-4 transition-all ${currentView === 'profile' ? 'text-gold' : 'text-cinema-subtle hover:text-gold'}`}>
+                <User className="w-5 h-5" /><span className="text-[10px] font-medium">Profile</span>
+                {currentView === 'profile' && <div className="w-1 h-1 rounded-full bg-gold" />}
+              </button>
+            </>
           )}
         </div>
       </nav>
@@ -700,11 +716,11 @@ function HomeView({ entries, stats, onEntryClick, onQuickRate, getTypeIcon, isDe
 
   useEffect(() => {
     if (isDemo) return;
-    activityService.getStreak().then(setStreak).catch(() => {});
-    activityService.getRecent(10).then(setActivities).catch(() => {});
-    activityService.getHeatmap(30).then(setHeatmap).catch(() => {});
-    goalService.getAll().then(setGoals).catch(() => {});
-    recommendationService.get().then(setRecommendations).catch(() => {});
+    activityService.getStreak().then(setStreak).catch(e => console.error('Streak fetch failed:', e));
+    activityService.getRecent(10).then(setActivities).catch(e => console.error('Activity fetch failed:', e));
+    activityService.getHeatmap(30).then(setHeatmap).catch(e => console.error('Heatmap fetch failed:', e));
+    goalService.getAll().then(setGoals).catch(e => console.error('Goals fetch failed:', e));
+    recommendationService.get().then(setRecommendations).catch(e => console.error('Recommendations fetch failed:', e));
   }, [isDemo]);
 
   const typeConfig = {
@@ -983,7 +999,7 @@ function HomeView({ entries, stats, onEntryClick, onQuickRate, getTypeIcon, isDe
 
 // =================== LIBRARY VIEW ===================
 function LibraryView({ entries, allEntries, loading, filterType, setFilterType, searchQuery, setSearchQuery,
-  librarySort, setLibrarySort, onEntryClick, onAddEntry, onQuickRate, getTypeIcon, isDemo }) {
+  librarySort, setLibrarySort, onEntryClick, onAddEntry, onQuickRate, getTypeIcon, isDemo, onShareClick }) {
 
   const [viewMode, setViewMode] = useState('grid');
 
@@ -1020,18 +1036,27 @@ function LibraryView({ entries, allEntries, loading, filterType, setFilterType, 
           </div>
         </div>
 
-        {/* View Toggle */}
-        <div className="flex items-center p-1 cinema-card rounded-full">
-          <button onClick={() => setViewMode('grid')}
-            className={`p-1.5 rounded-full transition-all ${viewMode === 'grid' ? 'text-gold bg-gold/10' : 'text-cinema-subtle hover:text-cinema-muted'}`}
-            title="Grid view">
-            <LayoutGrid className="w-3.5 h-3.5" />
-          </button>
-          <button onClick={() => setViewMode('list')}
-            className={`p-1.5 rounded-full transition-all ${viewMode === 'list' ? 'text-gold bg-gold/10' : 'text-cinema-subtle hover:text-cinema-muted'}`}
-            title="List view">
-            <List className="w-3.5 h-3.5" />
-          </button>
+        {/* View Toggle + Share */}
+        <div className="flex items-center gap-2">
+          {!isDemo && onShareClick && (
+            <button onClick={onShareClick}
+              className="p-1.5 cinema-card rounded-full text-cinema-subtle hover:text-gold transition-colors"
+              title="Share library">
+              <Share2 className="w-3.5 h-3.5" />
+            </button>
+          )}
+          <div className="flex items-center p-1 cinema-card rounded-full">
+            <button onClick={() => setViewMode('grid')}
+              className={`p-1.5 rounded-full transition-all ${viewMode === 'grid' ? 'text-gold bg-gold/10' : 'text-cinema-subtle hover:text-cinema-muted'}`}
+              title="Grid view">
+              <LayoutGrid className="w-3.5 h-3.5" />
+            </button>
+            <button onClick={() => setViewMode('list')}
+              className={`p-1.5 rounded-full transition-all ${viewMode === 'list' ? 'text-gold bg-gold/10' : 'text-cinema-subtle hover:text-cinema-muted'}`}
+              title="List view">
+              <List className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1602,9 +1627,9 @@ function StatsView({ entries, isDemo }) {
 
   useEffect(() => {
     if (isDemo) return;
-    goalService.getAll().then(setGoals).catch(() => {});
-    activityService.getStreak().then(setStreak).catch(() => {});
-    activityService.getHeatmap(30).then(setHeatmap).catch(() => {});
+    goalService.getAll().then(setGoals).catch(e => console.error('Goals fetch failed:', e));
+    activityService.getStreak().then(setStreak).catch(e => console.error('Streak fetch failed:', e));
+    activityService.getHeatmap(30).then(setHeatmap).catch(e => console.error('Heatmap fetch failed:', e));
   }, [isDemo]);
 
   const handleCreateGoal = async () => {
@@ -1948,6 +1973,278 @@ function StatsView({ entries, isDemo }) {
             </div>
           ) : <div className="text-center py-8 text-cinema-subtle text-sm">No rated entries yet</div>}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// =================== SHARE MODAL ===================
+function ShareModal({ isOpen, onClose }) {
+  const [links, setLinks] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [copiedId, setCopiedId] = useState(null);
+  const [filterType, setFilterType] = useState('all');
+
+  useEffect(() => {
+    if (isOpen) {
+      setLoading(true);
+      shareService.getUserLinks().then(setLinks).catch(e => console.error('Failed to load share links:', e)).finally(() => setLoading(false));
+    }
+  }, [isOpen]);
+
+  const createLink = async () => {
+    try {
+      const filters = filterType !== 'all' ? { type: filterType } : {};
+      const link = await shareService.create(`${new Date().getFullYear()}`, filters);
+      setLinks(prev => [link, ...prev]);
+      toast.success('Share link created');
+    } catch (e) {
+      toast.error('Failed to create share link');
+    }
+  };
+
+  const deleteLink = async (id) => {
+    try {
+      await shareService.delete(id);
+      setLinks(prev => prev.filter(l => l.id !== id));
+      toast.success('Link deleted');
+    } catch {
+      toast.error('Failed to delete link');
+    }
+  };
+
+  const copyLink = (id) => {
+    const url = `${window.location.origin}/share/${id}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopiedId(id);
+      toast.success('Link copied to clipboard');
+      setTimeout(() => setCopiedId(null), 2000);
+    });
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+      <div className="absolute inset-0 bg-cinema-bg/80 backdrop-blur-md" onClick={onClose} />
+      <div className="relative w-full max-w-sm bg-cinema-card backdrop-blur-xl border border-cinema-border shadow-2xl rounded-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
+
+        <div className="p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-serif text-cinema-text flex items-center gap-2">
+              <Share2 className="w-4 h-4 text-gold" /> Share Library
+            </h3>
+            <button onClick={onClose} className="text-cinema-subtle hover:text-cinema-muted"><X className="w-4 h-4" /></button>
+          </div>
+
+          {/* Create new link */}
+          <div className="mb-4 p-3 bg-gold-50 border border-gold-100 rounded-lg">
+            <p className="text-[11px] text-cinema-muted mb-2">Create a public link to share your collection</p>
+            <div className="flex items-center gap-2">
+              <select value={filterType} onChange={(e) => setFilterType(e.target.value)}
+                className="flex-1 bg-cinema-card border border-cinema-border text-cinema-text text-xs rounded-lg px-2 py-1.5">
+                <option value="all">All Types</option>
+                <option value="Movie">Movies</option>
+                <option value="Series">Series</option>
+                <option value="Anime">Anime</option>
+                <option value="Book">Books</option>
+              </select>
+              <button onClick={createLink}
+                className="px-3 py-1.5 bg-gold hover:bg-gold-light text-cinema-bg text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5">
+                <Link className="w-3 h-3" /> Create Link
+              </button>
+            </div>
+          </div>
+
+          {/* Existing links */}
+          <div className="space-y-2 max-h-[200px] overflow-y-auto">
+            {loading ? (
+              <p className="text-cinema-subtle text-xs text-center py-4">Loading...</p>
+            ) : links.length === 0 ? (
+              <p className="text-cinema-subtle/40 text-xs text-center py-4">No share links yet</p>
+            ) : (
+              links.map(link => (
+                <div key={link.id} className="flex items-center gap-2 p-2 bg-gold-50 border border-gold-100 rounded-lg">
+                  <Link className="w-3 h-3 text-cinema-subtle flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] text-cinema-muted truncate font-mono">{link.id}</p>
+                    <p className="text-[9px] text-cinema-subtle">
+                      {link.collection} {link.filters && JSON.parse(link.filters || '{}').type ? `· ${JSON.parse(link.filters).type}` : ''}
+                    </p>
+                  </div>
+                  <button onClick={() => copyLink(link.id)}
+                    className="p-1.5 text-cinema-subtle hover:text-gold transition-colors" title="Copy link">
+                    {copiedId === link.id ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
+                  <button onClick={() => deleteLink(link.id)}
+                    className="p-1.5 text-cinema-subtle hover:text-red-400 transition-colors" title="Delete link">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =================== PROFILE VIEW ===================
+function ProfileView({ user, updateUser, entries }) {
+  const [displayName, setDisplayName] = useState(user?.display_name || '');
+  const [bio, setBio] = useState(user?.bio || '');
+  const [profileSaving, setProfileSaving] = useState(false);
+
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordSaving, setPasswordSaving] = useState(false);
+
+  const { logout } = useAuth();
+
+  const handleProfileSave = async () => {
+    setProfileSaving(true);
+    try {
+      const result = await authService.updateProfile(displayName, bio);
+      updateUser(result.user);
+      toast.success('Profile updated');
+    } catch (e) {
+      toast.error(e.message || 'Failed to update profile');
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    if (newPassword !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+    setPasswordSaving(true);
+    try {
+      await authService.changePassword(currentPassword, newPassword);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      toast.success('Password changed successfully');
+    } catch (e) {
+      toast.error(e.message || 'Failed to change password');
+    } finally {
+      setPasswordSaving(false);
+    }
+  };
+
+  const memberSince = user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '';
+  const totalEntries = entries.length;
+  const typeCounts = {
+    Movie: entries.filter(e => e.type === 'Movie').length,
+    Series: entries.filter(e => e.type === 'Series').length,
+    Anime: entries.filter(e => e.type === 'Anime').length,
+    Book: entries.filter(e => e.type === 'Book').length,
+  };
+  const favoriteType = Object.entries(typeCounts).sort((a, b) => b[1] - a[1])[0];
+
+  return (
+    <div className="fade-in max-w-2xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="mb-2">
+        <p className="text-xs text-cinema-subtle font-mono uppercase tracking-[0.2em] mb-1">Account</p>
+        <h2 className="text-2xl md:text-3xl font-serif text-cinema-text tracking-tight">Your <em className="text-gold">Profile</em></h2>
+      </div>
+
+      {/* Profile Info */}
+      <div className="cinema-card p-6">
+        <div className="flex items-center gap-4 mb-6">
+          <div className="w-16 h-16 rounded-full bg-gold/10 border-2 border-gold/30 flex items-center justify-center">
+            <User className="w-7 h-7 text-gold" />
+          </div>
+          <div>
+            <h3 className="text-cinema-text font-serif text-lg">{displayName || user?.email?.split('@')[0] || 'User'}</h3>
+            <p className="text-cinema-subtle text-xs">{user?.email}</p>
+            {memberSince && <p className="text-cinema-subtle/50 text-[10px] mt-0.5">Member since {memberSince}</p>}
+          </div>
+        </div>
+
+        {/* Account Stats */}
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <div className="p-3 bg-gold-50 border border-gold-100 rounded-lg text-center">
+            <div className="text-lg font-serif text-gold">{totalEntries}</div>
+            <div className="text-[9px] font-mono text-cinema-subtle uppercase tracking-wider">Total Entries</div>
+          </div>
+          <div className="p-3 bg-gold-50 border border-gold-100 rounded-lg text-center">
+            <div className="text-lg font-serif text-gold">{favoriteType ? favoriteType[1] : 0}</div>
+            <div className="text-[9px] font-mono text-cinema-subtle uppercase tracking-wider">{favoriteType ? favoriteType[0] + 's' : 'N/A'}</div>
+          </div>
+          <div className="p-3 bg-gold-50 border border-gold-100 rounded-lg text-center">
+            <div className="text-lg font-serif text-gold">{entries.filter(e => e.rating).length}</div>
+            <div className="text-[9px] font-mono text-cinema-subtle uppercase tracking-wider">Rated</div>
+          </div>
+        </div>
+
+        {/* Edit Profile */}
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-xs text-cinema-subtle font-mono uppercase tracking-[0.15em]">Display Name</label>
+            <input type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)}
+              className="w-full bg-gold-50 border border-gold-100 text-cinema-text text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-gold-200 focus:ring-1 focus:ring-gold-200 placeholder-cinema-subtle"
+              placeholder="Your name" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs text-cinema-subtle font-mono uppercase tracking-[0.15em]">Bio</label>
+            <textarea rows="2" value={bio} onChange={(e) => setBio(e.target.value)}
+              className="w-full bg-gold-50 border border-gold-100 text-cinema-text text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-gold-200 focus:ring-1 focus:ring-gold-200 placeholder-cinema-subtle resize-none"
+              placeholder="Tell us about yourself..." />
+          </div>
+          <button onClick={handleProfileSave} disabled={profileSaving}
+            className="px-4 py-2 bg-gold hover:bg-gold-light text-cinema-bg text-xs font-medium rounded-lg transition-colors disabled:opacity-50">
+            {profileSaving ? 'Saving...' : 'Save Profile'}
+          </button>
+        </div>
+      </div>
+
+      {/* Change Password */}
+      <div className="cinema-card p-6">
+        <h3 className="text-sm font-serif text-cinema-text flex items-center gap-2 mb-4">
+          <Lock className="w-4 h-4 text-gold" /> Change Password
+        </h3>
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <label className="text-xs text-cinema-subtle font-mono uppercase tracking-[0.15em]">Current Password</label>
+            <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)}
+              className="w-full bg-gold-50 border border-gold-100 text-cinema-text text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-gold-200 focus:ring-1 focus:ring-gold-200 placeholder-cinema-subtle"
+              placeholder="Enter current password" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs text-cinema-subtle font-mono uppercase tracking-[0.15em]">New Password</label>
+            <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
+              className="w-full bg-gold-50 border border-gold-100 text-cinema-text text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-gold-200 focus:ring-1 focus:ring-gold-200 placeholder-cinema-subtle"
+              placeholder="Enter new password" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs text-cinema-subtle font-mono uppercase tracking-[0.15em]">Confirm New Password</label>
+            <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full bg-gold-50 border border-gold-100 text-cinema-text text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-gold-200 focus:ring-1 focus:ring-gold-200 placeholder-cinema-subtle"
+              placeholder="Confirm new password" />
+          </div>
+          <button onClick={handlePasswordChange} disabled={passwordSaving || !currentPassword || !newPassword || !confirmPassword}
+            className="px-4 py-2 bg-gold hover:bg-gold-light text-cinema-bg text-xs font-medium rounded-lg transition-colors disabled:opacity-50">
+            {passwordSaving ? 'Changing...' : 'Change Password'}
+          </button>
+        </div>
+      </div>
+
+      {/* Sign Out */}
+      <div className="cinema-card p-6">
+        <button onClick={logout}
+          className="flex items-center gap-2 px-4 py-2 border border-red-500/30 hover:border-red-500/50 hover:bg-red-500/10 text-red-400 text-xs font-medium rounded-lg transition-colors">
+          <LogOut className="w-3.5 h-3.5" /> Sign Out
+        </button>
       </div>
     </div>
   );

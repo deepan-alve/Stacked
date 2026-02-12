@@ -62,6 +62,22 @@ export const authService = {
       return null;
     }
   },
+
+  /**
+   * Update profile (display name, bio)
+   */
+  updateProfile: async (display_name, bio) => {
+    const response = await authClient.put("/profile", { display_name, bio });
+    return response.data;
+  },
+
+  /**
+   * Change password
+   */
+  changePassword: async (currentPassword, newPassword) => {
+    const response = await authClient.put("/password", { currentPassword, newPassword });
+    return response.data;
+  },
 };
 
 export default authService;

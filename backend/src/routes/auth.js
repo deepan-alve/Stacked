@@ -8,6 +8,7 @@ import {
   generateRefreshToken,
   hashPassword,
   verifyToken,
+  requireAuth,
 } from "../middleware/auth.js";
 
 const router = express.Router();
@@ -216,7 +217,7 @@ router.get("/me", async (req, res) => {
     // Get user from database
     const user = await new Promise((resolve, reject) => {
       database.db.get(
-        "SELECT id, email, created_at FROM users WHERE id = ?",
+        "SELECT id, email, display_name, bio, created_at FROM users WHERE id = ?",
         [decoded.id],
         (err, row) => {
           if (err) reject(err);
@@ -234,6 +235,8 @@ router.get("/me", async (req, res) => {
       user: {
         id: user.id,
         email: user.email,
+        display_name: user.display_name || null,
+        bio: user.bio || null,
         created_at: user.created_at,
       },
     });
@@ -294,6 +297,106 @@ router.post("/refresh", async (req, res) => {
   } catch (error) {
     console.error("[AUTH] Refresh error:", error);
     res.status(500).json({ error: "Failed to refresh session" });
+  }
+});
+
+/**
+ * PUT /api/auth/profile
+ * Update display name and bio
+ */
+router.put("/profile", requireAuth, async (req, res) => {
+  const { display_name, bio } = req.body;
+  const userId = req.user.id;
+
+  try {
+    await new Promise((resolve, reject) => {
+      database.db.run(
+        "UPDATE users SET display_name = ?, bio = ? WHERE id = ?",
+        [display_name || null, bio || null, userId],
+        (err) => {
+          if (err) reject(err);
+          else resolve();
+        }
+      );
+    });
+
+    const user = await new Promise((resolve, reject) => {
+      database.db.get(
+        "SELECT id, email, display_name, bio, created_at FROM users WHERE id = ?",
+        [userId],
+        (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        }
+      );
+    });
+
+    res.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        display_name: user.display_name || null,
+        bio: user.bio || null,
+        created_at: user.created_at,
+      },
+    });
+  } catch (error) {
+    console.error("[AUTH] Profile update error:", error.message);
+    res.status(500).json({ error: "Failed to update profile" });
+  }
+});
+
+/**
+ * PUT /api/auth/password
+ * Change password (requires current password)
+ */
+router.put("/password", requireAuth, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  const userId = req.user.id;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: "Current and new password are required" });
+  }
+
+  if (newPassword.length < 6) {
+    return res.status(400).json({ error: "New password must be at least 6 characters" });
+  }
+
+  try {
+    const hashedCurrent = hashPassword(currentPassword);
+
+    const user = await new Promise((resolve, reject) => {
+      database.db.get(
+        "SELECT id, password FROM users WHERE id = ?",
+        [userId],
+        (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        }
+      );
+    });
+
+    if (!user || user.password !== hashedCurrent) {
+      return res.status(401).json({ error: "Current password is incorrect" });
+    }
+
+    const hashedNew = hashPassword(newPassword);
+
+    await new Promise((resolve, reject) => {
+      database.db.run(
+        "UPDATE users SET password = ? WHERE id = ?",
+        [hashedNew, userId],
+        (err) => {
+          if (err) reject(err);
+          else resolve();
+        }
+      );
+    });
+
+    res.json({ message: "Password changed successfully" });
+  } catch (error) {
+    console.error("[AUTH] Password change error:", error.message);
+    res.status(500).json({ error: "Failed to change password" });
   }
 });
 
