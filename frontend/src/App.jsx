@@ -985,6 +985,8 @@ function HomeView({ entries, stats, onEntryClick, onQuickRate, getTypeIcon, isDe
 function LibraryView({ entries, allEntries, loading, filterType, setFilterType, searchQuery, setSearchQuery,
   librarySort, setLibrarySort, onEntryClick, onAddEntry, onQuickRate, getTypeIcon, isDemo }) {
 
+  const [viewMode, setViewMode] = useState('grid');
+
   const stats = {
     total: entries.length,
     movies: entries.filter(e => e.type === 'Movie').length,
@@ -1032,6 +1034,21 @@ function LibraryView({ entries, allEntries, loading, filterType, setFilterType, 
             <input type="text" placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-gold-50 border border-cinema-border text-cinema-text text-xs rounded-full py-1.5 pl-8 pr-3 focus:outline-none focus:ring-1 focus:ring-gold-200 placeholder-cinema-subtle" />
           </div>
+
+          {/* View Toggle */}
+          <div className="flex items-center p-1 cinema-card rounded-full">
+            <button onClick={() => setViewMode('grid')}
+              className={`p-1.5 rounded-full transition-all ${viewMode === 'grid' ? 'text-gold bg-gold/10' : 'text-cinema-subtle hover:text-cinema-muted'}`}
+              title="Grid view">
+              <LayoutGrid className="w-3.5 h-3.5" />
+            </button>
+            <button onClick={() => setViewMode('list')}
+              className={`p-1.5 rounded-full transition-all ${viewMode === 'list' ? 'text-gold bg-gold/10' : 'text-cinema-subtle hover:text-cinema-muted'}`}
+              title="List view">
+              <List className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
           <span className="text-xs text-cinema-subtle font-mono tracking-wider whitespace-nowrap">{entries.length} entr{entries.length === 1 ? 'y' : 'ies'}</span>
         </div>
       </div>
@@ -1045,7 +1062,7 @@ function LibraryView({ entries, allEntries, loading, filterType, setFilterType, 
         <StatCard label="Books" value={stats.books} />
       </div>
 
-      {/* Grid */}
+      {/* Entries */}
       {loading ? (
         <div className="text-center py-20 text-cinema-subtle">Loading...</div>
       ) : entries.length === 0 ? (
@@ -1056,10 +1073,24 @@ function LibraryView({ entries, allEntries, loading, filterType, setFilterType, 
           <h3 className="text-cinema-text font-serif font-medium text-sm mb-1">No entries found</h3>
           <p className="text-cinema-subtle text-xs max-w-xs mx-auto">Try adjusting your filters or add new items.</p>
         </div>
-      ) : (
+      ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {entries.map(entry => (
             <EntryCard key={entry.id} entry={entry} onClick={() => onEntryClick(entry)} getTypeIcon={getTypeIcon} onQuickRate={onQuickRate} isDemo={isDemo} />
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {/* List Header */}
+          <div className="hidden md:grid grid-cols-[1fr_80px_80px_80px_100px] gap-4 px-4 py-2 text-[10px] text-cinema-subtle font-mono uppercase tracking-wider border-b border-cinema-border">
+            <span>Title</span>
+            <span>Type</span>
+            <span className="text-center">Rating</span>
+            <span className="text-center">Season</span>
+            <span className="text-right">Added</span>
+          </div>
+          {entries.map(entry => (
+            <EntryListRow key={entry.id} entry={entry} onClick={() => onEntryClick(entry)} getTypeIcon={getTypeIcon} onQuickRate={onQuickRate} isDemo={isDemo} />
           ))}
         </div>
       )}
@@ -1489,6 +1520,114 @@ function EntryCard({ entry, onClick, getTypeIcon, onQuickRate, isDemo }) {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// =================== ENTRY LIST ROW ===================
+function EntryListRow({ entry, onClick, getTypeIcon, onQuickRate, isDemo }) {
+  const status = entry.status || 'completed';
+  const statusColors = {
+    watching: 'bg-blue-500/80 text-white',
+    planned: 'bg-purple-500/80 text-white',
+    dropped: 'bg-red-500/80 text-white',
+    completed: '',
+  };
+
+  const addedDate = entry.created_at ? new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+
+  return (
+    <div className="group cursor-pointer cinema-card rounded-lg border border-cinema-border hover:border-gold-200 transition-all duration-200" onClick={onClick}>
+      <div className="flex items-center gap-4 px-4 py-3">
+        {/* Poster Thumbnail */}
+        <div className="w-10 h-14 rounded overflow-hidden flex-shrink-0 border border-cinema-border">
+          {entry.poster_url ? (
+            <img src={entry.poster_url} alt={entry.title} className="w-full h-full object-cover"
+              onError={(e) => { e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="40" height="56"%3E%3Crect fill="%23111110" width="40" height="56"/%3E%3C/svg%3E'; }} />
+          ) : (
+            <div className="w-full h-full bg-cinema-card flex items-center justify-center text-gold">
+              {getTypeIcon(entry.type)}
+            </div>
+          )}
+        </div>
+
+        {/* Title & Info - Mobile: stacked, Desktop: grid */}
+        <div className="flex-1 min-w-0 md:grid md:grid-cols-[1fr_80px_80px_80px_100px] md:gap-4 md:items-center">
+          {/* Title + Status */}
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <h3 className="text-cinema-text font-serif font-medium text-sm leading-tight truncate">{entry.title}</h3>
+              {status !== 'completed' && (
+                <span className={`flex-shrink-0 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider ${statusColors[status]}`}>
+                  {status}
+                </span>
+              )}
+            </div>
+            {/* Mobile-only subtitle */}
+            <div className="flex items-center gap-2 mt-0.5 md:hidden">
+              <span className="text-[10px] text-gold font-medium uppercase tracking-wider">{entry.type}</span>
+              {entry.rating > 0 && (
+                <div className="flex items-center gap-0.5 text-gold text-[10px]">
+                  <Star className="w-2.5 h-2.5 fill-current" /><span>{entry.rating}</span>
+                </div>
+              )}
+              {(entry.type === 'Series' || entry.type === 'Anime') && entry.season > 0 && (
+                <span className="text-[10px] text-cinema-muted">S{entry.season}</span>
+              )}
+            </div>
+          </div>
+
+          {/* Type - Desktop only */}
+          <span className="hidden md:block text-[11px] text-gold font-medium uppercase tracking-wider">{entry.type}</span>
+
+          {/* Rating - Desktop only */}
+          <div className="hidden md:flex items-center justify-center gap-1">
+            {entry.rating > 0 ? (
+              <div className="flex items-center gap-1 text-gold text-[11px]">
+                <Star className="w-3 h-3 fill-current" /><span>{entry.rating}</span>
+              </div>
+            ) : (
+              <span className="text-cinema-subtle text-[11px]">—</span>
+            )}
+          </div>
+
+          {/* Season - Desktop only */}
+          <div className="hidden md:flex items-center justify-center">
+            {(entry.type === 'Series' || entry.type === 'Anime') && entry.season > 0 ? (
+              <span className="text-[11px] font-medium bg-gold-50 text-cinema-muted px-2 py-0.5 rounded border border-gold-100">S{entry.season}</span>
+            ) : (
+              <span className="text-cinema-subtle text-[11px]">—</span>
+            )}
+          </div>
+
+          {/* Date - Desktop only */}
+          <span className="hidden md:block text-[11px] text-cinema-subtle text-right font-mono">{addedDate}</span>
+        </div>
+
+        {/* Quick Rate - Desktop hover */}
+        {!isDemo && (
+          <div className="hidden md:flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+            {[1, 2, 3, 4, 5].map(star => (
+              <button key={star} onClick={(e) => { e.stopPropagation(); onQuickRate(entry.id, star); }}
+                className={`transition-colors ${entry.rating >= star ? 'text-gold' : 'text-cinema-subtle hover:text-gold/60'}`}>
+                <Star className={`w-3 h-3 ${entry.rating >= star ? 'fill-current' : ''}`} />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Progress Bar for watching items */}
+      {status === 'watching' && entry.progress_total > 0 && (
+        <div className="px-4 pb-2">
+          <div className="flex items-center gap-2">
+            <div className="flex-1 h-1 bg-cinema-bg/50 rounded-full overflow-hidden">
+              <div className="h-full bg-gold rounded-full" style={{ width: `${(entry.progress_current / entry.progress_total) * 100}%` }} />
+            </div>
+            <span className="text-[9px] text-cinema-subtle font-mono">{entry.progress_current}/{entry.progress_total}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
