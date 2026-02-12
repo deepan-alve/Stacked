@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useParams } from 'react-router-dom';
 import { Film, Tv, Sparkles, Book, Plus, Search, X, ChevronDown, Star, Inbox, ExternalLink, LogOut, Calendar, BarChart3, Menu, Download, Home, LayoutGrid, Heart, Flame, Target, Clock, TrendingUp, Upload, Share2, Tag, ArrowUpDown, Play, List, Eye, Trash2, Archive, User, Link, Copy, Check, Lock, Settings } from 'lucide-react';
 import { useEntries } from './hooks/useEntries';
 import SearchModal from './components/SearchModal';
@@ -1888,16 +1889,19 @@ function StatsView({ entries, isDemo }) {
       {/* Monthly Chart */}
       <div className="cinema-card p-6">
         <h3 className="text-sm font-serif text-cinema-text mb-6">Monthly Activity (Last 12 Months)</h3>
-        <div className="flex items-end gap-2 h-32">
-          {monthlyData.map((d, i) => (
-            <div key={i} className="flex-1 flex flex-col items-center gap-1">
-              <span className="text-[9px] text-cinema-subtle font-mono">{d.count}</span>
-              <div className="w-full bg-gold-50 rounded-sm overflow-hidden" style={{ height: `${(d.count / maxMonthly) * 100}%`, minHeight: d.count > 0 ? '4px' : '2px' }}>
-                <div className="w-full h-full bg-gold bar-fill" />
+        <div className="flex items-end gap-2" style={{ height: '128px' }}>
+          {monthlyData.map((d, i) => {
+            const pct = maxMonthly > 0 ? (d.count / maxMonthly) * 100 : 0;
+            return (
+              <div key={i} className="flex-1 flex flex-col items-center h-full">
+                <span className="text-[9px] text-cinema-subtle font-mono mb-1">{d.count}</span>
+                <div className="flex-1 w-full flex items-end">
+                  <div className="w-full bg-gold rounded-sm" style={{ height: d.count > 0 ? `${Math.max(pct, 4)}%` : '2px' }} />
+                </div>
+                <span className="text-[9px] text-cinema-subtle mt-1">{d.month}</span>
               </div>
-              <span className="text-[9px] text-cinema-subtle">{d.month}</span>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -1937,42 +1941,25 @@ function StatsView({ entries, isDemo }) {
         </div>
       </div>
 
-      {/* Tag Breakdown + Top Rated */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Tag Breakdown */}
-        <div className="cinema-card p-6">
-          <h3 className="text-sm font-serif text-cinema-text mb-4 flex items-center gap-2"><Tag className="w-4 h-4 text-gold" /> Tags</h3>
-          {topTags.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {topTags.map(([tag, count]) => (
-                <span key={tag} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gold/10 border border-gold-200 text-gold text-xs rounded-full">
-                  {tag} <span className="text-cinema-subtle">({count})</span>
-                </span>
-              ))}
-            </div>
-          ) : <p className="text-cinema-subtle text-xs">No tags yet. Add tags to entries to see breakdown.</p>}
-        </div>
-
-        {/* Top Rated */}
-        <div className="cinema-card p-6">
-          <h3 className="text-sm font-serif text-cinema-text mb-4">Top Rated</h3>
-          {topRated.length > 0 ? (
-            <div className="space-y-3">
-              {topRated.map((entry, idx) => (
-                <div key={entry.id} className="flex items-center gap-3 p-3 rounded-lg bg-gold-50 hover:bg-gold-100 transition-colors">
-                  <div className="flex items-center justify-center w-6 h-6 rounded bg-gold-100 text-gold text-xs font-mono font-medium">{idx + 1}</div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm text-cinema-text font-medium truncate">{entry.title}</div>
-                    <div className="text-xs text-cinema-subtle">{entry.type}</div>
-                  </div>
-                  <div className="flex items-center gap-1 text-gold text-sm font-medium">
-                    <Star className="w-3.5 h-3.5 fill-current" />{entry.rating}
-                  </div>
+      {/* Top Rated */}
+      <div className="cinema-card p-6">
+        <h3 className="text-sm font-serif text-cinema-text mb-4">Top Rated</h3>
+        {topRated.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+            {topRated.map((entry, idx) => (
+              <div key={entry.id} className="flex items-center gap-3 p-3 rounded-lg bg-gold-50 hover:bg-gold-100 transition-colors">
+                <div className="flex items-center justify-center w-6 h-6 rounded bg-gold-100 text-gold text-xs font-mono font-medium">{idx + 1}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm text-cinema-text font-medium truncate">{entry.title}</div>
+                  <div className="text-xs text-cinema-subtle">{entry.type}</div>
                 </div>
-              ))}
-            </div>
-          ) : <div className="text-center py-8 text-cinema-subtle text-sm">No rated entries yet</div>}
-        </div>
+                <div className="flex items-center gap-1 text-gold text-sm font-medium">
+                  <Star className="w-3.5 h-3.5 fill-current" />{entry.rating}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : <div className="text-center py-8 text-cinema-subtle text-sm">No rated entries yet</div>}
       </div>
     </div>
   );
@@ -2245,6 +2232,108 @@ function ProfileView({ user, updateUser, entries }) {
           className="flex items-center gap-2 px-4 py-2 border border-red-500/30 hover:border-red-500/50 hover:bg-red-500/10 text-red-400 text-xs font-medium rounded-lg transition-colors">
           <LogOut className="w-3.5 h-3.5" /> Sign Out
         </button>
+      </div>
+    </div>
+  );
+}
+
+// =================== SHARED COLLECTION PAGE ===================
+export function SharedCollectionPage() {
+  const { id } = useParams();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    shareService.getPublic(id)
+      .then(setData)
+      .catch(e => setError(e.message || 'Share link not found'))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <div className="text-cinema-subtle text-sm">Loading shared collection...</div>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center gap-4">
+        <div className="text-cinema-subtle text-sm">{error || 'Share link not found or expired'}</div>
+        <a href="/" className="text-gold text-xs hover:text-gold-light">Go to Stacked</a>
+      </div>
+    );
+  }
+
+  const entries = data.entries || [];
+  const typeConfig = {
+    Movie: { color: '#c4a265' },
+    Series: { color: '#60a5fa' },
+    Anime: { color: '#f472b6' },
+    Book: { color: '#34d399' },
+  };
+
+  return (
+    <div className="min-h-screen bg-[#050505] text-[#f5f0e8]/60 selection:bg-[#c4a265]/20 selection:text-[#f5f0e8]">
+      {/* Ambient */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-[#c4a265]/5 rounded-full blur-3xl" />
+      </div>
+
+      <div className="relative z-10 max-w-5xl mx-auto px-4 md:px-6 py-12">
+        {/* Header */}
+        <div className="text-center mb-10">
+          <a href="/" className="inline-block mb-4">
+            <span className="text-[#f5f0e8] font-serif text-xl tracking-tight">Stacked<span className="text-[#c4a265]">.</span></span>
+          </a>
+          <h1 className="text-2xl md:text-3xl font-serif text-[#f5f0e8] tracking-tight mb-2">Shared Collection</h1>
+          <p className="text-sm text-[#f5f0e8]/30">{entries.length} entr{entries.length === 1 ? 'y' : 'ies'}</p>
+        </div>
+
+        {/* Grid */}
+        {entries.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {entries.map(entry => (
+              <div key={entry.id} className="group">
+                <div className="relative aspect-[2/3] rounded-lg border border-white/[0.06] overflow-hidden bg-white/[0.02]">
+                  {entry.poster_url ? (
+                    <>
+                      <img src={entry.poster_url} alt={entry.title} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#050505]/90 via-[#050505]/20 to-transparent" />
+                      <div className="absolute bottom-0 left-0 right-0 p-3">
+                        <h3 className="text-[#f5f0e8] font-serif font-medium text-xs leading-tight line-clamp-2 mb-1">{entry.title}</h3>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] font-medium uppercase tracking-wider" style={{ color: typeConfig[entry.type]?.color || '#c4a265' }}>{entry.type}</span>
+                          {entry.rating && (
+                            <div className="flex items-center gap-1 text-[#c4a265] text-[10px]">
+                              <Star className="w-2.5 h-2.5 fill-current" /><span>{entry.rating}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center">
+                      <Film className="w-6 h-6 text-[#c4a265]/30 mb-2" />
+                      <h3 className="text-[#f5f0e8] font-serif font-medium text-xs leading-tight line-clamp-3 mb-2">{entry.title}</h3>
+                      <span className="text-[9px] font-medium uppercase tracking-wider" style={{ color: typeConfig[entry.type]?.color || '#c4a265' }}>{entry.type}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20 text-[#f5f0e8]/20 text-sm">This collection is empty</div>
+        )}
+
+        {/* Footer */}
+        <div className="text-center mt-12 pt-6 border-t border-white/[0.04]">
+          <a href="/" className="text-[#c4a265] text-xs hover:text-[#d4b87a] transition-colors">Track your own with Stacked</a>
+        </div>
       </div>
     </div>
   );
