@@ -15,6 +15,11 @@ import backupRoutes from "./routes/backup.js";
 import publicRoutes from "./routes/public.js";
 import authRoutes from "./routes/auth.js";
 import syncRoutes from "./routes/sync.js";
+import goalRoutes from "./routes/goals.js";
+import activityRoutes from "./routes/activity.js";
+import shareRoutes from "./routes/share.js";
+import csvRoutes from "./routes/csv.js";
+import recommendationRoutes from "./routes/recommendations.js";
 import backupService from "./services/backupService.js";
 import gitSyncService from "./services/gitSyncService.js";
 import { requireAuth } from "./middleware/auth.js";
@@ -130,6 +135,11 @@ app.use("/api/details", detailsRoutes); // Details can be public
 app.use("/api/dlang", requireAuth, dlangRoutes); // Protected
 app.use("/api/backup", requireAuth, backupRoutes); // Protected
 app.use("/api/sync", requireAuth, syncRoutes); // Protected - Git sync
+app.use("/api/goals", requireAuth, goalRoutes); // Protected
+app.use("/api/activity", requireAuth, activityRoutes); // Protected
+app.use("/api/share", shareRoutes); // Mixed - has own auth per route
+app.use("/api/csv", requireAuth, csvRoutes); // Protected
+app.use("/api/recommendations", requireAuth, recommendationRoutes); // Protected
 
 // Health check
 app.get("/api/health", (req, res) => {

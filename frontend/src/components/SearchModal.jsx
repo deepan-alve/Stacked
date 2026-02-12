@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, X, Loader2 } from 'lucide-react';
+import { Search, X, Loader2, Star } from 'lucide-react';
 import { searchService } from '../services/api';
 
 const SearchModal = ({ isOpen, onClose, onSelect, type }) => {
@@ -70,40 +70,43 @@ const SearchModal = ({ isOpen, onClose, onSelect, type }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-cinema-bg/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+      <div className="bg-cinema-card border border-cinema-border rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+        {/* Gold glow at top */}
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
+
         {/* Header */}
-        <div className="p-4 border-b border-gray-700 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-white">Search {type}</h2>
+        <div className="p-4 border-b border-cinema-border flex items-center justify-between">
+          <h2 className="text-lg font-serif text-cinema-text">Search {type}</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors"
+            className="text-cinema-subtle hover:text-cinema-muted transition-colors"
           >
-            <X size={24} />
+            <X size={20} />
           </button>
         </div>
 
         {/* Search Input */}
-        <div className="p-4 border-b border-gray-700">
+        <div className="p-4 border-b border-cinema-border">
           <div className="flex gap-2">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-cinema-subtle" size={18} />
               <input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder={`Search for ${type.toLowerCase()}...`}
-                className="w-full pl-10 pr-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none"
+                className="w-full pl-10 pr-4 py-2.5 bg-gold-50 text-cinema-text text-sm rounded-lg border border-cinema-border focus:border-gold/30 focus:ring-1 focus:ring-gold-200 focus:outline-none placeholder-cinema-subtle"
                 autoFocus
               />
             </div>
             <button
               onClick={handleSearch}
               disabled={loading || !query.trim()}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+              className="px-6 py-2.5 bg-gold text-cinema-bg text-sm font-medium rounded-lg hover:bg-gold-light disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? <Loader2 className="animate-spin" size={20} /> : 'Search'}
+              {loading ? <Loader2 className="animate-spin" size={18} /> : 'Search'}
             </button>
           </div>
         </div>
@@ -111,19 +114,19 @@ const SearchModal = ({ isOpen, onClose, onSelect, type }) => {
         {/* Results */}
         <div className="flex-1 overflow-y-auto p-4">
           {error && (
-            <div className="bg-red-900 bg-opacity-50 text-red-200 p-4 rounded-lg">
+            <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-lg text-sm">
               {error}
             </div>
           )}
 
           {loading && (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="animate-spin text-blue-500" size={40} />
+              <Loader2 className="animate-spin text-gold" size={32} />
             </div>
           )}
 
           {!loading && results.length === 0 && query && (
-            <div className="text-center py-12 text-gray-400">
+            <div className="text-center py-12 text-cinema-subtle text-sm">
               No results found for "{query}"
             </div>
           )}
@@ -134,7 +137,7 @@ const SearchModal = ({ isOpen, onClose, onSelect, type }) => {
                 <div
                   key={result.id}
                   onClick={() => handleSelectResult(result)}
-                  className="bg-gray-700 rounded-lg overflow-hidden cursor-pointer hover:bg-gray-600 transition-colors"
+                  className="cinema-card rounded-lg overflow-hidden cursor-pointer hover:border-gold-200 transition-colors"
                 >
                   {result.poster && (
                     <img
@@ -147,20 +150,20 @@ const SearchModal = ({ isOpen, onClose, onSelect, type }) => {
                     />
                   )}
                   <div className="p-3">
-                    <h3 className="font-semibold text-white text-sm mb-1 line-clamp-2">
+                    <h3 className="font-serif font-medium text-cinema-text text-sm mb-1 line-clamp-2">
                       {result.title}
                     </h3>
                     {result.year && (
-                      <p className="text-gray-400 text-xs mb-1">{result.year}</p>
+                      <p className="text-cinema-subtle text-xs mb-1">{result.year}</p>
                     )}
                     {result.rating && (
                       <div className="flex items-center gap-1">
-                        <span className="text-yellow-500 text-xs">★</span>
-                        <span className="text-white text-xs">{result.rating.toFixed(1)}</span>
+                        <Star className="w-3 h-3 text-gold fill-current" />
+                        <span className="text-cinema-text text-xs">{result.rating.toFixed(1)}</span>
                       </div>
                     )}
                     {result.overview && (
-                      <p className="text-gray-400 text-xs mt-2 line-clamp-3">
+                      <p className="text-cinema-muted text-xs mt-2 line-clamp-3">
                         {result.overview}
                       </p>
                     )}

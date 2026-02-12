@@ -24,6 +24,9 @@ router.post("/", EntryController.create);
 // Add entry by IMDB ID
 router.post("/add-by-imdb", EntryController.addByImdb);
 
+// Quick rate entry
+router.put("/:id/quick-rate", EntryController.quickRate);
+
 // Update entry
 router.put("/:id", EntryController.update);
 

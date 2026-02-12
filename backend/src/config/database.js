@@ -318,6 +318,78 @@ class Database {
       }
       console.log("[DB] ✓ 2026 movies data migration complete");
 
+      // Add status column to movies
+      if (!(await columnExists('movies', 'status'))) {
+        await addColumn('movies', 'status', "TEXT DEFAULT 'completed'");
+      }
+
+      // Add progress_current column to movies
+      if (!(await columnExists('movies', 'progress_current'))) {
+        await addColumn('movies', 'progress_current', 'INTEGER DEFAULT 0');
+      }
+
+      // Add progress_total column to movies
+      if (!(await columnExists('movies', 'progress_total'))) {
+        await addColumn('movies', 'progress_total', 'INTEGER DEFAULT 0');
+      }
+
+      // Add tags column to movies
+      if (!(await columnExists('movies', 'tags'))) {
+        await addColumn('movies', 'tags', "TEXT DEFAULT '[]'");
+      }
+
+      // Create goals table
+      await new Promise((resolve) => {
+        this.db.run(`CREATE TABLE IF NOT EXISTS goals (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          type TEXT NOT NULL,
+          target INTEGER NOT NULL,
+          period TEXT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users(id)
+        )`, [], (err) => {
+          if (err) console.log("[DB] Goals table error:", err.message);
+          else console.log("[DB] ✓ Goals table ready");
+          resolve();
+        });
+      });
+
+      // Create share_links table
+      await new Promise((resolve) => {
+        this.db.run(`CREATE TABLE IF NOT EXISTS share_links (
+          id TEXT PRIMARY KEY,
+          user_id INTEGER NOT NULL,
+          collection TEXT NOT NULL,
+          filters TEXT DEFAULT '{}',
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users(id)
+        )`, [], (err) => {
+          if (err) console.log("[DB] Share links table error:", err.message);
+          else console.log("[DB] ✓ Share links table ready");
+          resolve();
+        });
+      });
+
+      // Create activity_log table
+      await new Promise((resolve) => {
+        this.db.run(`CREATE TABLE IF NOT EXISTS activity_log (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          action TEXT NOT NULL,
+          entry_id INTEGER,
+          entry_title TEXT,
+          entry_type TEXT,
+          metadata TEXT DEFAULT '{}',
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users(id)
+        )`, [], (err) => {
+          if (err) console.log("[DB] Activity log table error:", err.message);
+          else console.log("[DB] ✓ Activity log table ready");
+          resolve();
+        });
+      });
+
       console.log("[DB] ✓ Migrations complete");
     } catch (error) {
       console.error("[DB] Migration error:", error.message);

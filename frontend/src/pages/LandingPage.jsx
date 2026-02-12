@@ -1,17 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Check, Command, Search, Zap, Shield, Film, Tv, Book, X, Menu, BarChart3, PieChart, Activity, Layers, Database, Globe, Star, Clock, Play } from 'lucide-react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowRight, Check, Command, Search, Zap, Shield, Film, Tv, Book, X, Menu, Layers, Star, Play, Download, Plus, Heart } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-// Sample media data with real TMDB/Jikan images
-const SAMPLE_MEDIA = [
-  { id: 1, title: "Oppenheimer", type: "movie", poster: "https://image.tmdb.org/t/p/w300/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg", time: "2h ago" },
-  { id: 2, title: "Jujutsu Kaisen", type: "anime", poster: "https://cdn.myanimelist.net/images/anime/1171/109222.jpg", time: "4h ago" },
-  { id: 3, title: "Breaking Bad", type: "show", poster: "https://image.tmdb.org/t/p/w300/ggFHVNu6YYI5L9pCfOacjizRGt.jpg", time: "1d ago" },
-  { id: 4, title: "Dune: Part Two", type: "movie", poster: "https://image.tmdb.org/t/p/w300/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg", time: "2d ago" },
-  { id: 5, title: "Attack on Titan", type: "anime", poster: "https://cdn.myanimelist.net/images/anime/10/47347.jpg", time: "3d ago" },
-  { id: 6, title: "The Bear", type: "show", poster: "https://image.tmdb.org/t/p/w300/sHFlbKS3WLqMnp9t2ghADIJFnuQ.jpg", time: "4d ago" },
-];
+gsap.registerPlugin(ScrollTrigger);
 
 const POSTER_GRID = [
   "https://image.tmdb.org/t/p/w300/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg", // Oppenheimer
@@ -42,23 +36,6 @@ const FadeIn = ({ children, delay = 0, className = "" }) => (
   </motion.div>
 );
 
-const StatBar = ({ label, value, color = "bg-gold-dark" }) => (
-  <div className="flex flex-col gap-2">
-    <div className="flex justify-between text-xs text-cinema-muted font-medium uppercase tracking-wider">
-      <span>{label}</span>
-      <span>{value}%</span>
-    </div>
-    <div className="h-1 w-full bg-gold-50 rounded-full overflow-hidden">
-      <motion.div
-        initial={{ width: 0 }}
-        whileInView={{ width: `${value}%` }}
-        transition={{ duration: 1.5, ease: "circOut" }}
-        className={`h-full rounded-full ${color}`}
-      />
-    </div>
-  </div>
-);
-
 export default function LandingPage({ onLogin }) {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState('idle');
@@ -69,10 +46,28 @@ export default function LandingPage({ onLogin }) {
   const [loginLoading, setLoginLoading] = useState(false);
 
   const { login } = useAuth();
+  const heroRef = useRef(null);
+  const heroContentRef = useRef(null);
 
-  const { scrollY } = useScroll();
-  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
-  const heroScale = useTransform(scrollY, [0, 400], [1, 0.95]);
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      // Scrub-based fade — no pinning, no extra spacing, no gap
+      gsap.to(heroContentRef.current, {
+        opacity: 0,
+        scale: 0.95,
+        y: -50,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: heroRef.current,
+          start: 'top top',
+          end: '55% top',
+          scrub: true,
+        },
+      });
+    }, heroRef);
+
+    return () => ctx.revert();
+  }, []);
 
   const handleJoinWaitlist = async (e) => {
     e.preventDefault();
@@ -122,7 +117,7 @@ export default function LandingPage({ onLogin }) {
       </div>
 
       {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-6">
+      <nav className="absolute top-0 left-0 right-0 z-50 px-6 py-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="font-serif text-xl tracking-tight text-cinema-text">Stacked</span>
@@ -145,10 +140,9 @@ export default function LandingPage({ onLogin }) {
       </nav>
 
       {/* Hero Section */}
-      <motion.main
-        style={{ opacity: heroOpacity, scale: heroScale }}
-        className="relative z-10 h-screen flex items-center px-6 max-w-7xl mx-auto"
-      >
+      <section ref={heroRef} className="relative z-10 min-h-[90vh] flex items-center">
+        <div ref={heroContentRef} className="px-6 max-w-7xl mx-auto w-full">
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center w-full">
           {/* Left Side - Text Content */}
           <div className="text-left">
@@ -329,347 +323,482 @@ export default function LandingPage({ onLogin }) {
             </motion.div>
           </FadeIn>
         </div>
-      </motion.main>
-
-      {/* Gold Divider */}
-      <div className="gold-divider max-w-7xl mx-auto" />
-
-      {/* Dashboard Preview / Stats Section */}
-      <section className="px-6 py-32 max-w-7xl mx-auto relative z-20">
-        <FadeIn delay={0.4}>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-            {/* Main Stats Card */}
-            <div className="cinema-card md:col-span-2 p-8 md:p-12 flex flex-col justify-between min-h-[400px]">
-              <div>
-                <h3 className="font-serif text-3xl text-cinema-text mb-2">Your Collection</h3>
-                <p className="text-cinema-muted text-sm">Real-time insights into your media consumption.</p>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-12">
-                <div>
-                  <div className="font-serif text-4xl text-gold mb-1">1,240</div>
-                  <div className="text-xs text-cinema-subtle uppercase tracking-widest">Movies</div>
-                </div>
-                <div>
-                  <div className="font-serif text-4xl text-gold mb-1">84</div>
-                  <div className="text-xs text-cinema-subtle uppercase tracking-widest">Shows</div>
-                </div>
-                <div>
-                  <div className="font-serif text-4xl text-gold mb-1">328</div>
-                  <div className="text-xs text-cinema-subtle uppercase tracking-widest">Books</div>
-                </div>
-                <div>
-                  <div className="font-serif text-4xl text-gold mb-1">12k</div>
-                  <div className="text-xs text-cinema-subtle uppercase tracking-widest">Hours</div>
-                </div>
-              </div>
-
-              <div className="mt-12 space-y-6">
-                <StatBar label="Storage Used" value={78} color="bg-gold" />
-                <StatBar label="Metadata Synced" value={100} color="bg-gold-dark" />
-              </div>
-            </div>
-
-            {/* Activity Card */}
-            <div className="cinema-card p-8 flex flex-col">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="font-serif text-lg text-cinema-text">Recent Activity</h3>
-                <Activity className="w-5 h-5 text-gold-dark" />
-              </div>
-
-              <div className="space-y-4 flex-1">
-                {SAMPLE_MEDIA.slice(0, 5).map((item) => (
-                  <motion.div
-                    key={item.id}
-                    className="flex items-center gap-4 group cursor-pointer p-2 -mx-2 rounded-lg hover:bg-gold-50 transition-colors duration-300"
-                    whileHover={{ x: 4 }}
-                  >
-                    <img
-                      src={item.poster}
-                      alt={item.title}
-                      className="w-10 h-14 object-cover rounded-md border border-cinema-border group-hover:border-gold/30 transition-colors shadow-lg"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm text-cinema-text truncate">{item.title}</div>
-                      <div className="text-xs text-cinema-subtle capitalize flex items-center gap-1">
-                        {item.type === 'movie' && <Film className="w-3 h-3" />}
-                        {item.type === 'show' && <Tv className="w-3 h-3" />}
-                        {item.type === 'anime' && <Play className="w-3 h-3" />}
-                        {item.type}
-                      </div>
-                    </div>
-                    <div className="text-xs text-cinema-subtle flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {item.time}
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-
-          </div>
-        </FadeIn>
-      </section>
-
-      {/* Gold Divider */}
-      <div className="gold-divider max-w-7xl mx-auto" />
-
-      {/* Features Grid */}
-      <section id="features" className="px-6 py-32 max-w-7xl mx-auto relative z-20">
-        <FadeIn>
-          <div className="mb-16 md:text-center max-w-2xl mx-auto">
-            <h2 className="font-serif text-3xl md:text-4xl text-cinema-text mb-4">
-              Everything in its <em className="italic text-gold">place.</em>
-            </h2>
-            <p className="text-cinema-muted">
-              Designed for the obsessive collector. Every detail crafted to help you manage, discover, and enjoy your library.
-            </p>
-          </div>
-        </FadeIn>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[300px]">
-
-          {/* 01 - Spotlight Search */}
-          <div className="cinema-card md:col-span-2 relative overflow-hidden">
-            <div className="absolute inset-0 flex items-center justify-center opacity-30 pointer-events-none">
-              <div className="w-[500px] h-[300px] bg-gradient-to-r from-gold/5 to-transparent rounded-full blur-3xl" />
-            </div>
-            <div className="relative z-10 p-10 h-full flex flex-col justify-center items-start">
-              <span className="font-serif italic text-gold-dark text-sm mb-4 tracking-wide">01</span>
-              <div className="gold-divider w-12 mb-6" />
-              <h3 className="font-serif text-2xl text-cinema-text mb-3">Spotlight Search</h3>
-              <p className="text-cinema-muted max-w-md mb-6 text-sm leading-relaxed">
-                Navigate your entire library without lifting your hands.
-                Press <kbd className="bg-gold-50 px-1.5 py-0.5 rounded text-gold text-xs mx-1 border border-cinema-border">&#8984;K</kbd>
-                to find anything instantly.
-              </p>
-            </div>
-            <div className="absolute right-10 top-1/2 -translate-y-1/2 hidden md:block">
-              <div className="w-64 h-48 bg-cinema-bg border border-cinema-border rounded-xl shadow-2xl p-4 flex flex-col gap-3">
-                <div className="h-8 bg-gold-50 rounded-lg w-full animate-pulse" />
-                <div className="h-4 bg-gold-50 rounded w-2/3" />
-                <div className="h-4 bg-gold-50 rounded w-1/2" />
-              </div>
-            </div>
-          </div>
-
-          {/* 02 - Local First */}
-          <div className="cinema-card p-8 flex flex-col justify-between">
-            <div>
-              <span className="font-serif italic text-gold-dark text-sm tracking-wide">02</span>
-              <div className="gold-divider w-8 mt-3 mb-4" />
-              <Shield className="w-8 h-8 text-gold-dark mb-4" />
-            </div>
-            <div>
-              <h3 className="font-serif text-xl text-cinema-text mb-2">Local First</h3>
-              <p className="text-sm text-cinema-muted leading-relaxed">
-                Your data lives on your device. No tracking, no ads, no selling your history.
-              </p>
-            </div>
-          </div>
-
-          {/* 03 - Instant */}
-          <div className="cinema-card p-8 flex flex-col justify-between">
-            <div>
-              <span className="font-serif italic text-gold-dark text-sm tracking-wide">03</span>
-              <div className="gold-divider w-8 mt-3 mb-4" />
-              <Zap className="w-8 h-8 text-gold-dark mb-4" />
-            </div>
-            <div>
-              <h3 className="font-serif text-xl text-cinema-text mb-2">Instant</h3>
-              <p className="text-sm text-cinema-muted leading-relaxed">
-                Built with modern web tech but runs locally. Zero latency, infinite speed.
-              </p>
-            </div>
-          </div>
-
-          {/* 04 - Unified Library */}
-          <div className="cinema-card md:col-span-2 p-10 flex items-center justify-between relative overflow-hidden">
-            <div className="relative z-10 max-w-md">
-              <span className="font-serif italic text-gold-dark text-sm tracking-wide">04</span>
-              <div className="gold-divider w-8 mt-3 mb-6" />
-              <div className="flex gap-3 mb-6">
-                <div className="p-2 bg-gold-50 rounded-lg border border-cinema-border"><Film className="w-5 h-5 text-gold" /></div>
-                <div className="p-2 bg-gold-50 rounded-lg border border-cinema-border"><Tv className="w-5 h-5 text-gold" /></div>
-                <div className="p-2 bg-gold-50 rounded-lg border border-cinema-border"><Book className="w-5 h-5 text-gold" /></div>
-              </div>
-              <h3 className="font-serif text-2xl text-cinema-text mb-3">Unified Library</h3>
-              <p className="text-cinema-muted text-sm leading-relaxed">
-                Movies, Series, Anime, and Books. All your media types live together in <em className="font-serif italic text-gold-light">harmony</em>.
-              </p>
-            </div>
-            <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-gold/5 to-transparent" />
-          </div>
-
         </div>
       </section>
 
-      {/* Gold Divider */}
-      <div className="gold-divider max-w-7xl mx-auto" />
-
-      {/* How It Works Section */}
-      <section className="px-6 py-32 max-w-7xl mx-auto relative z-20">
+      {/* Media Types Showcase */}
+      <section className="px-6 py-20 max-w-6xl mx-auto relative z-20">
         <FadeIn>
-          <div className="mb-16 md:text-center max-w-2xl mx-auto">
+          <div className="mb-10 md:text-center max-w-2xl mx-auto">
             <h2 className="font-serif text-3xl md:text-4xl text-cinema-text mb-4">
-              How it <em className="italic text-gold">works</em>
+              One home for <em className="italic text-gold">everything</em> you watch and read.
             </h2>
             <p className="text-cinema-muted">
-              Get started in minutes. No complicated setup, no cloud accounts required.
+              Movies, series, anime, and books — no more scattered spreadsheets and forgotten accounts.
             </p>
           </div>
         </FadeIn>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+
+          {/* Movies */}
           <FadeIn delay={0.1}>
-            <div className="text-center md:text-left">
-              <span className="font-serif italic text-gold text-4xl block mb-4">01</span>
-              <div className="gold-divider w-12 mb-6 mx-auto md:mx-0" />
-              <h3 className="font-serif text-xl text-cinema-text mb-3">Install & Launch</h3>
-              <p className="text-cinema-muted text-sm leading-relaxed">
-                Download Stacked and run it locally. Your data stays on your machine from day one.
-              </p>
+            <div className="group relative overflow-hidden rounded-xl aspect-[2/3] cursor-pointer">
+              <img
+                src="https://image.tmdb.org/t/p/w780/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg"
+                alt="Oppenheimer"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent group-hover:from-black/90 group-hover:via-black/60 transition-all duration-500" />
+              <div className="absolute bottom-3 left-3">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/50 backdrop-blur-sm border border-white/10 text-[10px] text-gold uppercase tracking-[0.2em] font-medium">
+                  <Film className="w-3 h-3" /> Movies
+                </span>
+              </div>
+              <div className="absolute inset-0 flex flex-col justify-center items-center p-5 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+                <Film className="w-6 h-6 text-gold mb-3" />
+                <h4 className="font-serif text-lg text-white mb-2">Blockbusters to indie gems</h4>
+                <p className="text-xs text-white/70 leading-relaxed">Posters, cast, ratings & synopses auto-fetched from TMDB.</p>
+              </div>
             </div>
           </FadeIn>
+
+          {/* TV Shows */}
           <FadeIn delay={0.2}>
-            <div className="text-center md:text-left">
-              <span className="font-serif italic text-gold text-4xl block mb-4">02</span>
-              <div className="gold-divider w-12 mb-6 mx-auto md:mx-0" />
-              <h3 className="font-serif text-xl text-cinema-text mb-3">Add Your Media</h3>
-              <p className="text-cinema-muted text-sm leading-relaxed">
-                Search and add movies, shows, or books. Metadata is fetched automatically from TMDB & OpenLibrary.
-              </p>
+            <div className="group relative overflow-hidden rounded-xl aspect-[2/3] cursor-pointer">
+              <img
+                src="https://image.tmdb.org/t/p/w780/ggFHVNu6YYI5L9pCfOacjizRGt.jpg"
+                alt="Breaking Bad"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent group-hover:from-black/90 group-hover:via-black/60 transition-all duration-500" />
+              <div className="absolute bottom-3 left-3">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/50 backdrop-blur-sm border border-white/10 text-[10px] text-gold uppercase tracking-[0.2em] font-medium">
+                  <Tv className="w-3 h-3" /> Series
+                </span>
+              </div>
+              <div className="absolute inset-0 flex flex-col justify-center items-center p-5 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+                <Tv className="w-6 h-6 text-gold mb-3" />
+                <h4 className="font-serif text-lg text-white mb-2">Track every season</h4>
+                <p className="text-xs text-white/70 leading-relaxed">Episodes, progress & watchlists — all in one place.</p>
+              </div>
             </div>
           </FadeIn>
+
+          {/* Anime */}
           <FadeIn delay={0.3}>
-            <div className="text-center md:text-left">
-              <span className="font-serif italic text-gold text-4xl block mb-4">03</span>
-              <div className="gold-divider w-12 mb-6 mx-auto md:mx-0" />
-              <h3 className="font-serif text-xl text-cinema-text mb-3">Enjoy Forever</h3>
-              <p className="text-cinema-muted text-sm leading-relaxed">
-                Track what you've watched, rate your favorites, and discover new content. All without subscriptions.
-              </p>
+            <div className="group relative overflow-hidden rounded-xl aspect-[2/3] cursor-pointer">
+              <img
+                src="https://image.tmdb.org/t/p/w780/tCZFfYTIwrR7n94J6G14Y4hAFU6.jpg"
+                alt="Death Note"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent group-hover:from-black/90 group-hover:via-black/60 transition-all duration-500" />
+              <div className="absolute bottom-3 left-3">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/50 backdrop-blur-sm border border-white/10 text-[10px] text-gold uppercase tracking-[0.2em] font-medium">
+                  <Play className="w-3 h-3" /> Anime
+                </span>
+              </div>
+              <div className="absolute inset-0 flex flex-col justify-center items-center p-5 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+                <Play className="w-6 h-6 text-gold mb-3" />
+                <h4 className="font-serif text-lg text-white mb-2">Powered by AniList</h4>
+                <p className="text-xs text-white/70 leading-relaxed">Every title catalogued with full metadata & cover art.</p>
+              </div>
             </div>
           </FadeIn>
+
+          {/* Books */}
+          <FadeIn delay={0.4}>
+            <div className="group relative overflow-hidden rounded-xl aspect-[2/3] cursor-pointer">
+              <img
+                src="/iron-flame-cover.jpg"
+                alt="Iron Flame by Rebecca Yarros"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent group-hover:from-black/90 group-hover:via-black/60 transition-all duration-500" />
+              <div className="absolute bottom-3 left-3">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/50 backdrop-blur-sm border border-white/10 text-[10px] text-gold uppercase tracking-[0.2em] font-medium">
+                  <Book className="w-3 h-3" /> Books
+                </span>
+              </div>
+              <div className="absolute inset-0 flex flex-col justify-center items-center p-5 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+                <Book className="w-6 h-6 text-gold mb-3" />
+                <h4 className="font-serif text-lg text-white mb-2">Covers & metadata</h4>
+                <p className="text-xs text-white/70 leading-relaxed">Synced from OpenLibrary. Search, add & rate your reads.</p>
+              </div>
+            </div>
+          </FadeIn>
+
         </div>
       </section>
 
-      {/* Gold Divider */}
-      <div className="gold-divider max-w-7xl mx-auto" />
-
-      {/* Poster Showcase */}
-      <section className="py-32 relative z-20 overflow-hidden">
+      {/* Features — Alternating Rows */}
+      <section id="features" className="px-6 py-20 max-w-6xl mx-auto relative z-20">
         <FadeIn>
-          <div className="mb-12 px-6 max-w-7xl mx-auto">
-            <h2 className="font-serif text-3xl md:text-4xl text-cinema-text mb-4 text-center">
-              Your entire collection. One <em className="italic text-gold">beautiful</em> interface.
+          <div className="mb-14 md:text-center max-w-2xl mx-auto">
+            <h2 className="font-serif text-3xl md:text-4xl text-cinema-text mb-4">
+              Built for <em className="italic text-gold">collectors.</em>
             </h2>
-            <p className="text-cinema-muted text-center max-w-xl mx-auto">From blockbuster movies to hidden anime gems, Stacked displays your library with stunning visuals.</p>
+            <p className="text-cinema-muted">
+              Every detail crafted so you can focus on what matters — your library.
+            </p>
           </div>
         </FadeIn>
 
-        <div className="relative">
-          <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-cinema-bg to-transparent z-10" />
-          <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-cinema-bg to-transparent z-10" />
+        <div className="space-y-16">
+          {/* Feature 1 — Spotlight Search */}
+          <FadeIn>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
+              <div>
+                <span className="font-serif italic text-gold-dark text-xs tracking-widest uppercase block mb-4">Search</span>
+                <h3 className="font-serif text-xl md:text-2xl text-cinema-text mb-4">Find anything with <em className="italic text-gold">one keystroke.</em></h3>
+                <p className="text-cinema-muted text-sm leading-relaxed mb-6">
+                  Press <kbd className="bg-gold-50 px-2 py-1 rounded text-gold text-xs mx-1 border border-cinema-border font-mono">&#8984;K</kbd> to instantly search across your entire library — movies, shows, anime, and books. No menus, no clicking around.
+                </p>
+                <div className="flex items-center gap-3 text-xs text-cinema-subtle">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gold-50 border border-cinema-border">
+                    <Command className="w-3 h-3 text-gold" /> Keyboard-first
+                  </div>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gold-50 border border-cinema-border">
+                    <Zap className="w-3 h-3 text-gold" /> Instant results
+                  </div>
+                </div>
+              </div>
+              <div className="cinema-card p-6 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-gold/[0.03] to-transparent pointer-events-none" />
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gold-50 border border-cinema-border mb-4">
+                  <Search className="w-4 h-4 text-cinema-subtle" />
+                  <span className="text-sm text-cinema-muted flex-1">Search your library...</span>
+                  <kbd className="px-2 py-0.5 rounded bg-cinema-bg text-[10px] text-cinema-subtle border border-cinema-border font-mono">&#8984;K</kbd>
+                </div>
+                <div className="space-y-2">
+                  {[
+                    { title: "Oppenheimer", sub: "Movie · 2023", color: "border-l-gold" },
+                    { title: "Breaking Bad", sub: "Series · 5 Seasons", color: "border-l-gold-dark" },
+                    { title: "Death Note", sub: "Anime · 37 Episodes", color: "border-l-gold/60" },
+                  ].map((item, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: -10 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.3 + i * 0.1 }}
+                      viewport={{ once: true }}
+                      className={`flex items-center justify-between px-4 py-3 rounded-lg bg-cinema-bg/50 border-l-2 ${item.color} hover:bg-gold-50 transition-colors cursor-pointer`}
+                    >
+                      <div>
+                        <div className="text-sm text-cinema-text font-medium">{item.title}</div>
+                        <div className="text-[11px] text-cinema-subtle">{item.sub}</div>
+                      </div>
+                      <ArrowRight className="w-3.5 h-3.5 text-cinema-subtle" />
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </FadeIn>
 
-          <motion.div
-            className="flex gap-4 py-4"
-            animate={{ x: ["-50%", "0%"] }}
-            transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-          >
-            {[...POSTER_GRID, ...POSTER_GRID].map((poster, i) => (
-              <motion.img
-                key={i}
-                src={poster}
-                alt="Media poster"
-                className="w-36 h-52 object-cover rounded-lg border border-cinema-border shadow-2xl flex-shrink-0 hover:scale-105 hover:border-gold/30 transition-all duration-300"
-                whileHover={{ y: -10 }}
-              />
-            ))}
-          </motion.div>
+          {/* Feature 2 — Privacy / Local First */}
+          <FadeIn>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
+              <div className="md:order-2">
+                <span className="font-serif italic text-gold-dark text-xs tracking-widest uppercase block mb-4">Privacy</span>
+                <h3 className="font-serif text-xl md:text-2xl text-cinema-text mb-4">Your data never <em className="italic text-gold">leaves.</em></h3>
+                <p className="text-cinema-muted text-sm leading-relaxed mb-6">
+                  Stacked is self-hosted. Your collection lives on your device — no cloud accounts, no tracking, no ads. You own your data completely, forever.
+                </p>
+                <div className="flex items-center gap-3 text-xs text-cinema-subtle">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gold-50 border border-cinema-border">
+                    <Shield className="w-3 h-3 text-gold" /> Self-hosted
+                  </div>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gold-50 border border-cinema-border">
+                    <Check className="w-3 h-3 text-gold" /> No subscriptions
+                  </div>
+                </div>
+              </div>
+              <div className="md:order-1 cinema-card p-8 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-gold/[0.03] to-transparent pointer-events-none" />
+                <div className="space-y-6 relative z-10">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center flex-shrink-0">
+                      <Shield className="w-5 h-5 text-gold" />
+                    </div>
+                    <div>
+                      <div className="text-sm text-cinema-text font-medium">Data stored locally</div>
+                      <div className="text-[11px] text-cinema-subtle">SQLite on your machine</div>
+                    </div>
+                    <div className="ml-auto px-2 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-[10px] text-green-400">Secure</div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center flex-shrink-0">
+                      <Zap className="w-5 h-5 text-gold" />
+                    </div>
+                    <div>
+                      <div className="text-sm text-cinema-text font-medium">Zero external calls</div>
+                      <div className="text-[11px] text-cinema-subtle">No analytics or tracking</div>
+                    </div>
+                    <div className="ml-auto px-2 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-[10px] text-green-400">Private</div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center flex-shrink-0">
+                      <Star className="w-5 h-5 text-gold" />
+                    </div>
+                    <div>
+                      <div className="text-sm text-cinema-text font-medium">Auto backups</div>
+                      <div className="text-[11px] text-cinema-subtle">Never lose your collection</div>
+                    </div>
+                    <div className="ml-auto px-2 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-[10px] text-green-400">Active</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </FadeIn>
+
+          {/* Feature 3 — Auto Metadata */}
+          <FadeIn>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
+              <div>
+                <span className="font-serif italic text-gold-dark text-xs tracking-widest uppercase block mb-4">Metadata</span>
+                <h3 className="font-serif text-xl md:text-2xl text-cinema-text mb-4">Search once, get <em className="italic text-gold">everything.</em></h3>
+                <p className="text-cinema-muted text-sm leading-relaxed mb-6">
+                  Type a title and Stacked fills in the rest — posters, ratings, cast, synopses, episode counts. Powered by TMDB, AniList, and OpenLibrary.
+                </p>
+                <div className="flex items-center gap-3 text-xs text-cinema-subtle">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gold-50 border border-cinema-border">
+                    <Layers className="w-3 h-3 text-gold" /> 3 data sources
+                  </div>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gold-50 border border-cinema-border">
+                    <Search className="w-3 h-3 text-gold" /> Auto-fetched
+                  </div>
+                </div>
+              </div>
+              <div className="cinema-card p-5 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-gold/[0.03] to-transparent pointer-events-none" />
+                <div className="flex gap-4 relative z-10">
+                  <img
+                    src="https://image.tmdb.org/t/p/w300/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg"
+                    alt="Oppenheimer"
+                    className="w-24 h-36 object-cover rounded-lg border border-cinema-border flex-shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-cinema-text mb-1">Oppenheimer</div>
+                    <div className="text-[11px] text-cinema-subtle mb-3">2023 · Christopher Nolan · 3h 1m</div>
+                    <div className="flex gap-1 mb-3">
+                      {[1,2,3,4,5].map(s => (
+                        <Star key={s} className={`w-3 h-3 ${s <= 4 ? 'text-gold fill-gold' : 'text-cinema-subtle'}`} />
+                      ))}
+                      <span className="text-[10px] text-cinema-subtle ml-1">8.4</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {['Drama', 'History', 'Thriller'].map(g => (
+                        <span key={g} className="px-2 py-0.5 rounded-full bg-gold-50 border border-cinema-border text-[10px] text-cinema-muted">{g}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4 pt-3 border-t border-cinema-border relative z-10">
+                  <p className="text-[11px] text-cinema-subtle leading-relaxed line-clamp-2">
+                    The story of J. Robert Oppenheimer's role in the development of the atomic bomb during World War II...
+                  </p>
+                </div>
+              </div>
+            </div>
+          </FadeIn>
         </div>
       </section>
 
-      {/* Gold Divider */}
-      <div className="gold-divider max-w-7xl mx-auto" />
+      {/* ── Stats Strip ── */}
+      <section className="px-6 py-20 relative z-20 overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-gold/[0.04] rounded-full blur-[120px]" />
+        </div>
+        <div className="max-w-6xl mx-auto">
+          <FadeIn>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-y-10 gap-x-8">
+              {[
+                { number: "10K+", label: "Titles tracked" },
+                { number: "3", label: "Data sources" },
+                { number: "0", label: "Cloud dependencies" },
+                { number: "∞", label: "Yours forever" },
+              ].map((stat, i) => (
+                <div key={i} className="text-center relative">
+                  <div className="font-serif text-3xl md:text-4xl text-gold mb-3 tracking-tight">{stat.number}</div>
+                  <div className="text-xs text-cinema-subtle uppercase tracking-[0.2em]">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </FadeIn>
+        </div>
+      </section>
 
-      {/* Testimonials / Social Proof */}
-      <section className="px-6 py-32 max-w-7xl mx-auto relative z-20">
+      {/* ── Poster Marquee ── */}
+      <div className="relative z-20 overflow-hidden py-6">
+        <div className="absolute left-0 top-0 bottom-0 w-40 bg-gradient-to-r from-cinema-bg to-transparent z-10" />
+        <div className="absolute right-0 top-0 bottom-0 w-40 bg-gradient-to-l from-cinema-bg to-transparent z-10" />
+        <motion.div
+          className="flex gap-3"
+          animate={{ x: ["-50%", "0%"] }}
+          transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+        >
+          {[...POSTER_GRID, ...POSTER_GRID].map((poster, i) => (
+            <img
+              key={i}
+              src={poster}
+              alt=""
+              className="w-28 h-40 object-cover rounded-lg border border-cinema-border/40 opacity-50 hover:opacity-100 hover:border-gold/30 hover:scale-105 transition-all duration-500 flex-shrink-0"
+            />
+          ))}
+        </motion.div>
+      </div>
+
+      {/* ── Testimonials ── */}
+      <section className="px-6 py-20 max-w-6xl mx-auto relative z-20">
         <FadeIn>
-          <div className="cinema-card p-12 md:p-16 text-center relative overflow-hidden">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[200px] bg-gold/5 rounded-full blur-[100px] pointer-events-none" />
-            <div className="max-w-3xl mx-auto relative z-10">
-              <div className="flex justify-center gap-1 mb-8">
-                {[1,2,3,4,5].map((i) => (
-                  <Star key={i} className="w-5 h-5 text-gold fill-gold" />
-                ))}
-              </div>
-              <blockquote className="font-serif text-2xl md:text-3xl text-cinema-text mb-8 leading-relaxed italic">
-                "Finally, an app that respects my data and looks <span className="text-gold">stunning</span>. I've tried Letterboxd, Goodreads, and dozens of spreadsheets. Stacked is the first one that just works."
+          <div className="mb-12 text-center">
+            <span className="font-serif italic text-gold-dark text-xs tracking-widest uppercase block mb-4">Wall of love</span>
+            <h2 className="font-serif text-3xl md:text-4xl text-cinema-text">
+              Loved by <em className="italic text-gold">collectors.</em>
+            </h2>
+          </div>
+        </FadeIn>
+
+        <FadeIn delay={0.1}>
+          <div className="cinema-card p-10 md:p-14 relative overflow-hidden mb-6">
+            {/* Accent bar */}
+            <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-gold/50 via-gold/20 to-transparent" />
+            {/* Quote mark */}
+            <div className="absolute top-6 left-8 font-serif text-7xl text-gold/[0.08] select-none leading-none pointer-events-none">&ldquo;</div>
+            <div className="max-w-3xl mx-auto pl-6 md:pl-10">
+              <blockquote className="font-serif text-xl md:text-2xl text-cinema-text mb-8 leading-relaxed">
+                Finally, an app that respects my data and looks <span className="text-gold italic">stunning</span>. I&apos;ve tried Letterboxd, Goodreads, and dozens of spreadsheets. Stacked is the first one that just works.
               </blockquote>
-              <div className="gold-divider w-16 mx-auto mb-8" />
-              <div className="flex items-center justify-center gap-4">
+              <div className="flex items-center gap-4">
                 <img
                   src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face"
                   alt="Alex Chen"
-                  className="w-14 h-14 rounded-full object-cover border-2 border-gold/20"
+                  className="w-11 h-11 rounded-full object-cover border-2 border-gold/20"
                 />
-                <div className="text-left">
-                  <div className="font-medium text-cinema-text">Alex Chen</div>
-                  <div className="text-sm text-cinema-muted">Software Engineer & Movie Collector</div>
+                <div>
+                  <div className="text-sm font-medium text-cinema-text">Alex Chen</div>
+                  <div className="text-xs text-cinema-subtle">Software Engineer &middot; 1,200+ titles</div>
+                </div>
+                <div className="ml-auto flex gap-0.5">
+                  {[1,2,3,4,5].map((s) => (
+                    <Star key={s} className="w-3.5 h-3.5 text-gold fill-gold" />
+                  ))}
                 </div>
               </div>
             </div>
           </div>
         </FadeIn>
 
-        {/* Multiple Testimonials */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[
+            { quote: "The keyboard shortcuts alone make this worth it. \u2318K search is addictive.", name: "Sarah Miller", role: "Designer", img: "photo-1494790108377-be9c29b29330" },
+            { quote: "I've catalogued 2,000+ anime titles. Auto-metadata saved me weeks of work.", name: "Takeshi Yamamoto", role: "Anime Collector", img: "photo-1539571696357-5a69c17a67c6" },
+            { quote: "Self-hosted means I own my data forever. No more worrying about services shutting down.", name: "Marcus Johnson", role: "Privacy Advocate", img: "photo-1472099645785-5658abf4ff4e" },
+          ].map((t, i) => (
+            <FadeIn key={i} delay={0.1 + i * 0.08}>
+              <div className="cinema-card p-6 h-full flex flex-col group hover:border-gold/20 transition-colors duration-500">
+                <div className="flex gap-0.5 mb-4">
+                  {[1,2,3,4,5].map((s) => <Star key={s} className="w-3 h-3 text-gold fill-gold" />)}
+                </div>
+                <p className="text-sm text-cinema-muted leading-relaxed flex-1 mb-6">&ldquo;{t.quote}&rdquo;</p>
+                <div className="flex items-center gap-3 pt-4 border-t border-cinema-border">
+                  <img src={`https://images.unsplash.com/${t.img}?w=80&h=80&fit=crop&crop=face`} alt="" className="w-8 h-8 rounded-full object-cover border border-gold/20" />
+                  <div>
+                    <div className="text-xs font-medium text-cinema-text">{t.name}</div>
+                    <div className="text-[10px] text-cinema-subtle">{t.role}</div>
+                  </div>
+                </div>
+              </div>
+            </FadeIn>
+          ))}
+        </div>
+      </section>
+
+      {/* ── FAQ ── */}
+      <section id="faq" className="px-6 py-24 relative z-20">
+        <div className="max-w-4xl mx-auto">
+          <FadeIn>
+            <div className="mb-14 text-center">
+              <h2 className="font-serif text-3xl md:text-5xl text-cinema-text mb-4">
+                Questions & <em className="italic text-gold">Answers</em>
+              </h2>
+              <p className="text-base text-cinema-muted">Everything you need to know about Stacked.</p>
+            </div>
+          </FadeIn>
+
           <FadeIn delay={0.1}>
-            <div className="cinema-card p-8">
-              <div className="flex gap-1 mb-4">
-                {[1,2,3,4,5].map((i) => <Star key={i} className="w-4 h-4 text-gold fill-gold" />)}
-              </div>
-              <p className="text-cinema-muted mb-6 text-sm leading-relaxed">"The keyboard shortcuts alone make this worth it. &#8984;K search is addictive."</p>
-              <div className="gold-divider w-8 mb-4" />
-              <div className="flex items-center gap-3">
-                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face" alt="" className="w-10 h-10 rounded-full object-cover border border-gold/20" />
-                <div>
-                  <div className="text-sm font-medium text-cinema-text">Sarah Miller</div>
-                  <div className="text-xs text-cinema-subtle">Designer</div>
-                </div>
-              </div>
+            <div className="cinema-card overflow-hidden divide-y divide-cinema-border">
+              {[
+                { q: "Is Stacked really free?", a: "Yes. Stacked is self-hosted software that runs on your own device or server. No charges, no subscriptions — your data never touches our servers." },
+                { q: "Where does the metadata come from?", a: "We pull metadata from TMDB for movies and TV shows, AniList for anime, and OpenLibrary for books. Posters, ratings, descriptions, and more are all fetched automatically." },
+                { q: "Can I import my existing data?", a: "We're working on importers for Letterboxd, Goodreads, and CSV files. Join the waitlist to get notified when these are ready." },
+                { q: "Is there a mobile app?", a: "Not yet, but the web interface is fully responsive and works great on mobile browsers. Native apps are on the roadmap." },
+              ].map((item, i) => (
+                <FAQItem key={i} question={item.q} answer={item.a} />
+              ))}
             </div>
           </FadeIn>
-          <FadeIn delay={0.2}>
-            <div className="cinema-card p-8">
-              <div className="flex gap-1 mb-4">
-                {[1,2,3,4,5].map((i) => <Star key={i} className="w-4 h-4 text-gold fill-gold" />)}
-              </div>
-              <p className="text-cinema-muted mb-6 text-sm leading-relaxed">"I've catalogued 2000+ anime titles. The auto-metadata feature saved me weeks."</p>
-              <div className="gold-divider w-8 mb-4" />
-              <div className="flex items-center gap-3">
-                <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=80&h=80&fit=crop&crop=face" alt="" className="w-10 h-10 rounded-full object-cover border border-gold/20" />
-                <div>
-                  <div className="text-sm font-medium text-cinema-text">Takeshi Yamamoto</div>
-                  <div className="text-xs text-cinema-subtle">Anime Enthusiast</div>
+        </div>
+      </section>
+
+      {/* ── CTA ── */}
+      <section className="px-6 py-24 relative z-20">
+        <div className="max-w-6xl mx-auto">
+          <FadeIn>
+            <div className="relative overflow-hidden rounded-3xl border border-cinema-border">
+              {/* Background poster collage — very faded */}
+              <div className="absolute inset-0 flex items-center justify-center opacity-[0.04] pointer-events-none overflow-hidden">
+                <div className="flex gap-3 -rotate-6 scale-150">
+                  {POSTER_GRID.slice(0, 8).map((poster, i) => (
+                    <img key={i} src={poster} alt="" className="w-28 h-40 object-cover rounded-lg flex-shrink-0" />
+                  ))}
                 </div>
               </div>
-            </div>
-          </FadeIn>
-          <FadeIn delay={0.3}>
-            <div className="cinema-card p-8">
-              <div className="flex gap-1 mb-4">
-                {[1,2,3,4,5].map((i) => <Star key={i} className="w-4 h-4 text-gold fill-gold" />)}
-              </div>
-              <p className="text-cinema-muted mb-6 text-sm leading-relaxed">"Self-hosted means I own my data forever. No more worrying about services shutting down."</p>
-              <div className="gold-divider w-8 mb-4" />
-              <div className="flex items-center gap-3">
-                <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face" alt="" className="w-10 h-10 rounded-full object-cover border border-gold/20" />
-                <div>
-                  <div className="text-sm font-medium text-cinema-text">Marcus Johnson</div>
-                  <div className="text-xs text-cinema-subtle">Data Privacy Advocate</div>
+              {/* Gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-b from-cinema-card via-cinema-card/95 to-cinema-card pointer-events-none" />
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-gold/[0.08] rounded-full blur-[140px] pointer-events-none" />
+
+              <div className="relative z-10 p-12 md:p-20 lg:p-24 text-center">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-gold/20 text-gold text-xs font-medium mb-8 tracking-widest uppercase">
+                  <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
+                  Private Beta
+                </div>
+                <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl text-cinema-text mb-6 tracking-tight">
+                  Start your <em className="italic text-gold">collection</em>.
+                </h2>
+                <p className="text-cinema-muted mb-12 max-w-lg mx-auto text-base leading-relaxed">
+                  Join the beta. Track movies, shows, anime, and books — all in one beautiful, private library.
+                </p>
+                <form onSubmit={handleJoinWaitlist} className="max-w-xl mx-auto mb-8">
+                  <div className="flex items-center bg-cinema-bg border border-cinema-border rounded-xl p-2 pl-6 hover:border-gold/20 focus-within:border-gold/30 transition-colors duration-300">
+                    <input
+                      type="email"
+                      placeholder="Enter your email..."
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      disabled={status === 'success'}
+                      className="flex-1 bg-transparent text-cinema-text placeholder-cinema-subtle focus:outline-none text-base py-1"
+                      required
+                    />
+                    <button
+                      type="submit"
+                      disabled={status === 'success' || status === 'loading'}
+                      className="bg-gold text-cinema-bg rounded-lg px-10 py-3.5 text-sm font-semibold hover:bg-gold-light transition-colors disabled:opacity-50 whitespace-nowrap"
+                    >
+                      {status === 'loading' ? '...' : status === 'success' ? "You're in!" : 'Join Waitlist'}
+                    </button>
+                  </div>
+                </form>
+                <div className="flex items-center justify-center gap-5 md:gap-8 text-sm text-cinema-subtle flex-wrap">
+                  <a href="/demo" className="inline-flex items-center gap-1.5 text-cinema-muted hover:text-gold transition-colors duration-300">
+                    <Play className="w-4 h-4" /> Try the live demo
+                  </a>
+                  <span className="w-1 h-1 rounded-full bg-cinema-border hidden md:block" />
+                  <span>No credit card required</span>
+                  <span className="w-1 h-1 rounded-full bg-cinema-border hidden md:block" />
+                  <span>Free forever</span>
                 </div>
               </div>
             </div>
@@ -677,106 +806,50 @@ export default function LandingPage({ onLogin }) {
         </div>
       </section>
 
-      {/* Gold Divider */}
-      <div className="gold-divider max-w-3xl mx-auto" />
-
-      {/* FAQ Section */}
-      <section id="faq" className="px-6 py-32 max-w-3xl mx-auto relative z-20">
-        <FadeIn>
-          <div className="mb-12 text-center">
-            <h2 className="font-serif text-3xl md:text-4xl text-cinema-text mb-4">
-              Questions & <em className="italic text-gold">Answers</em>
-            </h2>
-            <p className="text-cinema-muted">Everything you need to know about Stacked.</p>
-          </div>
-        </FadeIn>
-
-        <div className="space-y-0">
-          <FadeIn delay={0.1}>
-            <FAQItem
-              question="Is Stacked really free?"
-              answer="Yes. Stacked is self-hosted software that runs on your own device or server. We don't charge anything because we're not storing your data or running servers for you."
-            />
-          </FadeIn>
-          <FadeIn delay={0.15}>
-            <FAQItem
-              question="Where does the metadata come from?"
-              answer="We pull metadata from TMDB for movies and TV shows, and OpenLibrary for books. Posters, ratings, descriptions, and more are all fetched automatically."
-            />
-          </FadeIn>
-          <FadeIn delay={0.2}>
-            <FAQItem
-              question="Can I import my existing data?"
-              answer="We're working on importers for Letterboxd, Goodreads, and CSV files. Join the waitlist to get notified when these are ready."
-            />
-          </FadeIn>
-          <FadeIn delay={0.25}>
-            <FAQItem
-              question="Is there a mobile app?"
-              answer="Not yet, but the web interface is fully responsive and works great on mobile browsers. Native apps are on the roadmap."
-            />
-          </FadeIn>
-        </div>
-      </section>
-
-      {/* Gold Divider */}
-      <div className="gold-divider max-w-4xl mx-auto" />
-
-      {/* CTA Section */}
-      <section id="join" className="px-6 py-32 max-w-4xl mx-auto relative z-20 text-center">
-        <FadeIn>
-          <h2 className="font-serif text-4xl md:text-5xl text-cinema-text mb-6">
-            Ready to <em className="italic text-gold">begin</em>?
-          </h2>
-          <p className="text-lg text-cinema-muted mb-10 max-w-xl mx-auto">
-            Join the private beta and be among the first to experience a new way to manage your media collection.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-            <form onSubmit={handleJoinWaitlist} className="flex-1 relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-gold/10 to-gold/5 rounded-lg blur opacity-0 group-hover:opacity-100 transition duration-1000" />
-              <div className="relative flex items-center bg-cinema-card border border-cinema-border rounded-lg p-1.5 pl-5 hover:border-gold/20 transition-colors duration-300">
-                <input
-                  type="email"
-                  placeholder="Enter your email..."
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={status === 'success'}
-                  className="flex-1 bg-transparent text-cinema-text placeholder-cinema-subtle focus:outline-none text-sm"
-                  required
-                />
-                <button
-                  type="submit"
-                  disabled={status === 'success' || status === 'loading'}
-                  className="bg-gold text-cinema-bg rounded-md px-6 py-2.5 text-sm font-medium hover:bg-gold-light transition-colors disabled:opacity-50"
-                >
-                  {status === 'loading' ? '...' : status === 'success' ? 'Joined' : 'Join Waitlist'}
-                </button>
+      {/* ── Footer ── */}
+      <footer className="relative z-20 border-t border-cinema-border">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="py-16 grid grid-cols-1 md:grid-cols-12 gap-12">
+            {/* Brand */}
+            <div className="md:col-span-5">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="font-serif text-xl text-cinema-text tracking-tight">Stacked</span>
+                <span className="text-gold text-xl font-serif">.</span>
               </div>
-            </form>
-            <a
-              href="/demo"
-              className="inline-flex items-center justify-center gap-2 border border-cinema-border hover:border-gold/20 text-cinema-muted hover:text-gold rounded-lg px-6 py-3 text-sm font-medium transition-all duration-300"
-            >
-              <Play className="w-4 h-4" />
-              Try Demo
-            </a>
-          </div>
-        </FadeIn>
-      </section>
+              <p className="text-sm text-cinema-subtle leading-relaxed max-w-xs">
+                The all-in-one sanctuary for your movies, shows, anime, and books. Local-first, forever free.
+              </p>
+            </div>
 
-      {/* Footer */}
-      <footer className="border-t border-cinema-border py-12 px-6 bg-cinema-bg">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2">
-            <span className="font-serif text-sm text-cinema-text">Stacked</span>
-            <span className="text-gold font-serif">.</span>
+            {/* Product */}
+            <div className="md:col-span-3 md:col-start-7">
+              <div className="text-[10px] text-cinema-subtle uppercase tracking-[0.2em] mb-4 font-medium">Product</div>
+              <div className="space-y-3">
+                <a href="#features" className="block text-sm text-cinema-muted hover:text-gold transition-colors duration-300">Features</a>
+                <a href="#faq" className="block text-sm text-cinema-muted hover:text-gold transition-colors duration-300">FAQ</a>
+                <a href="/demo" className="block text-sm text-cinema-muted hover:text-gold transition-colors duration-300">Live Demo</a>
+              </div>
+            </div>
+
+            {/* Community */}
+            <div className="md:col-span-3">
+              <div className="text-[10px] text-cinema-subtle uppercase tracking-[0.2em] mb-4 font-medium">Community</div>
+              <div className="space-y-3">
+                <a href="#" className="block text-sm text-cinema-muted hover:text-gold transition-colors duration-300">GitHub</a>
+                <a href="#" className="block text-sm text-cinema-muted hover:text-gold transition-colors duration-300">Twitter</a>
+                <a href="#" className="block text-sm text-cinema-muted hover:text-gold transition-colors duration-300">Discord</a>
+              </div>
+            </div>
           </div>
-          <div className="flex gap-8 text-xs text-cinema-subtle uppercase tracking-widest font-medium">
-            <a href="#" className="hover:text-gold transition-colors duration-300">Twitter</a>
-            <a href="#" className="hover:text-gold transition-colors duration-300">GitHub</a>
-            <a href="#" className="hover:text-gold transition-colors duration-300">Discord</a>
+
+          {/* Bottom bar */}
+          <div className="border-t border-cinema-border py-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-cinema-subtle text-xs">&copy; 2026 Stacked. All rights reserved.</p>
+            <div className="flex gap-6 text-xs text-cinema-subtle">
+              <a href="#" className="hover:text-gold transition-colors duration-300">Privacy</a>
+              <a href="#" className="hover:text-gold transition-colors duration-300">Terms</a>
+            </div>
           </div>
-          <p className="text-cinema-subtle text-xs">&copy; 2025 Stacked Inc.</p>
         </div>
       </footer>
 
@@ -863,15 +936,15 @@ function FAQItem({ question, answer }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="border-b border-cinema-border">
+    <div>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full py-6 flex items-center justify-between text-left group"
+        className="w-full px-8 md:px-10 py-6 flex items-center justify-between text-left group hover:bg-gold/[0.02] transition-colors duration-300"
       >
-        <span className="font-serif text-lg text-cinema-text group-hover:text-gold transition-colors duration-300">{question}</span>
+        <span className="font-serif text-lg md:text-xl text-cinema-text group-hover:text-gold transition-colors duration-300 pr-4">{question}</span>
         <motion.span
           animate={{ rotate: isOpen ? 45 : 0 }}
-          className="text-2xl text-gold-dark"
+          className="text-2xl text-gold-dark flex-shrink-0"
         >
           +
         </motion.span>
@@ -884,7 +957,7 @@ function FAQItem({ question, answer }) {
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <p className="pb-6 text-cinema-muted leading-relaxed text-sm">
+            <p className="px-8 md:px-10 pb-6 text-cinema-muted leading-relaxed text-sm md:text-base">
               {answer}
             </p>
           </motion.div>

@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import { entryService } from "../services/api";
 
-export const useEntries = (year = null) => {
+export const useEntries = (year = null, options = {}) => {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const loadEntries = async (filterYear = year) => {
+  const loadEntries = async (filterYear = year, filterOptions = options) => {
     try {
       setLoading(true);
-      const data = await entryService.getAll(filterYear);
+      const data = await entryService.getAll(filterYear, filterOptions);
       setEntries(data);
       setError(null);
     } catch (err) {
@@ -21,9 +21,9 @@ export const useEntries = (year = null) => {
   };
 
   useEffect(() => {
-    loadEntries(year);
+    loadEntries(year, options);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [year]);
+  }, [year, options.status, options.sort, options.tags]);
 
   const createEntry = async (data) => {
     try {
@@ -61,6 +61,21 @@ export const useEntries = (year = null) => {
     }
   };
 
+  const quickRate = async (id, rating) => {
+    try {
+      const updatedEntry = await entryService.quickRate(id, rating);
+      setEntries((prev) =>
+        prev.map((entry) =>
+          entry.id === id ? { ...entry, ...updatedEntry } : entry
+        )
+      );
+      return updatedEntry;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
   return {
     entries,
     loading,
@@ -69,5 +84,6 @@ export const useEntries = (year = null) => {
     createEntry,
     updateEntry,
     deleteEntry,
+    quickRate,
   };
 };

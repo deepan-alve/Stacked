@@ -1,4 +1,5 @@
 import EntryModel from "../models/entryModel.js";
+import ActivityModel from "../models/activityModel.js";
 import googleSearchService from "../services/googleSearch.js";
 
 class EntryController {
@@ -7,13 +8,18 @@ class EntryController {
       const userId = req.user.id;
       const yearParam = req.query.year ? parseInt(req.query.year) : null;
       const year = yearParam && !isNaN(yearParam) ? yearParam : null;
+      const options = {
+        status: req.query.status || null,
+        sort: req.query.sort || null,
+        tags: req.query.tags || null,
+      };
       console.log(
         "[ENTRIES] Fetching entries for user:",
         userId,
         "Year filter:",
         year || "all"
       );
-      const entries = await EntryModel.findAll(year, userId);
+      const entries = await EntryModel.findAll(year, userId, options);
       console.log("[ENTRIES] Found", entries.length, "entries");
       res.json(entries);
     } catch (error) {
@@ -58,7 +64,24 @@ class EntryController {
       }
 
       const entry = await EntryModel.create(req.body, userId);
+      await ActivityModel.log(userId, "added", entry.id, entry.title, entry.type).catch(() => {});
       res.status(201).json(entry);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  async quickRate(req, res) {
+    try {
+      const userId = req.user.id;
+      const { rating } = req.body;
+      if (rating === undefined || rating === null) {
+        return res.status(400).json({ error: "rating is required" });
+      }
+      const entry = await EntryModel.quickRate(req.params.id, parseFloat(rating), userId);
+      if (!entry) return res.status(404).json({ error: "Entry not found" });
+      await ActivityModel.log(userId, "rated", entry.id, entry.title, entry.type, { rating }).catch(() => {});
+      res.json(entry);
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
@@ -132,6 +155,8 @@ class EntryController {
         return res.status(404).json({ error: "Entry not found" });
       }
 
+      const action = req.body.status === "completed" ? "completed" : "updated";
+      await ActivityModel.log(userId, action, entry.id, entry.title, entry.type).catch(() => {});
       res.json(entry);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -141,9 +166,14 @@ class EntryController {
   async delete(req, res) {
     try {
       const userId = req.user.id;
+      // Get entry title before deleting for activity log
+      const entry = await EntryModel.findById(req.params.id, userId);
       const deleted = await EntryModel.delete(req.params.id, userId);
       if (!deleted) {
         return res.status(404).json({ error: "Entry not found" });
+      }
+      if (entry) {
+        await ActivityModel.log(userId, "deleted", req.params.id, entry.title, entry.type).catch(() => {});
       }
       res.json({ message: "Entry deleted successfully" });
     } catch (error) {

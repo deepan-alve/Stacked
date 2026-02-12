@@ -1,7 +1,7 @@
 import database from "../config/database.js";
 
 class EntryModel {
-  async findAll(year = null, userId) {
+  async findAll(year = null, userId, options = {}) {
     try {
       let query = "SELECT * FROM movies WHERE user_id = ?";
       const params = [userId];
@@ -11,8 +11,30 @@ class EntryModel {
         params.push(year);
       }
 
-      // Order by watch_date (with NULL handling), then by id DESC
-      query += " ORDER BY COALESCE(watch_date, created_at) DESC, id DESC";
+      if (options.status) {
+        query += " AND status = ?";
+        params.push(options.status);
+      }
+
+      if (options.tags) {
+        const tagList = options.tags.split(",");
+        for (const tag of tagList) {
+          query += " AND tags LIKE ?";
+          params.push(`%"${tag.trim()}"%`);
+        }
+      }
+
+      // Sorting
+      const sortMap = {
+        title_asc: "title ASC",
+        title_desc: "title DESC",
+        rating_desc: "rating DESC NULLS LAST",
+        rating_asc: "rating ASC NULLS LAST",
+        release_date: "release_date DESC",
+        recently_added: "COALESCE(watch_date, created_at) DESC, id DESC",
+      };
+      const sort = sortMap[options.sort] || "COALESCE(watch_date, created_at) DESC, id DESC";
+      query += ` ORDER BY ${sort}`;
 
       const entries = await database.all(query, params);
       return entries;
@@ -114,11 +136,14 @@ class EntryModel {
       release_date,
       watch_date,
       year,
+      status,
+      progress_current,
+      progress_total,
+      tags,
     } = data;
     const now = new Date().toISOString();
 
     try {
-      // Only update watch_date and year if provided (for backward compatibility)
       const updateFields = [
         "title = ?",
         "type = ?",
@@ -154,6 +179,26 @@ class EntryModel {
         params.push(year);
       }
 
+      if (status !== undefined) {
+        updateFields.push("status = ?");
+        params.push(status);
+      }
+
+      if (progress_current !== undefined) {
+        updateFields.push("progress_current = ?");
+        params.push(progress_current);
+      }
+
+      if (progress_total !== undefined) {
+        updateFields.push("progress_total = ?");
+        params.push(progress_total);
+      }
+
+      if (tags !== undefined) {
+        updateFields.push("tags = ?");
+        params.push(typeof tags === "string" ? tags : JSON.stringify(tags));
+      }
+
       updateFields.push("updated_at = ?");
       params.push(now);
       params.push(id);
@@ -166,7 +211,6 @@ class EntryModel {
         return null;
       }
 
-      // Fetch the complete entry to return all fields including year and created_at
       const updatedEntry = await database.get(
         "SELECT * FROM movies WHERE id = ? AND user_id = ?",
         [id, userId]
@@ -174,6 +218,20 @@ class EntryModel {
       return updatedEntry;
     } catch (error) {
       throw new Error(`Error updating entry: ${error.message}`);
+    }
+  }
+
+  async quickRate(id, rating, userId) {
+    try {
+      const now = new Date().toISOString();
+      const result = await database.run(
+        "UPDATE movies SET rating = ?, updated_at = ? WHERE id = ? AND user_id = ?",
+        [rating, now, id, userId]
+      );
+      if (result.changes === 0) return null;
+      return database.get("SELECT * FROM movies WHERE id = ? AND user_id = ?", [id, userId]);
+    } catch (error) {
+      throw new Error(`Error quick-rating entry: ${error.message}`);
     }
   }
 
