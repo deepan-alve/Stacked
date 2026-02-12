@@ -294,41 +294,41 @@ function Dashboard({ isDemo = false, onLogout }) {
 
   const getTypeColor = (type) => {
     switch(type) {
-      case 'Movie': return 'from-indigo-500/10';
-      case 'Series': return 'from-violet-500/10';
-      case 'Anime': return 'from-pink-500/10';
-      case 'Book': return 'from-emerald-500/10';
-      default: return 'from-indigo-500/10';
+      case 'Movie': return 'from-gold-50';
+      case 'Series': return 'from-gold-50';
+      case 'Anime': return 'from-gold-50';
+      case 'Book': return 'from-gold-50';
+      default: return 'from-gold-50';
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col text-zinc-400 selection:bg-zinc-800 selection:text-zinc-200">
-      <Toaster 
+    <div className="min-h-screen flex flex-col text-cinema-muted selection:bg-gold-200 selection:text-cinema-text">
+      <Toaster
         toastOptions={{
           className: '',
           style: {
-            background: '#18181b',
+            background: '#111110',
             color: '#fff',
-            border: '1px solid #27272a',
+            border: '1px solid rgba(196,162,101,0.12)',
           },
         }}
       />
       {/* Background Glow */}
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-indigo-500/5 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gold/5 rounded-full blur-3xl pointer-events-none -z-10" />
 
       {/* Navigation */}
-      <nav className="fixed top-0 w-full z-40 border-b border-zinc-800/50 glass">
+      <nav className="fixed top-0 w-full z-40 border-b border-gold-100 glass">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-8">
             <div 
               className="flex items-center gap-2 group cursor-pointer" 
               onClick={() => setCurrentView('collection')}
             >
-              <div className="w-6 h-6 bg-zinc-100 rounded text-zinc-950 flex items-center justify-center font-bold text-xs tracking-tighter group-hover:bg-zinc-200 transition-colors">
+              <div className="w-6 h-6 bg-gold rounded text-cinema-bg flex items-center justify-center font-bold text-xs tracking-tighter group-hover:bg-gold-light transition-colors">
                 S
               </div>
-              <span className="text-zinc-100 font-medium tracking-tight text-sm">Stacked</span>
+              <span className="text-cinema-text font-serif tracking-tight text-sm">Stacked</span>
             </div>
 
             <div className="hidden md:flex items-center gap-1">
@@ -336,8 +336,8 @@ function Dashboard({ isDemo = false, onLogout }) {
                 onClick={() => setCurrentView('collection')}
                 className={`text-xs font-medium px-3 py-1.5 rounded-md transition-all ${
                   currentView === 'collection'
-                    ? 'text-zinc-100 bg-zinc-800/50'
-                    : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30'
+                    ? 'text-gold bg-gold-50'
+                    : 'text-cinema-subtle hover:text-gold-light'
                 }`}
               >
                 Collection
@@ -346,8 +346,8 @@ function Dashboard({ isDemo = false, onLogout }) {
                 onClick={() => setCurrentView('dlang')}
                 className={`text-xs font-medium px-3 py-1.5 rounded-md transition-all ${
                   currentView === 'dlang'
-                    ? 'text-zinc-100 bg-zinc-800/50'
-                    : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30'
+                    ? 'text-gold bg-gold-50'
+                    : 'text-cinema-subtle hover:text-gold-light'
                 }`}
               >
                 Dlang
@@ -356,8 +356,8 @@ function Dashboard({ isDemo = false, onLogout }) {
                 onClick={() => setCurrentView('stats')}
                 className={`text-xs font-medium px-3 py-1.5 rounded-md transition-all ${
                   currentView === 'stats'
-                    ? 'text-zinc-100 bg-zinc-800/50'
-                    : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30'
+                    ? 'text-gold bg-gold-50'
+                    : 'text-cinema-subtle hover:text-gold-light'
                 }`}
               >
                 Analytics
@@ -366,8 +366,8 @@ function Dashboard({ isDemo = false, onLogout }) {
                 onClick={() => setCurrentView('archive')}
                 className={`text-xs font-medium px-3 py-1.5 rounded-md transition-all ${
                   currentView === 'archive'
-                    ? 'text-zinc-100 bg-zinc-800/50'
-                    : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30'
+                    ? 'text-gold bg-gold-50'
+                    : 'text-cinema-subtle hover:text-gold-light'
                 }`}
               >
                 Archive
@@ -378,27 +378,27 @@ function Dashboard({ isDemo = false, onLogout }) {
           <div className="flex items-center gap-2 md:gap-4">
             {/* Desktop Search */}
             <div className="hidden md:flex items-center relative w-64 group">
-              <Search className="absolute left-3 w-4 h-4 text-zinc-500 group-focus-within:text-zinc-300 transition-colors" />
+              <Search className="absolute left-3 w-4 h-4 text-cinema-subtle group-focus-within:text-cinema-muted transition-colors" />
               <input
                 type="text"
                 placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-zinc-900/50 border border-zinc-800 text-zinc-300 text-sm rounded-md py-1.5 pl-9 pr-4 focus:outline-none focus:ring-1 focus:ring-zinc-600 focus:border-zinc-600 placeholder-zinc-600 transition-all"
+                className="w-full bg-gold-50 border border-gold-100 text-cinema-text text-sm rounded-md py-1.5 pl-9 pr-4 focus:outline-none focus:ring-1 focus:ring-gold-200 focus:border-gold-200 placeholder-cinema-subtle transition-all"
               />
             </div>
 
             {/* Mobile Search Toggle */}
             <button
               onClick={() => setIsMobileSearchOpen(true)}
-              className="md:hidden flex items-center justify-center w-8 h-8 text-zinc-400 hover:text-zinc-200 transition-colors"
+              className="md:hidden flex items-center justify-center w-8 h-8 text-cinema-subtle hover:text-gold transition-colors"
             >
               <Search className="w-4 h-4" />
             </button>
 
             <button
               onClick={() => setIsSpotlightOpen(true)}
-              className="flex items-center gap-2 bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-medium py-1.5 px-3 rounded transition-colors shadow-[0_0_15px_rgba(255,255,255,0.1)]"
+              className="flex items-center gap-2 bg-gold hover:bg-gold-light text-cinema-bg text-xs font-medium py-1.5 px-3 rounded transition-colors shadow-[0_0_15px_rgba(196,162,101,0.15)]"
             >
               <Plus className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">{currentView === 'dlang' ? 'Add Movie' : 'Add Entry'}</span>
@@ -408,7 +408,7 @@ function Dashboard({ isDemo = false, onLogout }) {
             {!isDemo && onLogout && (
               <button
                 onClick={onLogout}
-                className="hidden md:flex items-center gap-2 text-zinc-500 hover:text-zinc-300 text-xs font-medium py-1.5 px-2 rounded transition-colors"
+                className="hidden md:flex items-center gap-2 text-cinema-subtle hover:text-gold text-xs font-medium py-1.5 px-2 rounded border border-gold-100 transition-colors"
                 title="Sign out"
               >
                 <LogOut className="w-4 h-4" />
@@ -434,15 +434,15 @@ function Dashboard({ isDemo = false, onLogout }) {
             {/* Filters */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
               <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
-                <div className="flex items-center gap-1 p-1 bg-zinc-900/50 border border-zinc-800/50 rounded-lg w-max">
+                <div className="flex items-center gap-1 p-1 bg-gold-50 border border-gold-100 rounded-lg w-max">
                   {['All', 'Movie', 'Series', 'Anime', 'Book'].map(type => (
                     <button
                       key={type}
                       onClick={() => setFilterType(type)}
                       className={`px-3 py-1.5 text-xs font-medium rounded transition-all whitespace-nowrap ${
                         filterType === type
-                          ? 'text-zinc-100 bg-zinc-800 shadow-sm'
-                          : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
+                          ? 'text-gold bg-gold-100 shadow-sm'
+                          : 'text-cinema-subtle hover:text-cinema-muted'
                       }`}
                     >
                       {type === 'Book' ? 'Books' : type === 'All' ? 'All' : `${type}s`}
@@ -451,21 +451,21 @@ function Dashboard({ isDemo = false, onLogout }) {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 text-xs text-zinc-500">
+              <div className="flex items-center gap-2 text-xs text-cinema-subtle">
                 <span>{filteredEntries.length} entr{filteredEntries.length === 1 ? 'y' : 'ies'}</span>
               </div>
             </div>
 
             {/* Grid */}
             {loading ? (
-              <div className="text-center py-20 text-zinc-500">Loading...</div>
+              <div className="text-center py-20 text-cinema-subtle">Loading...</div>
             ) : filteredEntries.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-zinc-800 rounded-xl bg-zinc-900/10">
-                <div className="w-12 h-12 bg-zinc-900 rounded-full flex items-center justify-center mb-4 text-zinc-600">
+              <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-cinema-border rounded-xl bg-cinema-card">
+                <div className="w-12 h-12 bg-gold-50 border border-gold-100 rounded-full flex items-center justify-center mb-4 text-gold">
                   <Inbox className="w-5 h-5" />
                 </div>
-                <h3 className="text-zinc-200 font-medium text-sm mb-1">No entries found</h3>
-                <p className="text-zinc-500 text-xs max-w-xs mx-auto">
+                <h3 className="text-cinema-text font-serif font-medium text-sm mb-1">No entries found</h3>
+                <p className="text-cinema-subtle text-xs max-w-xs mx-auto">
                   Try adjusting your search or filters, or add a new item to your collection.
                 </p>
               </div>
@@ -504,27 +504,27 @@ function Dashboard({ isDemo = false, onLogout }) {
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div 
-            className="absolute inset-0 bg-black/60 backdrop-blur-md transition-opacity" 
+          <div
+            className="absolute inset-0 bg-cinema-bg/80 backdrop-blur-md transition-opacity"
             onClick={closeModal}
           />
-          
-          <div 
-            className="relative w-full max-w-md bg-zinc-900/95 backdrop-blur-xl border border-zinc-800 shadow-2xl rounded-xl p-6 flex flex-col max-h-[85vh] overflow-y-auto"
+
+          <div
+            className="relative w-full max-w-md bg-cinema-card backdrop-blur-xl border border-cinema-border shadow-2xl rounded-2xl p-6 flex flex-col max-h-[85vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-base font-medium text-white tracking-tight">
+              <h2 className="text-base font-medium text-cinema-text font-serif tracking-tight">
                 {currentEntry ? 'Edit Entry' : 'Add Entry'}
               </h2>
-              <button onClick={closeModal} className="text-zinc-500 hover:text-zinc-300 transition-colors">
+              <button onClick={closeModal} className="text-cinema-subtle hover:text-cinema-muted transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs text-zinc-500 flex items-center justify-between">
+                <label className="text-xs text-cinema-subtle font-mono uppercase flex items-center justify-between">
                   <span>Title</span>
                   {!isDemo && (
                     <button
@@ -543,32 +543,32 @@ function Dashboard({ isDemo = false, onLogout }) {
                   value={formData.title}
                   onChange={(e) => setFormData({...formData, title: e.target.value})}
                   readOnly={isDemo}
-                  className="w-full bg-zinc-800/50 border border-zinc-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-colors placeholder-zinc-600" 
+                  className="w-full bg-gold-50 border border-gold-100 text-cinema-text text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-gold-200 focus:ring-1 focus:ring-gold-200 transition-colors placeholder-cinema-subtle"
                   placeholder="e.g. Inception" 
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs text-zinc-500">Type</label>
+                <label className="text-xs text-cinema-subtle font-mono uppercase">Type</label>
                 <div className="relative">
                   <select 
                     value={formData.type}
                     onChange={(e) => setFormData({...formData, type: e.target.value})}
                     disabled={isDemo}
-                    className="w-full appearance-none bg-zinc-800/50 border border-zinc-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-colors cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="w-full appearance-none bg-gold-50 border border-gold-100 text-cinema-text text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-gold-200 focus:ring-1 focus:ring-gold-200 transition-colors cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
                   >
                     <option value="Movie">Movie</option>
                     <option value="Series">Series</option>
                     <option value="Anime">Anime</option>
                     <option value="Book">Book</option>
                   </select>
-                  <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-zinc-500 pointer-events-none" />
+                  <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-cinema-subtle pointer-events-none" />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="text-xs text-zinc-500">Rating (0-5)</label>
+                  <label className="text-xs text-cinema-subtle font-mono uppercase">Rating (0-5)</label>
                   <input
                     type="number"
                     min="0"
@@ -577,12 +577,12 @@ function Dashboard({ isDemo = false, onLogout }) {
                     value={formData.rating}
                     onChange={(e) => setFormData({...formData, rating: e.target.value})}
                     readOnly={isDemo}
-                    className="w-full bg-zinc-800/50 border border-zinc-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-colors placeholder-zinc-600"
+                    className="w-full bg-gold-50 border border-gold-100 text-cinema-text text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-gold-200 focus:ring-1 focus:ring-gold-200 transition-colors placeholder-cinema-subtle"
                     placeholder="-"
                   />
                 </div>
                 <div className={`space-y-1.5 ${formData.type !== 'Series' && formData.type !== 'Anime' ? 'opacity-50' : ''}`}>
-                  <label className="text-xs text-zinc-500">Season</label>
+                  <label className="text-xs text-cinema-subtle font-mono uppercase">Season</label>
                   <input 
                     type="number" 
                     min="1"
@@ -590,7 +590,7 @@ function Dashboard({ isDemo = false, onLogout }) {
                     readOnly={isDemo}
                     value={formData.season}
                     onChange={(e) => setFormData({...formData, season: e.target.value})}
-                    className="w-full bg-zinc-800/50 border border-zinc-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-colors placeholder-zinc-600 disabled:cursor-not-allowed disabled:opacity-50" 
+                    className="w-full bg-gold-50 border border-gold-100 text-cinema-text text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-gold-200 focus:ring-1 focus:ring-gold-200 transition-colors placeholder-cinema-subtle disabled:cursor-not-allowed disabled:opacity-50"
                     placeholder="#" 
                   />
                 </div>
@@ -599,7 +599,7 @@ function Dashboard({ isDemo = false, onLogout }) {
               {/* Watch Date and Year Fields */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="text-xs text-zinc-500 flex items-center gap-1">
+                  <label className="text-xs text-cinema-subtle font-mono uppercase flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
                     Watch Date
                   </label>
@@ -608,45 +608,45 @@ function Dashboard({ isDemo = false, onLogout }) {
                     value={formData.watch_date}
                     onChange={(e) => setFormData({...formData, watch_date: e.target.value})}
                     readOnly={isDemo}
-                    className="w-full bg-zinc-800/50 border border-zinc-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-colors"
+                    className="w-full bg-gold-50 border border-gold-100 text-cinema-text text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-gold-200 focus:ring-1 focus:ring-gold-200 transition-colors"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs text-zinc-500">Year (Collection)</label>
+                  <label className="text-xs text-cinema-subtle font-mono uppercase">Year (Collection)</label>
                   <div className="relative">
                     <select
                       value={formData.year}
                       onChange={(e) => setFormData({...formData, year: parseInt(e.target.value)})}
                       disabled={isDemo}
-                      className="w-full appearance-none bg-zinc-800/50 border border-zinc-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-colors cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+                      className="w-full appearance-none bg-gold-50 border border-gold-100 text-cinema-text text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-gold-200 focus:ring-1 focus:ring-gold-200 transition-colors cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
                     >
                       {/* Show available years plus current year */}
                       {[...new Set([currentYear, ...availableYears])].sort((a, b) => b - a).map(year => (
                         <option key={year} value={year}>{year}</option>
                       ))}
                     </select>
-                    <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-zinc-500 pointer-events-none" />
+                    <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-cinema-subtle pointer-events-none" />
                   </div>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs text-zinc-500">Notes</label>
-                <textarea 
+                <label className="text-xs text-cinema-subtle font-mono uppercase">Notes</label>
+                <textarea
                   rows="3"
                   value={formData.notes}
                   onChange={(e) => setFormData({...formData, notes: e.target.value})}
                   readOnly={isDemo}
-                  className="w-full bg-zinc-800/50 border border-zinc-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-colors placeholder-zinc-600 resize-none" 
+                  className="w-full bg-gold-50 border border-gold-100 text-cinema-text text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-gold-200 focus:ring-1 focus:ring-gold-200 transition-colors placeholder-cinema-subtle resize-none"
                   placeholder="Thoughts, memorable quotes, or summary..." 
                 />
               </div>
 
               {!isDemo && (
-                <div className="flex flex-col gap-2 pt-4 border-t border-zinc-800">
-                  <button 
+                <div className="flex flex-col gap-2 pt-4 border-t border-cinema-border">
+                  <button
                     type="submit"
-                    className="w-full bg-white hover:bg-gray-100 text-zinc-950 font-medium text-sm py-2.5 rounded-lg transition-colors"
+                    className="w-full bg-gold hover:bg-gold-light text-cinema-bg font-medium text-sm py-2.5 rounded-lg transition-colors"
                   >
                     Save Entry
                   </button>
@@ -654,7 +654,7 @@ function Dashboard({ isDemo = false, onLogout }) {
                     <button 
                       type="button"
                       onClick={handleDelete}
-                      className="w-full bg-transparent hover:bg-red-500/10 text-red-400 hover:text-red-300 border border-zinc-700 hover:border-red-500/50 font-medium text-sm py-2.5 rounded-lg transition-colors"
+                      className="w-full bg-transparent hover:bg-red-500/10 text-red-400 hover:text-red-300 border border-cinema-border hover:border-red-500/50 font-medium text-sm py-2.5 rounded-lg transition-colors"
                     >
                       Delete Entry
                     </button>
@@ -684,19 +684,19 @@ function Dashboard({ isDemo = false, onLogout }) {
       {/* Mobile Search Overlay */}
       {isMobileSearchOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsMobileSearchOpen(false)} />
+          <div className="absolute inset-0 bg-cinema-bg/80 backdrop-blur-sm" onClick={() => setIsMobileSearchOpen(false)} />
           <div className="relative p-4 pt-safe">
-            <div className="flex items-center gap-3 bg-zinc-900 border border-zinc-700 rounded-xl p-3">
-              <Search className="w-5 h-5 text-zinc-400 flex-shrink-0" />
+            <div className="flex items-center gap-3 bg-cinema-card border border-cinema-border rounded-xl p-3">
+              <Search className="w-5 h-5 text-cinema-subtle flex-shrink-0" />
               <input
                 type="text"
                 placeholder="Search your collection..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 autoFocus
-                className="flex-1 bg-transparent text-white text-base outline-none placeholder-zinc-500"
+                className="flex-1 bg-transparent text-cinema-text text-base outline-none placeholder-cinema-subtle"
               />
-              <button onClick={() => setIsMobileSearchOpen(false)} className="text-zinc-400 hover:text-zinc-200">
+              <button onClick={() => setIsMobileSearchOpen(false)} className="text-cinema-subtle hover:text-cinema-muted">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -705,12 +705,12 @@ function Dashboard({ isDemo = false, onLogout }) {
       )}
 
       {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-zinc-900/95 backdrop-blur-lg border-t border-zinc-800">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-cinema-card/95 backdrop-blur-lg border-t border-cinema-border">
         <div className="flex items-center justify-around py-2 px-2 safe-area-bottom">
           <button
             onClick={() => setCurrentView('collection')}
             className={`flex flex-col items-center gap-1 py-2 px-4 rounded-lg transition-all ${
-              currentView === 'collection' ? 'text-zinc-100 bg-zinc-800/50' : 'text-zinc-500'
+              currentView === 'collection' ? 'text-gold bg-gold-100' : 'text-cinema-subtle'
             }`}
           >
             <Film className="w-5 h-5" />
@@ -719,7 +719,7 @@ function Dashboard({ isDemo = false, onLogout }) {
           <button
             onClick={() => setCurrentView('dlang')}
             className={`flex flex-col items-center gap-1 py-2 px-4 rounded-lg transition-all ${
-              currentView === 'dlang' ? 'text-zinc-100 bg-zinc-800/50' : 'text-zinc-500'
+              currentView === 'dlang' ? 'text-gold bg-gold-100' : 'text-cinema-subtle'
             }`}
           >
             <Tv className="w-5 h-5" />
@@ -728,7 +728,7 @@ function Dashboard({ isDemo = false, onLogout }) {
           <button
             onClick={() => setCurrentView('stats')}
             className={`flex flex-col items-center gap-1 py-2 px-4 rounded-lg transition-all ${
-              currentView === 'stats' ? 'text-zinc-100 bg-zinc-800/50' : 'text-zinc-500'
+              currentView === 'stats' ? 'text-gold bg-gold-100' : 'text-cinema-subtle'
             }`}
           >
             <BarChart3 className="w-5 h-5" />
@@ -737,7 +737,7 @@ function Dashboard({ isDemo = false, onLogout }) {
           <button
             onClick={() => setCurrentView('archive')}
             className={`flex flex-col items-center gap-1 py-2 px-4 rounded-lg transition-all ${
-              currentView === 'archive' ? 'text-zinc-100 bg-zinc-800/50' : 'text-zinc-500'
+              currentView === 'archive' ? 'text-gold bg-gold-100' : 'text-cinema-subtle'
             }`}
           >
             <Archive className="w-5 h-5" />
@@ -766,7 +766,7 @@ function Dashboard({ isDemo = false, onLogout }) {
                   toast.error('Download failed', { id: 'download' });
                 }
               }}
-              className="flex flex-col items-center gap-1 py-2 px-4 rounded-lg text-zinc-500"
+              className="flex flex-col items-center gap-1 py-2 px-4 rounded-lg text-cinema-subtle"
             >
               <Download className="w-5 h-5" />
               <span className="text-[10px] font-medium">Export</span>
@@ -775,7 +775,7 @@ function Dashboard({ isDemo = false, onLogout }) {
           {!isDemo && onLogout && (
             <button
               onClick={onLogout}
-              className="flex flex-col items-center gap-1 py-2 px-4 rounded-lg text-zinc-500"
+              className="flex flex-col items-center gap-1 py-2 px-4 rounded-lg text-cinema-subtle"
             >
               <LogOut className="w-5 h-5" />
               <span className="text-[10px] font-medium">Logout</span>
@@ -789,9 +789,9 @@ function Dashboard({ isDemo = false, onLogout }) {
 
 function StatCard({ label, value }) {
   return (
-    <div className="p-4 rounded-lg border border-zinc-800 bg-zinc-900/20 cursor-default">
-      <p className="text-xs text-zinc-500 font-medium mb-1">{label}</p>
-      <h3 className="text-xl font-medium text-zinc-100 tracking-tight">{value}</h3>
+    <div className="p-4 rounded-lg border border-cinema-border bg-cinema-card cursor-default">
+      <p className="text-xs text-cinema-subtle uppercase tracking-wider font-mono mb-1">{label}</p>
+      <h3 className="text-2xl font-serif text-gold tracking-tight">{value}</h3>
     </div>
   );
 }
@@ -825,26 +825,26 @@ function EntryCard({ entry, onClick, getTypeIcon, getTypeColor }) {
         {/* Front Side - Poster */}
         <div className="flip-card-front">
           {entry.poster_url ? (
-            <div className="relative w-full h-full overflow-hidden rounded-lg border border-zinc-800/60">
-              <img 
-                src={entry.poster_url} 
+            <div className="relative w-full h-full overflow-hidden rounded-lg border border-cinema-border">
+              <img
+                src={entry.poster_url}
                 alt={entry.title}
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="150"%3E%3Crect fill="%2318181b" width="100" height="150"/%3E%3C/svg%3E';
+                  e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="150"%3E%3Crect fill="%23111110" width="100" height="150"/%3E%3C/svg%3E';
                 }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-cinema-bg/90 via-cinema-bg/20 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-3">
-                <h3 className="text-white font-medium text-xs leading-tight line-clamp-2 mb-1">
+                <h3 className="text-cinema-text font-serif font-medium text-xs leading-tight line-clamp-2 mb-1">
                   {entry.title}
                 </h3>
                 <div className="flex items-center gap-2">
-                  <span className="text-[9px] text-zinc-300 font-medium uppercase tracking-wider">
+                  <span className="text-[9px] text-gold font-medium uppercase tracking-wider">
                     {entry.type}
                   </span>
                   {entry.rating && (
-                    <div className="flex items-center gap-1 text-yellow-400 text-[10px]">
+                    <div className="flex items-center gap-1 text-gold text-[10px]">
                       <Star className="w-2.5 h-2.5 fill-current" />
                       <span>{entry.rating}</span>
                     </div>
@@ -853,14 +853,14 @@ function EntryCard({ entry, onClick, getTypeIcon, getTypeColor }) {
               </div>
             </div>
           ) : (
-            <div className="w-full h-full bg-zinc-900/30 border border-zinc-800/60 rounded-lg flex flex-col items-center justify-center p-4 text-center">
-              <div className="p-2 rounded bg-zinc-800/50 border border-zinc-700/50 text-zinc-400 mb-3">
+            <div className="w-full h-full bg-cinema-card border border-cinema-border rounded-lg flex flex-col items-center justify-center p-4 text-center">
+              <div className="p-2 rounded bg-gold-50 border border-gold-100 text-gold mb-3">
                 {getTypeIcon(entry.type)}
               </div>
-              <h3 className="text-zinc-100 font-medium text-xs leading-tight line-clamp-3 mb-2">
+              <h3 className="text-cinema-text font-serif font-medium text-xs leading-tight line-clamp-3 mb-2">
                 {entry.title}
               </h3>
-              <span className="text-[9px] text-zinc-500 font-medium uppercase tracking-wider">
+              <span className="text-[9px] text-gold font-medium uppercase tracking-wider">
                 {entry.type}
               </span>
             </div>
@@ -869,55 +869,55 @@ function EntryCard({ entry, onClick, getTypeIcon, getTypeColor }) {
 
         {/* Back Side - Details */}
         <div className="flip-card-back">
-          <div className={`w-full h-full bg-zinc-900/90 border border-zinc-600/50 rounded-lg p-4 flex flex-col relative overflow-hidden`}>
+          <div className={`w-full h-full bg-cinema-card border border-cinema-border rounded-lg p-4 flex flex-col relative overflow-hidden`}>
             <div className={`absolute top-0 left-0 w-full h-full bg-gradient-to-b ${getTypeColor(entry.type)} to-transparent opacity-30`} />
-            
+
             <div className="relative z-10 flex-1 flex flex-col">
               <div className="flex items-start justify-between mb-3">
-                <div className="p-1.5 rounded bg-zinc-800/50 border border-zinc-700/50 text-zinc-400">
+                <div className="p-1.5 rounded bg-gold-50 border border-gold-100 text-gold">
                   {getTypeIcon(entry.type)}
                 </div>
                 {entry.rating ? (
-                  <div className="flex items-center gap-1 text-yellow-400 text-xs">
+                  <div className="flex items-center gap-1 text-gold text-xs">
                     <Star className="w-3 h-3 fill-current" />
                     <span>{entry.rating}</span>
                   </div>
                 ) : (
-                  <span className="text-zinc-600 text-xs">-</span>
+                  <span className="text-cinema-subtle text-xs">-</span>
                 )}
               </div>
 
-              <h3 className="text-zinc-100 font-semibold text-sm leading-tight mb-2 line-clamp-2">
+              <h3 className="text-cinema-text font-serif font-semibold text-sm leading-tight mb-2 line-clamp-2">
                 {entry.title}
               </h3>
 
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider">
+                <span className="text-[10px] text-gold font-medium uppercase tracking-wider">
                   {entry.type}
                 </span>
                 {(entry.type === 'Series' || entry.type === 'Anime') && entry.season && (
-                  <span className="text-[10px] font-medium bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded border border-zinc-700">
+                  <span className="text-[10px] font-medium bg-gold-50 text-cinema-muted px-2 py-0.5 rounded border border-gold-100">
                     Season {entry.season}
                   </span>
                 )}
               </div>
 
               {entry.description && (
-                <p className="text-zinc-400 text-[11px] leading-relaxed line-clamp-4 mb-3">
+                <p className="text-cinema-muted text-[11px] leading-relaxed line-clamp-4 mb-3">
                   {entry.description}
                 </p>
               )}
 
               {entry.notes && (
-                <div className="mt-auto pt-2 border-t border-zinc-700/50">
-                  <p className="text-zinc-500 text-[10px] leading-relaxed line-clamp-2">
+                <div className="mt-auto pt-2 border-t border-cinema-border">
+                  <p className="text-cinema-subtle text-[10px] leading-relaxed line-clamp-2">
                     {entry.notes}
                   </p>
                 </div>
               )}
 
               <div className="mt-auto pt-3">
-                <div className="text-[9px] text-zinc-600 uppercase tracking-wider">
+                <div className="text-[9px] text-cinema-subtle uppercase tracking-wider">
                   Click again to edit
                 </div>
               </div>
@@ -970,19 +970,19 @@ function ArchiveView({ selectedYear, availableYears, onYearChange, onEntryClick,
       {/* Header with Year Selector */}
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <h2 className="text-lg font-medium text-zinc-100 tracking-tight">Archive</h2>
+          <h2 className="text-lg font-serif text-cinema-text tracking-tight">Archive</h2>
           <div className="relative">
             <select
               value={selectedYear || ''}
               onChange={(e) => onYearChange(e.target.value ? parseInt(e.target.value) : null)}
-              className="bg-zinc-900/50 border border-zinc-800 text-zinc-300 text-sm rounded-lg px-4 py-2 pr-10 focus:outline-none focus:ring-1 focus:ring-zinc-600 focus:border-zinc-600 cursor-pointer appearance-none"
+              className="bg-cinema-card border border-cinema-border text-cinema-muted text-sm rounded-lg px-4 py-2 pr-10 focus:outline-none focus:ring-1 focus:ring-gold-200 focus:border-gold-200 cursor-pointer appearance-none"
             >
               <option value="">All Years</option>
               {availableYears.map(year => (
                 <option key={year} value={year}>{year}</option>
               ))}
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cinema-subtle pointer-events-none" />
           </div>
           {/* Year tabs for quick access */}
           <div className="hidden lg:flex items-center gap-1">
@@ -990,8 +990,8 @@ function ArchiveView({ selectedYear, availableYears, onYearChange, onEntryClick,
               onClick={() => onYearChange(null)}
               className={`px-2 py-1 text-xs font-medium rounded transition-all ${
                 selectedYear === null
-                  ? 'text-zinc-100 bg-zinc-800'
-                  : 'text-zinc-500 hover:text-zinc-300'
+                  ? 'text-gold bg-gold-100'
+                  : 'text-cinema-subtle hover:text-cinema-muted'
               }`}
             >
               All
@@ -1002,8 +1002,8 @@ function ArchiveView({ selectedYear, availableYears, onYearChange, onEntryClick,
                 onClick={() => onYearChange(year)}
                 className={`px-2 py-1 text-xs font-medium rounded transition-all ${
                   selectedYear === year
-                    ? 'text-zinc-100 bg-zinc-800'
-                    : 'text-zinc-500 hover:text-zinc-300'
+                    ? 'text-gold bg-gold-100'
+                    : 'text-cinema-subtle hover:text-cinema-muted'
                 }`}
               >
                 {year}
@@ -1014,7 +1014,7 @@ function ArchiveView({ selectedYear, availableYears, onYearChange, onEntryClick,
         {!isDemo && (
           <button
             onClick={() => onAddEntry(selectedYear || currentYear)}
-            className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 text-xs font-medium py-2 px-3 rounded-lg transition-colors"
+            className="flex items-center gap-2 bg-gold hover:bg-gold-light text-cinema-bg text-xs font-medium py-2 px-3 rounded-lg transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
             Add to {selectedYear || 'Archive'}
@@ -1034,15 +1034,15 @@ function ArchiveView({ selectedYear, availableYears, onYearChange, onEntryClick,
       {/* Filters */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
-          <div className="flex items-center gap-1 p-1 bg-zinc-900/50 border border-zinc-800/50 rounded-lg w-max">
+          <div className="flex items-center gap-1 p-1 bg-gold-50 border border-gold-100 rounded-lg w-max">
             {['All', 'Movie', 'Series', 'Anime', 'Book'].map(type => (
               <button
                 key={type}
                 onClick={() => setFilterType(type)}
                 className={`px-3 py-1.5 text-xs font-medium rounded transition-all whitespace-nowrap ${
                   filterType === type
-                    ? 'text-zinc-100 bg-zinc-800 shadow-sm'
-                    : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
+                    ? 'text-gold bg-gold-100 shadow-sm'
+                    : 'text-cinema-subtle hover:text-cinema-muted'
                 }`}
               >
                 {type === 'Book' ? 'Books' : type === 'All' ? 'All' : `${type}s`}
@@ -1053,29 +1053,29 @@ function ArchiveView({ selectedYear, availableYears, onYearChange, onEntryClick,
 
         <div className="flex items-center gap-4">
           <div className="relative flex-1 md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cinema-subtle" />
             <input
               type="text"
               placeholder="Search archive..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-zinc-900/50 border border-zinc-800 text-zinc-300 text-sm rounded-md py-1.5 pl-9 pr-4 focus:outline-none focus:ring-1 focus:ring-zinc-600 focus:border-zinc-600 placeholder-zinc-600"
+              className="w-full bg-gold-50 border border-gold-100 text-cinema-text text-sm rounded-md py-1.5 pl-9 pr-4 focus:outline-none focus:ring-1 focus:ring-gold-200 focus:border-gold-200 placeholder-cinema-subtle"
             />
           </div>
-          <span className="text-xs text-zinc-500 whitespace-nowrap">{filteredEntries.length} entr{filteredEntries.length === 1 ? 'y' : 'ies'}</span>
+          <span className="text-xs text-cinema-subtle whitespace-nowrap">{filteredEntries.length} entr{filteredEntries.length === 1 ? 'y' : 'ies'}</span>
         </div>
       </div>
 
       {/* Grid */}
       {loading ? (
-        <div className="text-center py-20 text-zinc-500">Loading...</div>
+        <div className="text-center py-20 text-cinema-subtle">Loading...</div>
       ) : filteredEntries.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-zinc-800 rounded-xl bg-zinc-900/10">
-          <div className="w-12 h-12 bg-zinc-900 rounded-full flex items-center justify-center mb-4 text-zinc-600">
+        <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-cinema-border rounded-xl bg-cinema-card">
+          <div className="w-12 h-12 bg-gold-50 border border-gold-100 rounded-full flex items-center justify-center mb-4 text-gold">
             <Inbox className="w-5 h-5" />
           </div>
-          <h3 className="text-zinc-200 font-medium text-sm mb-1">No entries found</h3>
-          <p className="text-zinc-500 text-xs max-w-xs mx-auto">
+          <h3 className="text-cinema-text font-serif font-medium text-sm mb-1">No entries found</h3>
+          <p className="text-cinema-subtle text-xs max-w-xs mx-auto">
             {selectedYear ? `No entries for ${selectedYear}. Try selecting a different year or add new entries.` : 'Your archive is empty. Start adding entries to build your collection!'}
           </p>
         </div>
