@@ -998,16 +998,45 @@ function LibraryView({ entries, allEntries, loading, filterType, setFilterType, 
   return (
     <div className="fade-in">
       {/* Header */}
-      <div className="mb-6">
-        <p className="text-xs text-cinema-subtle font-mono uppercase tracking-[0.2em] mb-1">{currentYear}</p>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
+        <div>
           <h2 className="text-2xl md:text-3xl font-serif text-cinema-text tracking-tight">Your <em className="text-gold">Library</em></h2>
-          <p className="text-xs text-cinema-subtle">Watched this year</p>
+          {/* Inline Stats */}
+          <div className="flex items-center gap-3 mt-2">
+            <span className="text-sm font-mono text-gold">{stats.total}</span>
+            <span className="text-[10px] text-cinema-subtle/40">|</span>
+            <div className="flex items-center gap-3">
+              {[
+                { label: 'Movies', value: stats.movies },
+                { label: 'Series', value: stats.series },
+                { label: 'Anime', value: stats.anime },
+                { label: 'Books', value: stats.books },
+              ].filter(s => s.value > 0).map(s => (
+                <span key={s.label} className="text-[11px] text-cinema-subtle">
+                  <span className="text-cinema-muted font-mono">{s.value}</span> {s.label}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* View Toggle */}
+        <div className="flex items-center p-1 cinema-card rounded-full">
+          <button onClick={() => setViewMode('grid')}
+            className={`p-1.5 rounded-full transition-all ${viewMode === 'grid' ? 'text-gold bg-gold/10' : 'text-cinema-subtle hover:text-cinema-muted'}`}
+            title="Grid view">
+            <LayoutGrid className="w-3.5 h-3.5" />
+          </button>
+          <button onClick={() => setViewMode('list')}
+            className={`p-1.5 rounded-full transition-all ${viewMode === 'list' ? 'text-gold bg-gold/10' : 'text-cinema-subtle hover:text-cinema-muted'}`}
+            title="List view">
+            <List className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
 
       {/* Filters Row */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-6">
         <div className="flex items-center gap-3 flex-wrap">
           {/* Type Filter */}
           <div className="overflow-x-auto scrollbar-hide">
@@ -1034,32 +1063,8 @@ function LibraryView({ entries, allEntries, loading, filterType, setFilterType, 
             <input type="text" placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-gold-50 border border-cinema-border text-cinema-text text-xs rounded-full py-1.5 pl-8 pr-3 focus:outline-none focus:ring-1 focus:ring-gold-200 placeholder-cinema-subtle" />
           </div>
-
-          {/* View Toggle */}
-          <div className="flex items-center p-1 cinema-card rounded-full">
-            <button onClick={() => setViewMode('grid')}
-              className={`p-1.5 rounded-full transition-all ${viewMode === 'grid' ? 'text-gold bg-gold/10' : 'text-cinema-subtle hover:text-cinema-muted'}`}
-              title="Grid view">
-              <LayoutGrid className="w-3.5 h-3.5" />
-            </button>
-            <button onClick={() => setViewMode('list')}
-              className={`p-1.5 rounded-full transition-all ${viewMode === 'list' ? 'text-gold bg-gold/10' : 'text-cinema-subtle hover:text-cinema-muted'}`}
-              title="List view">
-              <List className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
           <span className="text-xs text-cinema-subtle font-mono tracking-wider whitespace-nowrap">{entries.length} entr{entries.length === 1 ? 'y' : 'ies'}</span>
         </div>
-      </div>
-
-      {/* Statistics */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-        <StatCard label="Total" value={stats.total} />
-        <StatCard label="Movies" value={stats.movies} />
-        <StatCard label="Series" value={stats.series} />
-        <StatCard label="Anime" value={stats.anime} />
-        <StatCard label="Books" value={stats.books} />
       </div>
 
       {/* Entries */}
