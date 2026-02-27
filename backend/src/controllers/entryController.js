@@ -106,9 +106,8 @@ class EntryController {
         return res.status(404).json({ error: "Movie not found on IMDB" });
       }
 
-      // Check for duplicates (only if feature is enabled - after 2026)
-      const currentYear = new Date().getFullYear();
-      if (currentYear >= 2026) {
+      // Check for duplicates (skip if user confirmed with force flag)
+      if (!req.body.force) {
         const duplicate = await EntryModel.checkDuplicate(details.title, imdbId, "imdb", userId);
         if (duplicate) {
           return res.status(409).json({

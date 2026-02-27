@@ -91,7 +91,7 @@ const SpotlightSearch = ({ isOpen, onClose, onSelect }) => {
     onClose();
   };
 
-  const handleAddByImdb = async (type = 'Movie') => {
+  const handleAddByImdb = async (type = 'Movie', force = false) => {
     const imdbId = extractImdbId(query);
     if (!imdbId) return;
 
@@ -102,11 +102,20 @@ const SpotlightSearch = ({ isOpen, onClose, onSelect }) => {
       const response = await fetch('/api/entries/add-by-imdb', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imdbId, type })
+        body: JSON.stringify({ imdbId, type, ...(force && { force: true }) })
       });
 
       if (!response.ok) {
         const errorData = await response.json();
+        if (response.status === 409 && (errorData.message || errorData.error)) {
+          const msg = errorData.message || errorData.error;
+          if (window.confirm(`${msg}\n\nDo you still want to add it?`)) {
+            setAddingByImdb(false);
+            return handleAddByImdb(type, true);
+          }
+          setAddingByImdb(false);
+          return;
+        }
         throw new Error(errorData.error || 'Failed to add movie');
       }
 
