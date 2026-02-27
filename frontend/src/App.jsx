@@ -262,8 +262,8 @@ function Dashboard({ isDemo = false, onLogout }) {
 
   const closeModal = () => { setIsModalOpen(false); setCurrentEntry(null); };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e, force = false) => {
+    e?.preventDefault?.();
     if (isDemo) return;
 
     try {
@@ -274,6 +274,7 @@ function Dashboard({ isDemo = false, onLogout }) {
         year: formData.year ? parseInt(formData.year) : currentYear,
         progress_current: parseInt(formData.progress_current) || 0,
         progress_total: parseInt(formData.progress_total) || 0,
+        ...(force && { force: true }),
       };
 
       if (currentEntry) {
@@ -288,7 +289,9 @@ function Dashboard({ isDemo = false, onLogout }) {
       entryService.getAvailableYears().then(years => setAvailableYears(years)).catch(() => {});
     } catch (error) {
       if (error.message.includes('Duplicate') || error.message.includes('already added')) {
-        toast.error(error.message);
+        if (window.confirm(`${error.message}\n\nDo you still want to add it?`)) {
+          handleSubmit(null, true);
+        }
       } else {
         toast.error('Failed to save entry: ' + error.message);
       }

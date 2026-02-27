@@ -50,9 +50,8 @@ class EntryController {
         return res.status(400).json({ error: "Title and type are required" });
       }
 
-      // Check for duplicates (only if feature is enabled - after 2026)
-      const currentYear = new Date().getFullYear();
-      if (currentYear >= 2026) {
+      // Check for duplicates (skip if user confirmed with force flag)
+      if (!req.body.force) {
         const duplicate = await EntryModel.checkDuplicate(title, api_id, api_provider, userId);
         if (duplicate) {
           return res.status(409).json({
