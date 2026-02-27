@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, Loader2, X, Link, Plus } from 'lucide-react';
+import { Search, Loader2, X, Link, Plus, AlertTriangle } from 'lucide-react';
 
 const SpotlightSearch = ({ isOpen, onClose, onSelect }) => {
   const [query, setQuery] = useState('');
@@ -8,6 +8,7 @@ const SpotlightSearch = ({ isOpen, onClose, onSelect }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [addingByImdb, setAddingByImdb] = useState(false);
+  const [duplicateConfirm, setDuplicateConfirm] = useState(null);
   const inputRef = useRef(null);
 
   // Extract IMDB ID from URL or direct ID
@@ -109,11 +110,11 @@ const SpotlightSearch = ({ isOpen, onClose, onSelect }) => {
         const errorData = await response.json();
         if (response.status === 409 && (errorData.message || errorData.error)) {
           const msg = errorData.message || errorData.error;
-          if (window.confirm(`${msg}\n\nDo you still want to add it?`)) {
-            setAddingByImdb(false);
-            return handleAddByImdb(type, true);
-          }
           setAddingByImdb(false);
+          setDuplicateConfirm({
+            message: msg,
+            onConfirm: () => { setDuplicateConfirm(null); handleAddByImdb(type, true); },
+          });
           return;
         }
         throw new Error(errorData.error || 'Failed to add movie');
@@ -350,6 +351,34 @@ const SpotlightSearch = ({ isOpen, onClose, onSelect }) => {
             </div>
           )}
         </div>
+
+        {/* Duplicate Confirmation Dialog */}
+        {duplicateConfirm && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center px-4" onClick={() => setDuplicateConfirm(null)}>
+            <div className="absolute inset-0 bg-cinema-bg/60" />
+            <div className="relative w-full max-w-sm bg-cinema-card backdrop-blur-xl border border-cinema-border shadow-2xl rounded-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
+              <div className="p-6 text-center">
+                <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-4">
+                  <AlertTriangle className="w-6 h-6 text-amber-500" />
+                </div>
+                <h3 className="text-base font-serif text-cinema-text mb-2">Duplicate Entry</h3>
+                <p className="text-sm text-cinema-muted leading-relaxed">{duplicateConfirm.message}</p>
+              </div>
+              <div className="flex border-t border-cinema-border">
+                <button onClick={() => setDuplicateConfirm(null)}
+                  className="flex-1 px-4 py-3 text-sm text-cinema-muted hover:text-cinema-text hover:bg-white/[0.03] transition-colors">
+                  Cancel
+                </button>
+                <div className="w-px bg-cinema-border" />
+                <button onClick={duplicateConfirm.onConfirm}
+                  className="flex-1 px-4 py-3 text-sm text-gold hover:bg-gold/[0.06] font-medium transition-colors">
+                  Add Anyway
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

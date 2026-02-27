@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import { Film, Tv, Sparkles, Book, Plus, Search, X, ChevronDown, Star, Inbox, ExternalLink, LogOut, Calendar, BarChart3, Menu, Download, Home, LayoutGrid, Heart, Flame, Target, Clock, TrendingUp, Upload, Share2, Tag, ArrowUpDown, Play, List, Eye, Trash2, Archive, User, Link, Copy, Check, Lock, Settings } from 'lucide-react';
+import { Film, Tv, Sparkles, Book, Plus, Search, X, ChevronDown, Star, Inbox, ExternalLink, LogOut, Calendar, BarChart3, Menu, Download, Home, LayoutGrid, Heart, Flame, Target, Clock, TrendingUp, Upload, Share2, Tag, ArrowUpDown, Play, List, Eye, Trash2, Archive, User, Link, Copy, Check, Lock, Settings, AlertTriangle } from 'lucide-react';
 import { useEntries } from './hooks/useEntries';
 import SearchModal from './components/SearchModal';
 import SpotlightSearch from './components/SpotlightSearch';
@@ -32,6 +32,7 @@ function Dashboard({ isDemo = false, onLogout }) {
   const [archiveYearTo, setArchiveYearTo] = useState(null);
   const dlangViewRef = useRef(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [duplicateConfirm, setDuplicateConfirm] = useState(null);
 
   useEffect(() => {
     entryService.getAvailableYears().then(years => {
@@ -289,9 +290,10 @@ function Dashboard({ isDemo = false, onLogout }) {
       entryService.getAvailableYears().then(years => setAvailableYears(years)).catch(() => {});
     } catch (error) {
       if (error.message.includes('Duplicate') || error.message.includes('already added')) {
-        if (window.confirm(`${error.message}\n\nDo you still want to add it?`)) {
-          handleSubmit(null, true);
-        }
+        setDuplicateConfirm({
+          message: error.message,
+          onConfirm: () => { setDuplicateConfirm(null); handleSubmit(null, true); },
+        });
       } else {
         toast.error('Failed to save entry: ' + error.message);
       }
@@ -661,6 +663,34 @@ function Dashboard({ isDemo = false, onLogout }) {
       <SearchModal isOpen={isSearchModalOpen} onClose={() => setIsSearchModalOpen(false)} onSelect={handleSearchSelect} type={formData.type} />
       <SpotlightSearch isOpen={isSpotlightOpen} onClose={() => setIsSpotlightOpen(false)} onSelect={handleSpotlightSelect} />
       <ShareModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} />
+
+      {/* Duplicate Confirmation Dialog */}
+      {duplicateConfirm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-cinema-bg/80 backdrop-blur-md" onClick={() => setDuplicateConfirm(null)} />
+          <div className="relative w-full max-w-sm bg-cinema-card backdrop-blur-xl border border-cinema-border shadow-2xl rounded-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
+            <div className="p-6 text-center">
+              <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-4">
+                <AlertTriangle className="w-6 h-6 text-amber-500" />
+              </div>
+              <h3 className="text-base font-serif text-cinema-text mb-2">Duplicate Entry</h3>
+              <p className="text-sm text-cinema-muted leading-relaxed">{duplicateConfirm.message}</p>
+            </div>
+            <div className="flex border-t border-cinema-border">
+              <button onClick={() => setDuplicateConfirm(null)}
+                className="flex-1 px-4 py-3 text-sm text-cinema-muted hover:text-cinema-text hover:bg-white/[0.03] transition-colors">
+                Cancel
+              </button>
+              <div className="w-px bg-cinema-border" />
+              <button onClick={duplicateConfirm.onConfirm}
+                className="flex-1 px-4 py-3 text-sm text-gold hover:bg-gold/[0.06] font-medium transition-colors">
+                Add Anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mobile Search Overlay */}
       {isMobileSearchOpen && (
