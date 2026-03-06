@@ -5,16 +5,16 @@ import database from "../config/database.js";
 import { SYNC_ADMIN_EMAILS, isProduction } from "../config/env.js";
 
 const JWT_SECRET =
-  process.env.JWT_SECRET || (isProduction ? null : "dev-only-insecure-secret");
+  process.env.JWT_SECRET || "change-this-secret-in-production";
 const JWT_EXPIRES_IN = "7d"; // 7 days
 const JWT_REFRESH_EXPIRES_IN = "30d"; // 30 days
 const SCRYPT_PREFIX = "scrypt";
 const SCRYPT_KEYLEN = 64;
 const scryptAsync = promisify(crypto.scrypt);
 
-if (!process.env.JWT_SECRET && !isProduction) {
+if (!process.env.JWT_SECRET) {
   console.warn(
-    "[AUTH] WARNING: Using a development JWT secret. Set JWT_SECRET before deployment."
+    `[AUTH] WARNING: JWT_SECRET is not set${isProduction ? " in production" : ""}. Using compatibility fallback secret. Set JWT_SECRET in Dokploy.`
   );
 }
 
@@ -22,10 +22,6 @@ if (!process.env.JWT_SECRET && !isProduction) {
  * Generate JWT access token
  */
 export const generateAccessToken = (user) => {
-  if (!JWT_SECRET) {
-    throw new Error("JWT_SECRET is not configured");
-  }
-
   return jwt.sign(
     {
       id: user.id,
@@ -40,10 +36,6 @@ export const generateAccessToken = (user) => {
  * Generate JWT refresh token
  */
 export const generateRefreshToken = (user) => {
-  if (!JWT_SECRET) {
-    throw new Error("JWT_SECRET is not configured");
-  }
-
   return jwt.sign(
     {
       id: user.id,
@@ -97,10 +89,6 @@ export const needsPasswordRehash = (storedHash) => {
  * Verify JWT token
  */
 export const verifyToken = (token) => {
-  if (!JWT_SECRET) {
-    return null;
-  }
-
   try {
     return jwt.verify(token, JWT_SECRET);
   } catch (error) {
