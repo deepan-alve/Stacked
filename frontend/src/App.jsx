@@ -230,13 +230,21 @@ function Dashboard({ isDemo = false, onLogout }) {
       return;
     }
 
+    const normalizedType = result.type || 'Movie';
+    const normalizedPoster = result.poster || result.poster_url || '';
+    const normalizedImdbId = result.imdbId || result.api_id || '';
+    const normalizedPlot = result.plot || result.description || '';
+    const normalizedReleaseDate =
+      result.releaseDate || result.release_date || result.year || '';
+    const normalizedYear = result.year ? parseInt(result.year, 10) : null;
+
     if (currentView === 'favorites') {
       try {
         const payload = {
-          title: result.title || '', year: result.year ? parseInt(result.year) : null,
+          title: result.title || '', year: normalizedYear,
           language: 'English', genre: result.genre || '', director: result.director || '',
           rating: result.rating ? parseFloat(result.rating) : null,
-          poster_url: result.poster || '', notes: result.plot || ''
+          poster_url: normalizedPoster, notes: normalizedPlot
         };
         const res = await fetch('/api/dlang', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         if (!res.ok) throw new Error('Failed to save');
@@ -250,10 +258,10 @@ function Dashboard({ isDemo = false, onLogout }) {
 
     setCurrentEntry(null);
     setFormData({
-      title: result.title || '', type: result.type || 'Movie', rating: result.rating || '',
-      season: '', notes: '', poster_url: result.poster || '', api_id: result.imdbId || '',
-      api_provider: 'imdb', description: result.plot || '',
-      release_date: result.releaseDate || result.year || '',
+      title: result.title || '', type: normalizedType, rating: result.rating || '',
+      season: '', notes: '', poster_url: normalizedPoster, api_id: normalizedImdbId,
+      api_provider: 'imdb', description: normalizedPlot,
+      release_date: normalizedReleaseDate,
       watch_date: new Date().toISOString().split('T')[0], year: currentYear,
       status: 'completed', progress_current: 0, progress_total: 0, tags: '[]'
     });

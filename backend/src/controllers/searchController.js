@@ -2,10 +2,43 @@ import tmdbService from "../services/tmdb.js";
 import anilistService from "../services/anilist.js";
 import openlibraryService from "../services/openlibrary.js";
 import imdbService from "../services/imdb.js";
-import googleSearchService from "../services/googleSearch.js";
 import omdbService from "../services/omdb.js";
 import imdbScraper from "../services/imdbScraper.js";
-import db from "../config/database.js";
+
+const MAX_SPOTLIGHT_RESULTS = 15;
+
+function dedupeSpotlightResults(resultSets) {
+  const seen = new Set();
+  const merged = [];
+
+  for (const results of resultSets) {
+    for (const item of results || []) {
+      if (!item?.title) continue;
+
+      const imdbId = item.imdbId || item.id || null;
+      const key =
+        imdbId ||
+        `${item.title.toLowerCase()}::${item.year || ""}::${(
+          item.type || ""
+        ).toLowerCase()}`;
+
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      merged.push({
+        ...item,
+        imdbId,
+        provider: item.provider || "imdb",
+      });
+
+      if (merged.length >= MAX_SPOTLIGHT_RESULTS) {
+        return merged;
+      }
+    }
+  }
+
+  return merged;
+}
 
 const searchController = {
   // Search for movies
@@ -137,8 +170,17 @@ const searchController = {
         return res.status(400).json({ error: "IMDB ID is required" });
       }
 
-      const details = await imdbService.getDetails(imdbId);
-      res.json(details);
+      try {
+        const details = await imdbService.getDetails(imdbId);
+        return res.json(details);
+      } catch (imdbError) {
+        console.warn(
+          "Primary IMDB details lookup failed, falling back to OMDb:",
+          imdbError.message
+        );
+        const details = await omdbService.getDetails(imdbId);
+        return res.json(details);
+      }
     } catch (error) {
       console.error("Get IMDB Details Error:", error);
       res.status(500).json({ error: "Failed to get IMDB details" });
@@ -190,8 +232,16 @@ const searchController = {
           query.replace(/^anime\s+/i, "")
         );
       } else {
-        // Use IMDB scraper (suggestion API - no rate limits, full database)
-        searchResults = await imdbScraper.search(query);
+        // Merge the fast IMDb suggestion endpoint with the broader IMDb search API.
+        const [suggestionResults, fullSearchResults] = await Promise.allSettled([
+          imdbScraper.search(query),
+          imdbService.search(query, { page: 1 }),
+        ]);
+
+        searchResults = dedupeSpotlightResults([
+          suggestionResults.status === "fulfilled" ? suggestionResults.value : [],
+          fullSearchResults.status === "fulfilled" ? fullSearchResults.value : [],
+        ]);
       }
 
       console.log("Sending", searchResults.length, "results");

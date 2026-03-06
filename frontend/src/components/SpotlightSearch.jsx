@@ -100,28 +100,29 @@ const SpotlightSearch = ({ isOpen, onClose, onSelect }) => {
     setError(null);
 
     try {
-      const response = await fetch('/api/entries/add-by-imdb', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imdbId, type, ...(force && { force: true }) })
-      });
+      const response = await fetch(`/api/search/imdb/${imdbId}`);
 
       if (!response.ok) {
-        const errorData = await response.json();
-        if (response.status === 409 && (errorData.message || errorData.error)) {
-          const msg = errorData.message || errorData.error;
-          setAddingByImdb(false);
-          setDuplicateConfirm({
-            message: msg,
-            onConfirm: () => { setDuplicateConfirm(null); handleAddByImdb(type, true); },
-          });
-          return;
-        }
-        throw new Error(errorData.error || 'Failed to add movie');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to fetch IMDb details');
       }
 
-      const entry = await response.json();
-      onSelect(entry);
+      const details = await response.json();
+
+      onSelect({
+        imdbId: details.imdbId || imdbId,
+        title: details.title,
+        year: details.year || null,
+        type: type || details.type || 'Movie',
+        poster: details.poster || details.poster_url || null,
+        rating: details.rating || null,
+        plot: details.plot || details.description || null,
+        releaseDate:
+          details.releaseDate ||
+          details.release_date ||
+          (details.year ? `${details.year}-01-01` : null),
+        provider: details.provider || 'imdb',
+      });
       onClose();
     } catch (err) {
       console.error('Add by IMDB error:', err);

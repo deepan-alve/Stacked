@@ -1,6 +1,7 @@
 import EntryModel from "../models/entryModel.js";
 import ActivityModel from "../models/activityModel.js";
-import googleSearchService from "../services/googleSearch.js";
+import imdbService from "../services/imdb.js";
+import omdbService from "../services/omdb.js";
 
 class EntryController {
   async getAll(req, res) {
@@ -95,16 +96,23 @@ class EntryController {
         return res.status(400).json({ error: "IMDB ID is required" });
       }
 
-      // Default type is 'movie'
-      const entryType = type || "movie";
-
-      // Fetch details by scraping IMDB directly
-      console.log("Scraping IMDB details for:", imdbId);
-      const details = await googleSearchService.scrapeIMDBDetails(imdbId);
+      // Fetch details from structured APIs instead of scraping IMDb HTML pages.
+      let details;
+      try {
+        details = await imdbService.getDetails(imdbId);
+      } catch (imdbError) {
+        console.warn(
+          "Primary IMDB lookup failed in addByImdb, falling back to OMDb:",
+          imdbError.message
+        );
+        details = await omdbService.getDetails(imdbId);
+      }
 
       if (!details || !details.title || details.title === "Unknown") {
         return res.status(404).json({ error: "Movie not found on IMDB" });
       }
+
+      const entryType = type || details.type || "Movie";
 
       // Check for duplicates (skip if user confirmed with force flag)
       if (!req.body.force) {
@@ -123,11 +131,14 @@ class EntryController {
         title: details.title,
         type: entryType,
         rating: null, // User will rate it themselves
-        poster_url: details.poster,
+        poster_url: details.poster || details.poster_url || null,
         api_id: imdbId,
         api_provider: "imdb",
-        description: details.plot,
-        release_date: details.year ? `${details.year}-01-01` : null,
+        description: details.plot || details.description || "",
+        release_date:
+          details.releaseDate ||
+          details.release_date ||
+          (details.year ? `${details.year}-01-01` : null),
         notes: "",
       };
 
