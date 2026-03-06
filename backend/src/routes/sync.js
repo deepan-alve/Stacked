@@ -1,5 +1,5 @@
 import express from "express";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAuth, requireSyncAdmin } from "../middleware/auth.js";
 import gitSyncService from "../services/gitSyncService.js";
 
 const router = express.Router();
@@ -8,7 +8,7 @@ const router = express.Router();
  * POST /api/sync/push
  * Push database to GitHub
  */
-router.post("/push", requireAuth, async (req, res) => {
+router.post("/push", requireAuth, requireSyncAdmin, async (req, res) => {
   try {
     const result = await gitSyncService.syncToGitHub();
     res.json(result);
@@ -22,7 +22,7 @@ router.post("/push", requireAuth, async (req, res) => {
  * POST /api/sync/pull
  * Pull database from GitHub
  */
-router.post("/pull", requireAuth, async (req, res) => {
+router.post("/pull", requireAuth, requireSyncAdmin, async (req, res) => {
   try {
     const result = await gitSyncService.syncFromGitHub();
     res.json(result);
@@ -36,7 +36,7 @@ router.post("/pull", requireAuth, async (req, res) => {
  * GET /api/sync/export
  * Export database as JSON (download)
  */
-router.get("/export", requireAuth, async (req, res) => {
+router.get("/export", requireAuth, requireSyncAdmin, async (req, res) => {
   try {
     const data = await gitSyncService.exportData();
     res.setHeader("Content-Type", "application/json");
@@ -52,10 +52,10 @@ router.get("/export", requireAuth, async (req, res) => {
  * POST /api/sync/import
  * Import database from JSON
  */
-router.post("/import", requireAuth, async (req, res) => {
+router.post("/import", requireAuth, requireSyncAdmin, async (req, res) => {
   try {
     const data = req.body;
-    if (!data || !data.movies) {
+    if (!data || (!Array.isArray(data.movies) && !Array.isArray(data.dlangMovies))) {
       return res.status(400).json({ success: false, message: "Invalid import data" });
     }
     const result = await gitSyncService.importData(data);

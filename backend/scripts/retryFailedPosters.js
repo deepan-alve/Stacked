@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import pkg from "sqlite3";
@@ -8,7 +9,7 @@ const __dirname = dirname(__filename);
 const DB_PATH = join(__dirname, "..", "movies.db");
 
 // TMDB Configuration
-const TMDB_API_KEY = "***REMOVED_TMDB_KEY***";
+const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
 

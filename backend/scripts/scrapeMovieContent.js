@@ -1,3 +1,4 @@
+import "dotenv/config";
 import database from "../src/config/database.js";
 import fs from "fs";
 import path from "path";
@@ -6,7 +7,7 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const OMDB_API_KEY = "9059d346"; // Your OMDb API key
+const OMDB_API_KEY = process.env.OMDB_API_KEY;
 
 /**
  * Scrape Wikipedia page using Wikipedia API
@@ -116,8 +117,12 @@ async function scrapeIMDb(url) {
 
     console.log(`   🎬 Scraping IMDb: ${imdbId}`);
 
+    if (!OMDB_API_KEY) {
+      throw new Error("OMDB_API_KEY is not configured");
+    }
+
     // Get data from OMDb API
-    const omdbUrl = `http://www.omdbapi.com/?apikey=${OMDB_API_KEY}&i=${imdbId}&plot=full`;
+    const omdbUrl = `https://www.omdbapi.com/?apikey=${OMDB_API_KEY}&i=${imdbId}&plot=full`;
     const omdbResponse = await fetch(omdbUrl);
     const omdbData = await omdbResponse.json();
 

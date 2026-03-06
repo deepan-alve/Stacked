@@ -2,11 +2,11 @@
 // Free tier: 1000 requests/day
 // Get your own key at: https://www.omdbapi.com/apikey.aspx
 
-const OMDB_API_KEY = process.env.OMDB_API_KEY || "trilogy"; // Default demo key
+const OMDB_API_KEY = process.env.OMDB_API_KEY;
 const OMDB_BASE_URL = "https://www.omdbapi.com";
 
 // TMDB for poster fallback (more reliable image hosting)
-const TMDB_API_KEY = "***REMOVED_TMDB_KEY***";
+const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
 
@@ -15,6 +15,10 @@ class OMDbService {
   posterCache = new Map();
 
   async getTMDBPosterByImdbId(imdbId) {
+    if (!TMDB_API_KEY) {
+      return null;
+    }
+
     if (this.posterCache.has(imdbId)) {
       return this.posterCache.get(imdbId);
     }
@@ -42,6 +46,11 @@ class OMDbService {
   }
 
   async search(query) {
+    if (!OMDB_API_KEY) {
+      console.warn("[OMDb] OMDB_API_KEY is not configured. Search disabled.");
+      return [];
+    }
+
     try {
       const response = await fetch(
         `${OMDB_BASE_URL}/?s=${encodeURIComponent(query)}&apikey=${OMDB_API_KEY}`
@@ -82,6 +91,10 @@ class OMDbService {
   }
 
   async getDetails(imdbId) {
+    if (!OMDB_API_KEY) {
+      throw new Error("OMDB_API_KEY is not configured");
+    }
+
     try {
       const response = await fetch(
         `${OMDB_BASE_URL}/?i=${imdbId}&plot=full&apikey=${OMDB_API_KEY}`

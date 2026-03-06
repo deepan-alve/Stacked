@@ -1,6 +1,7 @@
 import express from "express";
 import db from "../config/database.js";
-import googleSearchService from "../services/googleSearch.js";
+import imdbService from "../services/imdb.js";
+import omdbService from "../services/omdb.js";
 
 const router = express.Router();
 
@@ -157,22 +158,41 @@ router.post("/add-by-imdb", async (req, res) => {
       return res.status(400).json({ error: "IMDB ID is required" });
     }
 
-    // Fetch details by scraping IMDB directly
-    console.log("Scraping IMDB details for:", imdbId);
-    const details = await googleSearchService.scrapeIMDBDetails(imdbId);
+    let details;
+    try {
+      details = await imdbService.getDetails(imdbId);
+    } catch (imdbError) {
+      console.warn(
+        "Primary IMDB lookup failed in dlang add-by-imdb, falling back to OMDb:",
+        imdbError.message
+      );
+      details = await omdbService.getDetails(imdbId);
+    }
 
     if (!details || !details.title || details.title === "Unknown") {
       return res.status(404).json({ error: "Movie not found on IMDB" });
     }
 
     // Extract director name (from scraped data if available)
-    const director = details.director || "";
+    const director =
+      details.director ||
+      details.directors?.[0]?.name ||
+      details.directors?.[0] ||
+      "";
 
     // Extract first genre
-    const genre = details.genres?.[0] || details.type || "";
+    const genre =
+      details.genres?.[0]?.name ||
+      details.genres?.[0] ||
+      details.type ||
+      "";
 
     // Extract language
-    const language = details.languages?.[0] || "English";
+    const language =
+      details.languages?.[0]?.name ||
+      details.languages?.[0] ||
+      details.language ||
+      "English";
 
     const result = await db.run(
       `INSERT INTO dlang_movies (user_id, title, year, language, genre, director, rating, poster_url, notes)
@@ -185,7 +205,7 @@ router.post("/add-by-imdb", async (req, res) => {
         genre,
         director,
         details.rating,
-        details.poster,
+        details.poster || details.poster_url,
         `IMDB: ${imdbId} | ${details.plot || ""}`,
       ]
     );

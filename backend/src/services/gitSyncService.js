@@ -1,18 +1,17 @@
 // Git Sync Service - Sync database to GitHub
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
 import database from "../config/database.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { ENABLE_GIT_SYNC } from "../config/env.js";
 
 class GitSyncService {
   constructor() {
-    this.githubToken = process.env.GITHUB_TOKEN || "***REMOVED_GITHUB_PAT***";
+    this.githubToken = process.env.GITHUB_TOKEN || "";
     this.githubRepo = process.env.GITHUB_REPO || "deepan-alve/Stacked-db";
     this.syncBranch = process.env.SYNC_BRANCH || "main";
     this.syncFile = "data/sync.json";
+  }
+
+  isGitSyncEnabled() {
+    return ENABLE_GIT_SYNC;
   }
 
   /**
@@ -21,14 +20,15 @@ class GitSyncService {
   async exportData() {
     try {
       const movies = await database.all("SELECT * FROM movies ORDER BY id");
-      const users = await database.all("SELECT id, email, created_at FROM users ORDER BY id");
-      const movieDetails = await database.all("SELECT * FROM movie_details ORDER BY id");
+      const dlangMovies = await database.all(
+        "SELECT * FROM dlang_movies ORDER BY id"
+      );
 
       return {
         exportedAt: new Date().toISOString(),
+        schemaVersion: 2,
         movies,
-        users,
-        movieDetails,
+        dlangMovies,
       };
     } catch (error) {
       console.error("[GitSync] Export error:", error.message);
@@ -40,6 +40,10 @@ class GitSyncService {
    * Push data to GitHub
    */
   async pushToGitHub(data) {
+    if (!this.isGitSyncEnabled()) {
+      return { success: false, message: "Git sync is disabled" };
+    }
+
     if (!this.githubToken) {
       console.log("[GitSync] No GITHUB_TOKEN set, skipping push");
       return { success: false, message: "No GitHub token configured" };
@@ -104,6 +108,10 @@ class GitSyncService {
    * Pull data from GitHub
    */
   async pullFromGitHub() {
+    if (!this.isGitSyncEnabled()) {
+      return { success: false, message: "Git sync is disabled" };
+    }
+
     if (!this.githubToken) {
       return { success: false, message: "No GitHub token configured" };
     }
@@ -145,28 +153,128 @@ class GitSyncService {
         const existing = await database.get("SELECT id FROM movies WHERE id = ?", [movie.id]);
         if (existing) {
           await database.run(
-            `UPDATE movies SET title=?, type=?, rating=?, season=?, notes=?, assignee=?,
+            `UPDATE movies SET user_id=?, title=?, type=?, rating=?, season=?, notes=?, assignee=?,
              due_date=?, poster_url=?, api_id=?, api_provider=?, description=?,
-             release_date=?, year=?, watch_date=?, updated_at=? WHERE id=?`,
-            [movie.title, movie.type, movie.rating, movie.season, movie.notes, movie.assignee,
-             movie.due_date, movie.poster_url, movie.api_id, movie.api_provider, movie.description,
-             movie.release_date, movie.year, movie.watch_date, movie.updated_at, movie.id]
+             release_date=?, year=?, watch_date=?, status=?, progress_current=?, progress_total=?,
+             tags=?, created_at=?, updated_at=? WHERE id=?`,
+            [
+              movie.user_id ?? 1,
+              movie.title,
+              movie.type,
+              movie.rating,
+              movie.season,
+              movie.notes,
+              movie.assignee,
+              movie.due_date,
+              movie.poster_url,
+              movie.api_id,
+              movie.api_provider,
+              movie.description,
+              movie.release_date,
+              movie.year,
+              movie.watch_date,
+              movie.status ?? "completed",
+              movie.progress_current ?? 0,
+              movie.progress_total ?? 0,
+              movie.tags ?? "[]",
+              movie.created_at,
+              movie.updated_at,
+              movie.id,
+            ]
           );
         } else {
           await database.run(
             `INSERT INTO movies (id, title, type, rating, season, notes, assignee, due_date,
              poster_url, api_id, api_provider, description, release_date, year, watch_date,
-             created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [movie.id, movie.title, movie.type, movie.rating, movie.season, movie.notes,
-             movie.assignee, movie.due_date, movie.poster_url, movie.api_id, movie.api_provider,
-             movie.description, movie.release_date, movie.year, movie.watch_date,
-             movie.created_at, movie.updated_at]
+             status, progress_current, progress_total, tags, user_id, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              movie.id,
+              movie.title,
+              movie.type,
+              movie.rating,
+              movie.season,
+              movie.notes,
+              movie.assignee,
+              movie.due_date,
+              movie.poster_url,
+              movie.api_id,
+              movie.api_provider,
+              movie.description,
+              movie.release_date,
+              movie.year,
+              movie.watch_date,
+              movie.status ?? "completed",
+              movie.progress_current ?? 0,
+              movie.progress_total ?? 0,
+              movie.tags ?? "[]",
+              movie.user_id ?? 1,
+              movie.created_at,
+              movie.updated_at,
+            ]
           );
         }
       }
 
-      console.log("[GitSync] ✓ Imported", data.movies?.length || 0, "movies");
-      return { success: true, imported: data.movies?.length || 0 };
+      for (const movie of data.dlangMovies || []) {
+        const existing = await database.get(
+          "SELECT id FROM dlang_movies WHERE id = ?",
+          [movie.id]
+        );
+
+        if (existing) {
+          await database.run(
+            `UPDATE dlang_movies SET user_id=?, title=?, year=?, language=?, genre=?, director=?,
+             rating=?, poster_url=?, notes=?, created_at=?, updated_at=? WHERE id=?`,
+            [
+              movie.user_id ?? 1,
+              movie.title,
+              movie.year,
+              movie.language,
+              movie.genre,
+              movie.director,
+              movie.rating,
+              movie.poster_url,
+              movie.notes,
+              movie.created_at,
+              movie.updated_at,
+              movie.id,
+            ]
+          );
+        } else {
+          await database.run(
+            `INSERT INTO dlang_movies (id, user_id, title, year, language, genre, director, rating,
+             poster_url, notes, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              movie.id,
+              movie.user_id ?? 1,
+              movie.title,
+              movie.year,
+              movie.language,
+              movie.genre,
+              movie.director,
+              movie.rating,
+              movie.poster_url,
+              movie.notes,
+              movie.created_at,
+              movie.updated_at,
+            ]
+          );
+        }
+      }
+
+      console.log(
+        "[GitSync] ✓ Imported",
+        data.movies?.length || 0,
+        "movies and",
+        data.dlangMovies?.length || 0,
+        "favorites"
+      );
+      return {
+        success: true,
+        imported: (data.movies?.length || 0) + (data.dlangMovies?.length || 0),
+      };
     } catch (error) {
       console.error("[GitSync] Import error:", error.message);
       return { success: false, message: error.message };

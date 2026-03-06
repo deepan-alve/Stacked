@@ -7,6 +7,8 @@ import {
   generateAccessToken,
   generateRefreshToken,
   hashPassword,
+  verifyPassword,
+  needsPasswordRehash,
   verifyToken,
   requireAuth,
 } from "../middleware/auth.js";
@@ -37,6 +39,8 @@ const validateSignup = [
     ),
 ];
 
+const STRONG_PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
+
 // Handle validation errors
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
@@ -63,13 +67,11 @@ router.post(
     console.log("[AUTH] Login attempt for:", email);
 
     try {
-      const hashedPassword = hashPassword(password);
-
       // Get user from database
       const user = await new Promise((resolve, reject) => {
         database.db.get(
-          "SELECT * FROM users WHERE email = ? AND password = ?",
-          [email, hashedPassword],
+          "SELECT * FROM users WHERE email = ?",
+          [email],
           (err, row) => {
             if (err) reject(err);
             else resolve(row);
@@ -77,10 +79,26 @@ router.post(
         );
       });
 
-      if (!user) {
+      const isValidPassword = await verifyPassword(password, user?.password);
+
+      if (!user || !isValidPassword) {
         console.error("[AUTH] Login failed: invalid credentials");
         // Generic error message to prevent user enumeration
         return res.status(401).json({ error: "Invalid email or password" });
+      }
+
+      if (needsPasswordRehash(user.password)) {
+        const upgradedHash = await hashPassword(password);
+        await new Promise((resolve, reject) => {
+          database.db.run(
+            "UPDATE users SET password = ? WHERE id = ?",
+            [upgradedHash, user.id],
+            (err) => {
+              if (err) reject(err);
+              else resolve();
+            }
+          );
+        });
       }
 
       console.log("[AUTH] Login successful for:", email);
@@ -121,7 +139,7 @@ router.post(
     const { email, password } = req.body;
 
     try {
-      const hashedPassword = hashPassword(password);
+      const hashedPassword = await hashPassword(password);
 
       // Check if user already exists
       const existingUser = await new Promise((resolve, reject) => {
@@ -358,13 +376,14 @@ router.put("/password", requireAuth, async (req, res) => {
     return res.status(400).json({ error: "Current and new password are required" });
   }
 
-  if (newPassword.length < 6) {
-    return res.status(400).json({ error: "New password must be at least 6 characters" });
+  if (newPassword.length < 8 || !STRONG_PASSWORD_REGEX.test(newPassword)) {
+    return res.status(400).json({
+      error:
+        "New password must be at least 8 characters with uppercase, lowercase, and number",
+    });
   }
 
   try {
-    const hashedCurrent = hashPassword(currentPassword);
-
     const user = await new Promise((resolve, reject) => {
       database.db.get(
         "SELECT id, password FROM users WHERE id = ?",
@@ -376,11 +395,12 @@ router.put("/password", requireAuth, async (req, res) => {
       );
     });
 
-    if (!user || user.password !== hashedCurrent) {
+    const isValidPassword = await verifyPassword(currentPassword, user?.password);
+    if (!user || !isValidPassword) {
       return res.status(401).json({ error: "Current password is incorrect" });
     }
 
-    const hashedNew = hashPassword(newPassword);
+    const hashedNew = await hashPassword(newPassword);
 
     await new Promise((resolve, reject) => {
       database.db.run(

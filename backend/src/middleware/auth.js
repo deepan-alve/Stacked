@@ -1,13 +1,20 @@
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import { promisify } from "util";
+import database from "../config/database.js";
+import { SYNC_ADMIN_EMAILS, isProduction } from "../config/env.js";
 
-const JWT_SECRET = process.env.JWT_SECRET || "change-this-secret-in-production";
+const JWT_SECRET =
+  process.env.JWT_SECRET || (isProduction ? null : "dev-only-insecure-secret");
 const JWT_EXPIRES_IN = "7d"; // 7 days
 const JWT_REFRESH_EXPIRES_IN = "30d"; // 30 days
+const SCRYPT_PREFIX = "scrypt";
+const SCRYPT_KEYLEN = 64;
+const scryptAsync = promisify(crypto.scrypt);
 
-if (!process.env.JWT_SECRET) {
+if (!process.env.JWT_SECRET && !isProduction) {
   console.warn(
-    "[AUTH] WARNING: Using default JWT_SECRET. Set JWT_SECRET in production!"
+    "[AUTH] WARNING: Using a development JWT secret. Set JWT_SECRET before deployment."
   );
 }
 
@@ -15,6 +22,10 @@ if (!process.env.JWT_SECRET) {
  * Generate JWT access token
  */
 export const generateAccessToken = (user) => {
+  if (!JWT_SECRET) {
+    throw new Error("JWT_SECRET is not configured");
+  }
+
   return jwt.sign(
     {
       id: user.id,
@@ -29,6 +40,10 @@ export const generateAccessToken = (user) => {
  * Generate JWT refresh token
  */
 export const generateRefreshToken = (user) => {
+  if (!JWT_SECRET) {
+    throw new Error("JWT_SECRET is not configured");
+  }
+
   return jwt.sign(
     {
       id: user.id,
@@ -40,21 +55,61 @@ export const generateRefreshToken = (user) => {
 };
 
 /**
- * Hash password using SHA-256
+ * Hash password using scrypt with a per-password salt
  */
-export const hashPassword = (password) => {
+const hashLegacyPassword = (password) => {
   return crypto.createHash("sha256").update(password).digest("hex");
+};
+
+export const hashPassword = async (password) => {
+  const salt = crypto.randomBytes(16).toString("hex");
+  const derivedKey = await scryptAsync(password, salt, SCRYPT_KEYLEN);
+  return `${SCRYPT_PREFIX}$${salt}$${Buffer.from(derivedKey).toString("hex")}`;
+};
+
+export const verifyPassword = async (password, storedHash) => {
+  if (!storedHash) return false;
+
+  if (storedHash.startsWith(`${SCRYPT_PREFIX}$`)) {
+    const [, salt, storedKeyHex] = storedHash.split("$");
+    if (!salt || !storedKeyHex) return false;
+
+    const derivedKey = Buffer.from(
+      await scryptAsync(password, salt, SCRYPT_KEYLEN)
+    );
+    const storedKey = Buffer.from(storedKeyHex, "hex");
+
+    if (derivedKey.length !== storedKey.length) {
+      return false;
+    }
+
+    return crypto.timingSafeEqual(derivedKey, storedKey);
+  }
+
+  return hashLegacyPassword(password) === storedHash;
+};
+
+export const needsPasswordRehash = (storedHash) => {
+  return !storedHash || !storedHash.startsWith(`${SCRYPT_PREFIX}$`);
 };
 
 /**
  * Verify JWT token
  */
 export const verifyToken = (token) => {
+  if (!JWT_SECRET) {
+    return null;
+  }
+
   try {
     return jwt.verify(token, JWT_SECRET);
   } catch (error) {
     return null;
   }
+};
+
+const getUserById = async (id) => {
+  return database.get("SELECT id, email FROM users WHERE id = ?", [id]);
 };
 
 /**
@@ -98,17 +153,23 @@ export const requireAuth = async (req, res, next) => {
         const refreshDecoded = verifyToken(refreshToken);
 
         if (refreshDecoded && refreshDecoded.type === "refresh") {
+          const user = await getUserById(refreshDecoded.id);
+          if (!user) {
+            clearAuthCookies(res);
+            return res.status(401).json({ error: "Session expired" });
+          }
+
           // Generate new tokens
           const newAccessToken = generateAccessToken({
-            id: refreshDecoded.id,
-            email: refreshDecoded.email,
+            id: user.id,
+            email: user.email,
           });
           const newRefreshToken = generateRefreshToken({
-            id: refreshDecoded.id,
+            id: user.id,
           });
 
           setAuthCookies(res, newAccessToken, newRefreshToken);
-          req.user = { id: refreshDecoded.id, email: refreshDecoded.email };
+          req.user = { id: user.id, email: user.email };
           return next();
         }
       }
@@ -185,7 +246,6 @@ export const setAuthCookies = (res, accessToken, refreshToken) => {
  * Clear auth cookies - important to clear with same options
  */
 export const clearAuthCookies = (res) => {
-  const isProduction = process.env.NODE_ENV === "production";
   const cookieOptions = {
     httpOnly: true,
     secure: isProduction,
@@ -195,4 +255,14 @@ export const clearAuthCookies = (res) => {
 
   res.clearCookie("access-token", cookieOptions);
   res.clearCookie("refresh-token", cookieOptions);
+};
+
+export const requireSyncAdmin = (req, res, next) => {
+  const email = req.user?.email?.toLowerCase();
+
+  if (!email || !SYNC_ADMIN_EMAILS.has(email)) {
+    return res.status(403).json({ error: "Admin access required" });
+  }
+
+  next();
 };

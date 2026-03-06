@@ -23,11 +23,14 @@ import recommendationRoutes from "./routes/recommendations.js";
 import backupService from "./services/backupService.js";
 import gitSyncService from "./services/gitSyncService.js";
 import { requireAuth } from "./middleware/auth.js";
+import { ENABLE_GIT_SYNC, validateEnvironment } from "./config/env.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const BACKUP_INTERVAL_HOURS = parseInt(process.env.BACKUP_INTERVAL_HOURS) || 6;
 const isProduction = process.env.NODE_ENV === "production";
+
+validateEnvironment();
 
 // Trust proxy - REQUIRED when behind nginx/traefik
 // This enables Express to trust X-Forwarded-* headers
@@ -212,16 +215,19 @@ database
     backupService.startPeriodicBackup(BACKUP_INTERVAL_HOURS);
     console.log(`Backup enabled: every ${BACKUP_INTERVAL_HOURS} hours`);
 
-    // Start periodic Git sync (every 30 minutes)
-    console.log("Git sync enabled - syncing to GitHub every 30 minutes");
-    setInterval(() => {
-      gitSyncService.syncToGitHub().catch(console.error);
-    }, 30 * 60 * 1000); // 30 minutes
+    if (ENABLE_GIT_SYNC) {
+      console.log("Git sync enabled - syncing to GitHub every 30 minutes");
+      setInterval(() => {
+        gitSyncService.syncToGitHub().catch(console.error);
+      }, 30 * 60 * 1000); // 30 minutes
 
-    // Initial sync after 1 minute
-    setTimeout(() => {
-      gitSyncService.syncToGitHub().catch(console.error);
-    }, 60 * 1000);
+      // Initial sync after 1 minute
+      setTimeout(() => {
+        gitSyncService.syncToGitHub().catch(console.error);
+      }, 60 * 1000);
+    } else {
+      console.log("Git sync disabled");
+    }
   })
   .catch((error) => {
     console.error("Failed to start server:", error);

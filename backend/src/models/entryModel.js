@@ -69,6 +69,10 @@ class EntryModel {
       release_date,
       year,
       watch_date,
+      status,
+      progress_current,
+      progress_total,
+      tags,
     } = data;
     const now = new Date().toISOString();
     const currentYear = new Date().getFullYear();
@@ -76,10 +80,14 @@ class EntryModel {
     // Default to current year and today's date
     const entryYear = year || currentYear;
     const entryWatchDate = watch_date || now;
+    const entryStatus = status || "completed";
+    const entryProgressCurrent = progress_current ?? 0;
+    const entryProgressTotal = progress_total ?? 0;
+    const entryTags = typeof tags === "string" ? tags : JSON.stringify(tags || []);
 
     try {
       const result = await database.run(
-        "INSERT INTO movies (user_id, title, type, rating, season, notes, poster_url, api_id, api_provider, description, release_date, year, watch_date, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO movies (user_id, title, type, rating, season, notes, poster_url, api_id, api_provider, description, release_date, year, watch_date, status, progress_current, progress_total, tags, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [
           userId,
           title,
@@ -94,6 +102,10 @@ class EntryModel {
           release_date || null,
           entryYear,
           entryWatchDate,
+          entryStatus,
+          entryProgressCurrent,
+          entryProgressTotal,
+          entryTags,
           now,
           now,
         ]
@@ -114,6 +126,10 @@ class EntryModel {
         release_date: release_date || null,
         year: entryYear,
         watch_date: entryWatchDate,
+        status: entryStatus,
+        progress_current: entryProgressCurrent,
+        progress_total: entryProgressTotal,
+        tags: entryTags,
         created_at: now,
         updated_at: now,
       };

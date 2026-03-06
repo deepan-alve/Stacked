@@ -2150,8 +2150,8 @@ function ProfileView({ user, updateUser, entries }) {
       toast.error('Passwords do not match');
       return;
     }
-    if (newPassword.length < 6) {
-      toast.error('Password must be at least 6 characters');
+    if (newPassword.length < 8 || !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(newPassword)) {
+      toast.error('Use 8+ chars with uppercase, lowercase, and number');
       return;
     }
     setPasswordSaving(true);

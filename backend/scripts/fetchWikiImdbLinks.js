@@ -1,3 +1,4 @@
+import "dotenv/config";
 import database from "../src/config/database.js";
 import fs from "fs";
 import path from "path";
@@ -106,7 +107,10 @@ async function getWikipediaDetails(pageTitle, pageUrl, originalTitle, year) {
  */
 async function searchIMDb(title, type, releaseDate) {
   try {
-    const OMDB_API_KEY = "9059d346";
+    const OMDB_API_KEY = process.env.OMDB_API_KEY;
+    if (!OMDB_API_KEY) {
+      return null;
+    }
     const searchTerm = encodeURIComponent(title);
     const year = releaseDate ? releaseDate.split("-")[0] : "";
 
@@ -118,7 +122,7 @@ async function searchIMDb(title, type, releaseDate) {
     else if (type === "Book") return null;
 
     // Search OMDb by title
-    const searchUrl = `http://www.omdbapi.com/?apikey=${OMDB_API_KEY}&t=${searchTerm}${
+    const searchUrl = `https://www.omdbapi.com/?apikey=${OMDB_API_KEY}&t=${searchTerm}${
       year ? `&y=${year}` : ""
     }${omdbType ? `&type=${omdbType}` : ""}`;
 
@@ -128,7 +132,7 @@ async function searchIMDb(title, type, releaseDate) {
     if (data.Response === "False") {
       // Try without year if first search failed
       if (year) {
-        const retryUrl = `http://www.omdbapi.com/?apikey=${OMDB_API_KEY}&t=${searchTerm}${
+        const retryUrl = `https://www.omdbapi.com/?apikey=${OMDB_API_KEY}&t=${searchTerm}${
           omdbType ? `&type=${omdbType}` : ""
         }`;
         const retryResponse = await fetch(retryUrl);

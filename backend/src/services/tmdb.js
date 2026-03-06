@@ -1,11 +1,18 @@
 // TMDB API Service
-const TMDB_API_KEY = "***REMOVED_TMDB_KEY***";
+const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
 
 class TMDBService {
+  ensureConfigured() {
+    if (!TMDB_API_KEY) {
+      throw new Error("TMDB_API_KEY is not configured");
+    }
+  }
+
   async searchMovies(query) {
     try {
+      this.ensureConfigured();
       const response = await fetch(
         `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(
           query
@@ -36,6 +43,7 @@ class TMDBService {
 
   async searchTVShows(query) {
     try {
+      this.ensureConfigured();
       const response = await fetch(
         `${TMDB_BASE_URL}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(
           query
@@ -66,6 +74,7 @@ class TMDBService {
 
   async getMovieDetails(id) {
     try {
+      this.ensureConfigured();
       const response = await fetch(
         `${TMDB_BASE_URL}/movie/${id}?api_key=${TMDB_API_KEY}`
       );
@@ -96,6 +105,7 @@ class TMDBService {
 
   async getTVDetails(id) {
     try {
+      this.ensureConfigured();
       const response = await fetch(
         `${TMDB_BASE_URL}/tv/${id}?api_key=${TMDB_API_KEY}`
       );
@@ -126,6 +136,7 @@ class TMDBService {
 
   async searchMulti(query) {
     try {
+      this.ensureConfigured();
       const response = await fetch(
         `${TMDB_BASE_URL}/search/multi?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(
           query
