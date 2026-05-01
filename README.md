@@ -144,4 +144,4 @@ Stacked/
 
 ## License
 
-[GPL-3.0-or-later](LICENSE) — Copyright (C) 2026 Deepan Alve
+[GPL-3.0-or-later](LICENSE) — see [NOTICE](NOTICE) for attribution. Copyright (C) 2026 Deepan Alve
