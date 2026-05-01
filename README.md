@@ -9,7 +9,7 @@
 [![Express](https://img.shields.io/badge/Express-4-000?logo=express&logoColor=white)](https://expressjs.com)
 [![SQLite](https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white)](https://sqlite.org)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
 [**🔗 Live demo →**](https://stacked.deepanalve.dev/)
 
@@ -144,4 +144,4 @@ Stacked/
 
 ## License
 
-[MIT](LICENSE) © Deepan Alve
+[GPL-3.0-or-later](LICENSE) — Copyright (C) 2026 Deepan Alve
