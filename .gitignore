@@ -4,24 +4,30 @@ node_modules/
 # Build outputs
 dist/
 build/
+.next/
 
-# Database (but keep seed database for Docker builds)
+# Databases (always created fresh per install — never commit)
 *.db
-!backend/data/movies.db
 *.db-journal
 *.db-wal
 *.db-shm
 
-# Environment files (use Dokploy env vars in production)
+# Personal export / sync state
+data/sync.json
+data/movies.db
+backend/data/movies.db
+
+# Environment files
 .env
 .env.local
 .env.*
-backend/.env
-frontend/.env
+!.env.example
 
-# IDE
+# IDE / tooling
 .idea/
 .vscode/
+.cursor/
+.playwright-mcp/
 *.swp
 *.swo
 
@@ -37,7 +43,6 @@ Thumbs.db
 .cache/
 .vite/
 
-# Temp files
+# Temp
 *.tmp
 *.temp
-# tmp-files
