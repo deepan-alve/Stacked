@@ -20,7 +20,7 @@ import activityRoutes from "./routes/activity.js";
 import shareRoutes from "./routes/share.js";
 import csvRoutes from "./routes/csv.js";
 import recommendationRoutes from "./routes/recommendations.js";
-import { connectPage, connectApi } from "./routes/connect.js";
+import { connectApi } from "./routes/connect.js";
 import backupService from "./services/backupService.js";
 import gitSyncService from "./services/gitSyncService.js";
 import { requireAuth } from "./middleware/auth.js";
@@ -146,10 +146,11 @@ app.use("/api/activity", requireAuth, activityRoutes); // Protected
 app.use("/api/share", shareRoutes); // Mixed - has own auth per route
 app.use("/api/csv", requireAuth, csvRoutes); // Protected
 app.use("/api/recommendations", requireAuth, recommendationRoutes); // Protected
-app.use("/api/connect", connectApi); // OAuth-style grant for external clients (Padam)
-
-// Top-level HTML page for the connect popup (no /api prefix)
-app.get("/connect", connectPage);
+// OAuth-style grant for external clients (Padam). The HTML authorise page
+// lives at GET /api/connect; the grant endpoint at POST /api/connect/grant.
+// Mounted under /api/ so the frontend nginx proxies it to the backend
+// instead of falling through to the React SPA's index.html.
+app.use("/api/connect", connectApi);
 
 // Health check
 app.get("/api/health", (req, res) => {

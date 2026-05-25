@@ -45,8 +45,14 @@ export function connectPage(req, res) {
 
 /**
  * Router for /api/connect/* endpoints.
+ *
+ * The HTML page lives under /api/ too — that's the path nginx proxies to
+ * the backend in production (everything else falls through to the React
+ * SPA's index.html).
  */
 export const connectApi = express.Router();
+
+connectApi.get("/", connectPage);
 
 connectApi.post("/grant", requireAuth, async (req, res) => {
   const { from } = req.body ?? {};
