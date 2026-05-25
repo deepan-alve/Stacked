@@ -114,21 +114,29 @@ export const requireAuth = async (req, res, next) => {
   }
 
   try {
-    // Get the access token from HTTP-only cookie
-    const accessToken = req.cookies?.["access-token"];
+    // Access token from HTTP-only cookie (frontend) OR Authorization: Bearer (external clients).
+    const cookieAccessToken = req.cookies?.["access-token"];
     const refreshToken = req.cookies?.["refresh-token"];
+
+    let bearerToken = null;
+    const authHeader = req.headers?.authorization;
+    if (typeof authHeader === "string" && authHeader.toLowerCase().startsWith("bearer ")) {
+      bearerToken = authHeader.slice(7).trim();
+    }
+    const accessToken = bearerToken || cookieAccessToken;
+    const isBearer = !!bearerToken;
 
     console.log(
       "[AUTH] Request to:",
       req.path,
-      "- Has access token:",
-      !!accessToken,
-      "- Has refresh token:",
+      "- via:",
+      isBearer ? "bearer" : cookieAccessToken ? "cookie" : "none",
+      "- Has refresh:",
       !!refreshToken
     );
 
     if (!accessToken) {
-      console.log("[AUTH] No access token found in cookies");
+      console.log("[AUTH] No access token in cookie or bearer header");
       return res.status(401).json({ error: "Authentication required" });
     }
 
