@@ -20,6 +20,7 @@ import activityRoutes from "./routes/activity.js";
 import shareRoutes from "./routes/share.js";
 import csvRoutes from "./routes/csv.js";
 import recommendationRoutes from "./routes/recommendations.js";
+import { connectPage, connectApi } from "./routes/connect.js";
 import backupService from "./services/backupService.js";
 import gitSyncService from "./services/gitSyncService.js";
 import { requireAuth } from "./middleware/auth.js";
@@ -84,9 +85,11 @@ const authLimiter = rateLimit({
 // Allowed origins for CORS
 const allowedOrigins = [
   process.env.FRONTEND_URL,
+  process.env.PADAM_URL,
   "http://localhost:5173",
   "http://localhost:3000",
   "https://stacked.deepanalve.dev",
+  "https://padam.deepanalve.dev",
 ].filter(Boolean);
 
 // CORS configuration for credentials (cookies)
@@ -143,6 +146,10 @@ app.use("/api/activity", requireAuth, activityRoutes); // Protected
 app.use("/api/share", shareRoutes); // Mixed - has own auth per route
 app.use("/api/csv", requireAuth, csvRoutes); // Protected
 app.use("/api/recommendations", requireAuth, recommendationRoutes); // Protected
+app.use("/api/connect", connectApi); // OAuth-style grant for external clients (Padam)
+
+// Top-level HTML page for the connect popup (no /api prefix)
+app.get("/connect", connectPage);
 
 // Health check
 app.get("/api/health", (req, res) => {
