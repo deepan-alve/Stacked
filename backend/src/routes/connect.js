@@ -40,6 +40,20 @@ export function connectPage(req, res) {
 
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.setHeader("Cache-Control", "no-store");
+  // Override the global helmet CSP (script-src 'self') for this page only.
+  // The authorize UI runs inline JS that calls /api/auth/me and /api/connect/grant
+  // on the same origin, so the relaxation here is minimal.
+  res.setHeader(
+    "Content-Security-Policy",
+    [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data:",
+      "connect-src 'self'",
+      "frame-ancestors 'none'",
+    ].join("; ")
+  );
   res.send(renderConnectPage({ from, state, fromAllowed }));
 }
 
