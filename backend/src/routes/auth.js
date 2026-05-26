@@ -215,20 +215,33 @@ router.post("/logout", async (req, res) => {
 
 /**
  * GET /api/auth/me
- * Get current user from cookie session
+ * Returns the current user. Accepts either the access-token cookie
+ * (frontend) or an Authorization: Bearer <token> header (external API
+ * clients such as Padam).
  */
 router.get("/me", async (req, res) => {
-  const accessToken = req.cookies?.["access-token"];
+  // Cookie first (existing frontend behaviour).
+  let accessToken = req.cookies?.["access-token"];
+
+  // Fall back to Authorization: Bearer <token>.
+  if (!accessToken) {
+    const authHeader = req.headers?.authorization;
+    if (typeof authHeader === "string" && authHeader.toLowerCase().startsWith("bearer ")) {
+      accessToken = authHeader.slice(7).trim();
+    }
+  }
 
   if (!accessToken) {
     return res.status(401).json({ error: "Not authenticated" });
   }
 
+  const isBearer = !req.cookies?.["access-token"];
+
   try {
     const decoded = verifyToken(accessToken);
 
     if (!decoded || decoded.type === "refresh") {
-      clearAuthCookies(res);
+      if (!isBearer) clearAuthCookies(res);
       return res.status(401).json({ error: "Invalid session" });
     }
 
@@ -245,7 +258,7 @@ router.get("/me", async (req, res) => {
     });
 
     if (!user) {
-      clearAuthCookies(res);
+      if (!isBearer) clearAuthCookies(res);
       return res.status(401).json({ error: "User not found" });
     }
 
